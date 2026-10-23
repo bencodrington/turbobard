@@ -15,14 +15,21 @@ export function createBrowserAudioPort(
   const elements = new Map<string, AudioElement>()
   const listeners = new Set<(soundId: string, error: unknown) => void>()
   const elementFor = (sound: Sound, variation?: string) => {
-    let element = elements.get(sound.id)
+    // Automatic one-shots need one element per variation. Reusing the element
+    // that was loaded for the first sample and swapping `src` while a load or
+    // play is pending can cancel the scheduled playback in real browsers.
+    const key =
+      sound.kind === 'one-shot' && variation
+        ? `${sound.id}:${variation}`
+        : sound.id
+    let element = elements.get(key)
     if (!element) {
       element = createAudio(sourceFor(sound, variation)) as AudioElement
       element.preload = 'auto'
       element.addEventListener('error', () =>
         listeners.forEach((listener) => listener(sound.id, element?.error)),
       )
-      elements.set(sound.id, element)
+      elements.set(key, element)
     }
     return element
   }
@@ -55,10 +62,6 @@ export function createBrowserAudioPort(
     },
     playOneShot(sound, variation, volume) {
       const element = elementFor(sound, variation)
-      if (element.src !== new URL(variation, window.location.href).href) {
-        element.src = variation
-        element.load()
-      }
       element.loop = false
       element.volume = volume
       element.currentTime = 0
