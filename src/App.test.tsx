@@ -195,6 +195,75 @@ describe('Environment workspace', () => {
     vi.restoreAllMocks()
   })
 
+  it('shows Combat button only when an Environment is playing and disables it on stop', () => {
+    render(<App />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+
+    expect(
+      screen.queryByRole('button', { name: /combat/i }),
+    ).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Play' }))
+    expect(screen.getByRole('button', { name: /combat/i })).toBeVisible()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Stop' }))
+    expect(
+      screen.queryByRole('button', { name: /combat/i }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('toggles Combat mode on and off, updating aria-pressed and label', () => {
+    render(<App />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Play' }))
+
+    const combatButton = screen.getByRole('button', { name: /combat/i })
+    expect(combatButton).toHaveAttribute('aria-pressed', 'false')
+    expect(combatButton).toHaveTextContent('Combat off')
+
+    fireEvent.click(combatButton)
+    expect(screen.getByRole('button', { name: /combat/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.getByRole('button', { name: /combat/i })).toHaveTextContent(
+      'Combat on',
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /combat/i }))
+    expect(screen.getByRole('button', { name: /combat/i })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+  })
+
+  it('preserves Combat mode state when switching between Environments', () => {
+    render(<App />)
+
+    // Create two environments
+    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+
+    const [play1, play2] = screen.getAllByRole('button', { name: 'Play' })
+
+    // Play first environment and enable Combat mode
+    fireEvent.click(play1)
+    fireEvent.click(screen.getByRole('button', { name: /combat/i }))
+    expect(screen.getByRole('button', { name: /combat/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+
+    // Switch to second environment — it should start in normal mode
+    fireEvent.click(play2)
+    expect(screen.getByRole('button', { name: /combat/i })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+  })
+
   it('searches the legacy catalog and composes playable Sounds', async () => {
     vi.spyOn(globalThis, 'fetch')
       .mockResolvedValueOnce(

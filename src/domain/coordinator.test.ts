@@ -142,6 +142,150 @@ describe('playback coordinator', () => {
     expect(port.playLoop).not.toHaveBeenCalled()
   })
 
+  it('replaces ambiance music with combat music and adds combat one-shots when Combat mode is toggled on', () => {
+    const port = audio()
+    const clock = fakeClock()
+    const combatLoop: Sound = {
+      id: 'battle',
+      name: 'Battle',
+      kind: 'loop',
+      placement: 'combat',
+      volume: 0.5,
+      source: { urls: ['battle.mp3'] },
+    }
+    const combatOneShot: Sound = {
+      id: 'sword',
+      kind: 'one-shot',
+      placement: 'combat',
+      volume: 1,
+      variations: ['sword.mp3'],
+      minIntervalSeconds: 2,
+      maxIntervalSeconds: 2,
+    }
+    const scene = {
+      ...environment,
+      sounds: [loop, combatLoop, combatOneShot],
+    }
+    const coordinator = createPlaybackCoordinator({
+      audio: port,
+      clock,
+      random: { next: () => 0 },
+    })
+    coordinator.start(scene)
+
+    // Only ambiance loop started initially
+    expect(port.playLoop).toHaveBeenCalledWith(loop, 0.4, 2000)
+    expect(port.playLoop).not.toHaveBeenCalledWith(
+      combatLoop,
+      expect.anything(),
+      expect.anything(),
+    )
+
+    coordinator.toggleCombat(scene)
+
+    // Ambiance music fades out; combat music and one-shot start
+    expect(port.stop).toHaveBeenCalledWith('rain', 2000)
+    expect(port.playLoop).toHaveBeenCalledWith(combatLoop, 0.4, 2000)
+    clock.advance(2_000)
+    expect(port.playOneShot).toHaveBeenCalledWith(
+      combatOneShot,
+      'sword.mp3',
+      0.8,
+    )
+  })
+
+  it('restores ordinary music and stops combat sounds when Combat mode is toggled off', () => {
+    const port = audio()
+    const combatLoop: Sound = {
+      id: 'battle',
+      name: 'Battle',
+      kind: 'loop',
+      placement: 'combat',
+      volume: 0.5,
+      source: { urls: ['battle.mp3'] },
+    }
+    const scene = {
+      ...environment,
+      sounds: [loop, combatLoop],
+      combatMode: true,
+    }
+    const coordinator = createPlaybackCoordinator({
+      audio: port,
+      clock: fakeClock(),
+      random: { next: () => 0 },
+    })
+    coordinator.start(scene)
+
+    // Combat music started, not ambiance
+    expect(port.playLoop).not.toHaveBeenCalledWith(
+      loop,
+      expect.anything(),
+      expect.anything(),
+    )
+    expect(port.playLoop).toHaveBeenCalledWith(combatLoop, 0.4, 2000)
+
+    coordinator.toggleCombat(scene)
+
+    // Combat music fades; ambiance music restarts
+    expect(port.stop).toHaveBeenCalledWith('battle', 2000)
+    expect(port.playLoop).toHaveBeenCalledWith(loop, 0.4, 2000)
+  })
+
+  it('ignores toggleCombat when the environment is not active', () => {
+    const port = audio()
+    const coordinator = createPlaybackCoordinator({
+      audio: port,
+      clock: fakeClock(),
+      random: { next: () => 0 },
+    })
+    const other = { ...environment, id: 'tavern' }
+    coordinator.start(other)
+
+    coordinator.toggleCombat(environment)
+
+    expect(port.stop).not.toHaveBeenCalled()
+  })
+
+  it('preserves Combat state across Environment transitions', () => {
+    const port = audio()
+    const combatLoop: Sound = {
+      id: 'battle',
+      name: 'Battle',
+      kind: 'loop',
+      placement: 'combat',
+      volume: 0.5,
+      source: { urls: ['battle.mp3'] },
+    }
+    const scene = {
+      ...environment,
+      sounds: [loop, combatLoop],
+    }
+    const coordinator = createPlaybackCoordinator({
+      audio: port,
+      clock: fakeClock(),
+      random: { next: () => 0 },
+    })
+    coordinator.start(scene)
+    coordinator.toggleCombat(scene)
+
+    // Now in combat mode — the coordinator switches to combatLoop internally.
+    // Starting a different environment should not carry over combat state.
+    const tavern: typeof environment = {
+      ...environment,
+      id: 'tavern',
+      sounds: [{ ...loop, id: 'lute' }],
+      combatMode: false,
+    }
+    coordinator.start(tavern)
+
+    // Lute (ordinary ambiance) should be playing after transition
+    expect(port.playLoop).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'lute' }),
+      expect.anything(),
+      expect.anything(),
+    )
+  })
+
   it('fades and unloads sounds removed from a playing Environment', () => {
     const clock = fakeClock()
     const port = audio()
