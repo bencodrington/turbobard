@@ -367,6 +367,11 @@ describe('Environment workspace', () => {
         screen.getByRole('button', { name: 'mountain-sun' }),
       ).toBeVisible(),
     )
+    expect(
+      screen
+        .getByRole('button', { name: 'mountain-sun' })
+        .querySelector('.environment-icon'),
+    ).toBeVisible()
 
     fireEvent.change(screen.getByRole('textbox', { name: 'Search icons' }), {
       target: { value: 'flame' },
@@ -377,6 +382,16 @@ describe('Environment workspace', () => {
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'fire' }))
+    expect(
+      screen
+        .getByRole('button', { name: 'fire' })
+        .querySelector('.environment-icon'),
+    ).toHaveTextContent('🔥')
+    expect(
+      screen
+        .getByRole('button', { name: 'campfire' })
+        .querySelector('.environment-icon'),
+    ).toHaveTextContent('✦')
     expect(screen.getByRole('button', { name: 'fire' })).toHaveAttribute(
       'aria-pressed',
       'true',

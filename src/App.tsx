@@ -38,6 +38,37 @@ function newEnvironmentId(): string {
     : `environment-${Date.now()}`
 }
 
+const ICON_GLYPHS: Record<string, string> = {
+  'mountain-sun': '⛰️',
+  burst: '✴️',
+  bell: '🔔',
+  snowflake: '❄️',
+  fire: '🔥',
+  guitar: '🎸',
+  leaf: '🍃',
+  fish: '🐟',
+  'wand-sparkles': '🪄',
+  poo: '💩',
+  skull: '💀',
+  'hat-wizard': '🧙',
+  'cloud-bolt': '🌩️',
+  'chess-rook': '♜',
+  heart: '❤️',
+  'hill-rockslide': '🏔️',
+  drum: '🥁',
+  'hands-clapping': '👏',
+  campground: '⛺',
+  'sack-dollar': '💰',
+}
+
+function EnvironmentIcon({ iconId }: { iconId: string }) {
+  return (
+    <span className="environment-icon" data-icon={iconId} aria-hidden="true">
+      {ICON_GLYPHS[iconId] ?? '✦'}
+    </span>
+  )
+}
+
 export type AppProps = {
   soundCatalog?: SoundCatalog
   iconCatalog?: IconCatalog
@@ -391,9 +422,8 @@ export default function App({
                             DEFAULT_ENVIRONMENT_ICON_COLOR,
                         }}
                       >
-                        <i
-                          className={`fa-solid fa-fw fa-${environment.icon ?? DEFAULT_ENVIRONMENT_ICON}`}
-                          aria-hidden="true"
+                        <EnvironmentIcon
+                          iconId={environment.icon ?? DEFAULT_ENVIRONMENT_ICON}
                         />
                       </button>
                       <label
@@ -781,10 +811,7 @@ export default function App({
                             DEFAULT_ENVIRONMENT_ICON_COLOR,
                         }}
                       >
-                        <i
-                          className={`fa-solid fa-fw fa-${iconId}`}
-                          aria-hidden="true"
-                        />
+                        <EnvironmentIcon iconId={iconId} />
                         {isSelected && (
                           <span
                             className="icon-selected-badge"

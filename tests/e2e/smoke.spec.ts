@@ -386,6 +386,7 @@ test('searches, selects, and persists an Environment icon and color', async ({
     name: /select icon for new environment/i,
   })
   await iconTrigger.click()
+  await expect(iconTrigger.locator('.environment-icon')).toBeVisible()
 
   await expect(
     page.getByRole('heading', { name: 'Select an icon' }),
@@ -396,6 +397,12 @@ test('searches, selects, and persists an Environment icon and color', async ({
 
   const fireButton = page.getByRole('button', { name: 'fire', exact: true })
   await expect(fireButton).toBeVisible()
+  await expect(fireButton.locator('.environment-icon')).toBeVisible()
+  await expect(
+    page
+      .getByRole('button', { name: 'campfire', exact: true })
+      .locator('.environment-icon'),
+  ).toBeVisible()
   await fireButton.click()
   await expect(fireButton).toHaveAttribute('aria-pressed', 'true')
 
