@@ -3,6 +3,8 @@ import {
   createEnvironment,
   deleteEnvironment,
   renameEnvironment,
+  setEnvironmentIcon,
+  setEnvironmentIconColor,
   toggleEnvironmentExpanded,
 } from './environments'
 
@@ -33,5 +35,17 @@ describe('Environment management', () => {
         'forest',
       ),
     ).toEqual([createEnvironment('cave', 'Cave')])
+  })
+
+  it('updates environment icon and color without mutating existing properties', () => {
+    const environment = createEnvironment('forest', 'Forest')
+    const withIcon = setEnvironmentIcon(environment, 'fire')
+    const withColor = setEnvironmentIconColor(withIcon, '#F87C7C')
+
+    expect(withIcon.icon).toBe('fire')
+    expect(withIcon.iconColor).toBeNull()
+    expect(withColor.icon).toBe('fire')
+    expect(withColor.iconColor).toBe('#F87C7C')
+    expect(environment.icon).toBeNull()
   })
 })

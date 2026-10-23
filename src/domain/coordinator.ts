@@ -8,6 +8,14 @@ import {
   type Sound,
 } from './playback'
 
+export type OneShotState = {
+  soundId: string
+  nextFireAtMs: number
+  durationMs: number
+  remainingMs: number
+  fractionRemaining: number
+}
+
 export type PlaybackCoordinator = {
   start: (environment: Environment) => void
   sync: (environment: Environment) => void
@@ -16,6 +24,9 @@ export type PlaybackCoordinator = {
   setEnvironmentVolume: (environment: Environment) => void
   setSoundVolume: (sound: Sound, environmentVolume: number) => void
   playManualOneShot: (environment: Environment, sound: Sound) => void
+  oneShotState: (soundId: string) => OneShotState | undefined
+  scheduledOneShotCount: () => number
+  subscribe: (listener: () => void) => () => void
   activeEnvironmentId: () => string | undefined
   dispose: () => void
 }
@@ -35,6 +46,12 @@ export function createPlaybackCoordinator({
   let activeEnvironment: Environment | undefined
   const soundVolumes = new Map<string, number>()
   const timers = new Map<string, unknown>()
+  const oneShotSchedules = new Map<
+    string,
+    { nextFireAtMs: number; durationMs: number }
+  >()
+  const listeners = new Set<() => void>()
+  const notify = () => listeners.forEach((listener) => listener())
   const unsubscribe = audio.onError?.((soundId, error) =>
     onSoundError?.(soundId, error),
   )
@@ -45,13 +62,22 @@ export function createPlaybackCoordinator({
     timers.delete(soundId)
   }
 
+  const clearOneShotSchedule = (soundId: string) => {
+    clearTimer(soundId)
+    if (oneShotSchedules.delete(soundId)) notify()
+  }
+
   const clearUnloadTimer = (soundId: string) => {
     clearTimer(`unload:${soundId}`)
   }
 
   const scheduleOneShot = (environment: Environment, sound: Sound) => {
-    clearTimer(sound.id)
+    clearOneShotSchedule(sound.id)
     const delay = nextOneShotDelayMs(sound, random.next())
+    oneShotSchedules.set(sound.id, {
+      nextFireAtMs: clock.now() + delay,
+      durationMs: delay,
+    })
     const timer = clock.setTimeout(() => {
       if (activeId !== environment.id) return
       try {
@@ -70,10 +96,11 @@ export function createPlaybackCoordinator({
       scheduleOneShot(environment, sound)
     }, delay)
     timers.set(sound.id, timer)
+    notify()
   }
 
   const stopSound = (sound: Sound) => {
-    clearTimer(sound.id)
+    clearOneShotSchedule(sound.id)
     audio.stop(sound.id, FADE_MS)
     const unloadTimer = clock.setTimeout(() => audio.unload(sound.id), FADE_MS)
     timers.set(`unload:${sound.id}`, unloadTimer)
@@ -177,10 +204,38 @@ export function createPlaybackCoordinator({
         chooseVariation(sound, random.next()),
         environment.volume * sound.volume,
       )
+      if (
+        activeId === environment.id &&
+        oneShotSchedules.has(sound.id) &&
+        activeEnvironment?.sounds.some((item) => item.id === sound.id)
+      ) {
+        scheduleOneShot(environment, sound)
+      }
+    },
+    oneShotState(soundId) {
+      const schedule = oneShotSchedules.get(soundId)
+      if (!schedule) return undefined
+      const remainingMs = Math.max(0, schedule.nextFireAtMs - clock.now())
+      return {
+        soundId,
+        ...schedule,
+        remainingMs,
+        fractionRemaining:
+          schedule.durationMs === 0
+            ? 0
+            : Math.min(1, Math.max(0, remainingMs / schedule.durationMs)),
+      }
+    },
+    scheduledOneShotCount: () => oneShotSchedules.size,
+    subscribe(listener) {
+      listeners.add(listener)
+      return () => listeners.delete(listener)
     },
     activeEnvironmentId: () => activeId,
     dispose() {
       for (const soundId of timers.keys()) clearTimer(soundId)
+      oneShotSchedules.clear()
+      listeners.clear()
       unsubscribe?.()
     },
   }

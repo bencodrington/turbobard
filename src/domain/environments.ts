@@ -36,3 +36,17 @@ export function deleteEnvironment(
 ): Environment[] {
   return environments.filter((environment) => environment.id !== environmentId)
 }
+
+export function setEnvironmentIcon(
+  environment: Environment,
+  icon: string | null,
+): Environment {
+  return { ...environment, icon }
+}
+
+export function setEnvironmentIconColor(
+  environment: Environment,
+  iconColor: string | null,
+): Environment {
+  return { ...environment, iconColor }
+}
