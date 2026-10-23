@@ -1,9 +1,18 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
+import { catalogItems } from './demo/catalog'
 
 describe('Environment workspace', () => {
   beforeEach(() => localStorage.clear())
+
+  it('uses playable demo sources for catalog Sounds', () => {
+    expect(
+      catalogItems.every(
+        (item) => !item.source?.urls[0]?.includes('example.test'),
+      ),
+    ).toBe(true)
+  })
 
   it('lets a user create, rename, select, collapse, expand, and delete an Environment', () => {
     render(<App />)
