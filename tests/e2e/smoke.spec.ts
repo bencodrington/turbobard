@@ -119,6 +119,31 @@ test('fades Heavy Rain out when it is removed from a playing Environment', async
     .toBe(true)
 })
 
+test('does not let a stopped fade pause Heavy Rain after it starts again', async ({
+  page,
+}) => {
+  await stubCatalogAndAudio(page)
+  await addAndPlayHeavyRain(page)
+  const environment = page.getByRole('listitem')
+
+  await environment.getByRole('button', { name: 'Stop' }).click()
+  await environment.getByRole('button', { name: 'Play' }).click()
+  await page.waitForTimeout(2_100)
+
+  expect(
+    await page.evaluate(() =>
+      (
+        window as typeof window & {
+          __audioEvents: Array<{ type: string; source?: string }>
+        }
+      ).__audioEvents.some(
+        (event) =>
+          event.type === 'pause' && event.source?.endsWith('/heavy-rain.mp3'),
+      ),
+    ),
+  ).toBe(false)
+})
+
 test('fades Heavy Rain out when its playing Environment is deleted', async ({
   page,
 }) => {
