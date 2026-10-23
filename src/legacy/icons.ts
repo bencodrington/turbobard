@@ -38,7 +38,7 @@ export function createLegacyIconCatalog(): IconCatalog {
       }
 
       const searchApiResultCount = MAX_ICON_SEARCH_RESULT_COUNT * 5
-      const graphQLQuery = `query { search (version: "${FONT_AWESOME_VERSION}", query: "${trimmedQuery}", first:${searchApiResultCount} ) { id familyStylesByLicense { free { style } } } }`
+      const graphQLQuery = `query { search (version: "${FONT_AWESOME_VERSION}", query: ${JSON.stringify(trimmedQuery)}, first:${searchApiResultCount} ) { id familyStylesByLicense { free { style } } } }`
 
       const endpoint = envValue('VITE_ICON_API_URL') ?? DEFAULT_ICON_API_URL
 

@@ -88,11 +88,21 @@ export default function App({
   const editingEnvironment = environments.find(
     (item) => item.id === editingIconEnvId,
   )
+  const displayedIcons = useMemo(() => {
+    if (
+      editingEnvironment?.icon &&
+      !iconResults.includes(editingEnvironment.icon)
+    ) {
+      return [editingEnvironment.icon, ...iconResults]
+    }
+    return iconResults
+  }, [editingEnvironment?.icon, iconResults])
   const playback = useMemo(
     () =>
       createPlaybackCoordinator({
         audio: createBrowserAudioPort(),
         clock: {
+          now: () => performance.now(),
           setTimeout: (callback, delayMs) =>
             window.setTimeout(callback, delayMs),
           clearTimeout: (handle) => window.clearTimeout(handle as number),
@@ -103,6 +113,27 @@ export default function App({
       }),
     [],
   )
+  const [, setPlaybackRevision] = useState(0)
+  useEffect(() => {
+    let frame: number | undefined
+    let running = false
+    const refresh = () => {
+      running = false
+      setPlaybackRevision((revision) => revision + 1)
+      if (playback.scheduledOneShotCount() > 0) requestRefresh()
+    }
+    const requestRefresh = () => {
+      if (running) return
+      running = true
+      frame = window.requestAnimationFrame(refresh)
+    }
+    const unsubscribe = playback.subscribe(requestRefresh)
+    requestRefresh()
+    return () => {
+      unsubscribe()
+      if (frame !== undefined) window.cancelAnimationFrame(frame)
+    }
+  }, [playback])
   useEffect(() => () => playback.dispose(), [playback])
   useEffect(() => {
     let active = true
@@ -549,7 +580,31 @@ export default function App({
               ) : (
                 selectedEnvironment.sounds.map((sound) => (
                   <div className="sound-row" key={sound.id}>
-                    <span>{sound.name ?? sound.id}</span>
+                    <span className="sound-name">
+                      {sound.name ?? sound.id}
+                      {selectedEnvironment.playing &&
+                        sound.kind === 'one-shot' &&
+                        (() => {
+                          const state = playback.oneShotState(sound.id)
+                          if (!state) return null
+                          const seconds = state.remainingMs / 1_000
+                          const remainingLabel =
+                            seconds < 1
+                              ? '<1 second'
+                              : `${Math.ceil(seconds)} seconds`
+                          return (
+                            <span
+                              className="one-shot-wick"
+                              role="img"
+                              aria-label={`${sound.name ?? sound.id}: next sound in ${remainingLabel}`}
+                              title={`Next sound in ${remainingLabel}`}
+                              style={{
+                                background: `conic-gradient(#78e2ae ${state.fractionRemaining * 360}deg, #31466f 0deg)`,
+                              }}
+                            />
+                          )
+                        })()}
+                    </span>
                     <input
                       aria-label={`Volume for ${sound.name ?? sound.id}`}
                       type="range"
@@ -686,8 +741,8 @@ export default function App({
                 <p role="status">Loading icons…</p>
               ) : iconError ? (
                 <div role="alert" className="icon-error">
-                  Legacy icon catalog unavailable. Check your local API
-                  configuration and network access.{' '}
+                  Icon catalog unavailable. Check your local API configuration
+                  and network access.{' '}
                   <button
                     className="text-button"
                     onClick={() => setIconAttempt((attempt) => attempt + 1)}
@@ -695,7 +750,7 @@ export default function App({
                     Retry
                   </button>
                 </div>
-              ) : iconResults.length === 0 ? (
+              ) : displayedIcons.length === 0 ? (
                 <p className="empty-state">
                   {iconQuery.trim()
                     ? `No icons found for "${iconQuery}".`
@@ -707,7 +762,7 @@ export default function App({
                   role="group"
                   aria-label="Available icons"
                 >
-                  {iconResults.map((iconId) => {
+                  {displayedIcons.map((iconId) => {
                     const isSelected =
                       (editingEnvironment.icon ?? DEFAULT_ENVIRONMENT_ICON) ===
                       iconId

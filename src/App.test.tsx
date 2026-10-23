@@ -182,6 +182,50 @@ describe('Environment workspace', () => {
     expect(screen.getByRole('button', { name: 'Play' })).toBeVisible()
   })
 
+  it('shows a wick for a scheduled One-shot while its Environment is playing', () => {
+    localStorage.setItem(
+      'environments',
+      JSON.stringify({
+        version: 1,
+        environments: [
+          {
+            id: 'forest',
+            name: 'Forest',
+            sounds: [
+              {
+                id: 'owl',
+                name: 'Owl',
+                kind: 'one-shot',
+                placement: 'ambiance',
+                volume: 1,
+                variations: ['owl.mp3'],
+                minIntervalSeconds: 10,
+                maxIntervalSeconds: 10,
+              },
+            ],
+          },
+        ],
+      }),
+    )
+    vi.spyOn(window, 'Audio').mockImplementation(function MockAudio() {
+      return {
+        volume: 1,
+        play: vi.fn(() => Promise.resolve()),
+        pause: vi.fn(),
+        load: vi.fn(),
+        removeAttribute: vi.fn(),
+        addEventListener: vi.fn(),
+      } as unknown as HTMLAudioElement
+    } as unknown as typeof Audio)
+
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: 'Play' }))
+
+    expect(
+      screen.getByRole('img', { name: 'Owl: next sound in 10 seconds' }),
+    ).toBeVisible()
+  })
+
   it('shows the legacy catalog failure state', async () => {
     vi.spyOn(globalThis, 'fetch').mockRejectedValueOnce(new Error('offline'))
     render(<App />)
@@ -427,7 +471,7 @@ describe('Environment workspace', () => {
 
     await waitFor(() =>
       expect(screen.getByRole('alert')).toHaveTextContent(
-        /legacy icon catalog unavailable/i,
+        /icon catalog unavailable/i,
       ),
     )
     expect(screen.getByRole('button', { name: 'Stop' })).toBeVisible()

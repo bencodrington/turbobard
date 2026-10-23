@@ -101,6 +101,79 @@ describe('playback coordinator', () => {
     )
   })
 
+  it('exposes the coordinator-owned deadline and refreshes it after each firing', () => {
+    const clock = fakeClock()
+    const port = audio()
+    const sound: Sound = {
+      id: 'thunder',
+      kind: 'one-shot',
+      placement: 'ambiance',
+      volume: 1,
+      variations: ['thunder.mp3'],
+      minIntervalSeconds: 2,
+      maxIntervalSeconds: 4,
+    }
+    const coordinator = createPlaybackCoordinator({
+      audio: port,
+      clock,
+      random: { next: () => 0 },
+    })
+    const changes = vi.fn()
+    const scene = { ...environment, sounds: [sound] }
+    coordinator.subscribe(changes)
+
+    coordinator.start(scene)
+    expect(coordinator.oneShotState(sound.id)).toMatchObject({
+      nextFireAtMs: 2_000,
+      durationMs: 2_000,
+      remainingMs: 2_000,
+      fractionRemaining: 1,
+    })
+
+    clock.advance(500)
+    expect(coordinator.oneShotState(sound.id)).toMatchObject({
+      remainingMs: 1_500,
+      fractionRemaining: 0.75,
+    })
+
+    clock.advance(1_500)
+    expect(port.playOneShot).toHaveBeenCalledOnce()
+    expect(coordinator.oneShotState(sound.id)).toMatchObject({
+      nextFireAtMs: 4_000,
+      durationMs: 2_000,
+      remainingMs: 2_000,
+      fractionRemaining: 1,
+    })
+    expect(changes).toHaveBeenCalled()
+  })
+
+  it('removes a one-shot deadline when the schedule is cancelled', () => {
+    const clock = fakeClock()
+    const port = audio()
+    const sound: Sound = {
+      id: 'thunder',
+      kind: 'one-shot',
+      placement: 'ambiance',
+      volume: 1,
+      variations: ['thunder.mp3'],
+      minIntervalSeconds: 2,
+      maxIntervalSeconds: 2,
+    }
+    const coordinator = createPlaybackCoordinator({
+      audio: port,
+      clock,
+      random: { next: () => 0 },
+    })
+    const scene = { ...environment, sounds: [sound] }
+
+    coordinator.start(scene)
+    expect(coordinator.scheduledOneShotCount()).toBe(1)
+    coordinator.sync({ ...scene, sounds: [] })
+
+    expect(coordinator.oneShotState(sound.id)).toBeUndefined()
+    expect(coordinator.scheduledOneShotCount()).toBe(0)
+  })
+
   it('starts added active loops and schedules added one-shots without immediate playback', () => {
     const clock = fakeClock()
     const port = audio()

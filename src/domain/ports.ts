@@ -1,6 +1,7 @@
 import type { Environment, Sound } from './playback'
 
 export type Clock = {
+  now: () => number
   setTimeout: (callback: () => void, delayMs: number) => unknown
   clearTimeout: (handle: unknown) => void
 }
@@ -30,6 +31,7 @@ export function fakeClock(): Clock & { advance: (delayMs: number) => void } {
   let now = 0
   const timers: Array<{ at: number; callback: () => void }> = []
   return {
+    now: () => now,
     setTimeout(callback, delayMs) {
       timers.push({ at: now + delayMs, callback })
       return callback

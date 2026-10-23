@@ -87,4 +87,21 @@ describe('createLegacyIconCatalog', () => {
       /failed \(503\)|unavailable/i,
     )
   })
+
+  it('safely escapes special characters in queries', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ data: { search: [] } }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    const catalog = createLegacyIconCatalog()
+    await catalog.search('sword" \\')
+
+    expect(fetchSpy).toHaveBeenCalledOnce()
+    const [, requestInit] = fetchSpy.mock.calls[0]
+    const parsedBody = JSON.parse(requestInit?.body as string)
+    expect(parsedBody.query).toContain('query: "sword\\" \\\\"')
+  })
 })
