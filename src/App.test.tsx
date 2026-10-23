@@ -50,7 +50,7 @@ describe('Environment workspace', () => {
       within(editor).getByRole('heading', { name: 'Sounds in Environment' }),
     ).toBeVisible()
     expect(
-      within(screen.getByRole('region', { name: 'Sound catalog' })).queryByRole(
+      within(screen.getByRole('region', { name: 'Search' })).queryByRole(
         'heading',
         { name: 'Sounds in Environment' },
       ),
@@ -109,9 +109,9 @@ describe('Environment workspace', () => {
     render(<App />)
 
     expect(screen.getByDisplayValue('Forest')).toBeVisible()
-    expect(screen.getAllByRole('status')[0]).toHaveTextContent(
-      '1 Environment saved.',
-    )
+    expect(
+      screen.queryByText(/ready for the first listening session/i),
+    ).not.toBeInTheDocument()
   })
 
   it('does not construct audio while restoring Environments', () => {

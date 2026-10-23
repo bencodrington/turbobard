@@ -5,9 +5,10 @@ test('loads the Turbobard workspace', async ({ page }) => {
 
   await expect(page).toHaveTitle('Turbobard')
   await expect(page.getByRole('heading', { name: 'Turbobard' })).toBeVisible()
-  await expect(page.getByRole('status')).toContainText(
-    'Ready for the first listening session.',
-  )
+  await expect(
+    page.getByRole('heading', { name: 'Environments' }),
+  ).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Search' })).toBeVisible()
 })
 
 async function stubCatalogAndAudio(page: Page) {

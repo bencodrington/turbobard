@@ -372,7 +372,6 @@ export default function App({
       <section className="workspace" aria-labelledby="app-title">
         <header className="app-header">
           <div>
-            <p className="eyebrow">Cross-platform audio workspace</p>
             <h1 id="app-title">Turbobard</h1>
           </div>
           <button
@@ -384,18 +383,6 @@ export default function App({
             <span>About</span>
           </button>
         </header>
-        <div className="workspace-header">
-          <button className="primary-button" onClick={addEnvironment}>
-            Create Environment
-          </button>
-        </div>
-        <div className="status-card" role="status" aria-live="polite">
-          <span className="status-dot" aria-hidden="true" />
-          <span>
-            Ready for the first listening session. {environments.length}{' '}
-            {environments.length === 1 ? 'Environment' : 'Environments'} saved.
-          </span>
-        </div>
         {audioError && (
           <div role="alert" className="audio-error">
             {audioError}{' '}
@@ -421,6 +408,9 @@ export default function App({
                 onClick={() => setIsEditMode((value) => !value)}
               >
                 <i className="fa-solid fa-pencil" aria-hidden="true" />
+              </button>
+              <button className="primary-button" onClick={addEnvironment}>
+                Create Environment
               </button>
             </div>
             {environments.length === 0 ? (
@@ -739,19 +729,17 @@ export default function App({
               >
                 <i className="fa-solid fa-arrow-left" aria-hidden="true" /> Back
               </button>
-              <h2 id="catalog-heading">Sound catalog</h2>
-              <span>
-                {selectedEnvironment
-                  ? `Editing ${selectedEnvironment.name}`
-                  : 'Select an Environment'}
-              </span>
+              <h2 id="catalog-heading">Search</h2>
             </div>
-            <label htmlFor="catalog-search">Search Sounds</label>
+            <label className="sr-only" htmlFor="catalog-search">
+              Search
+            </label>
             <input
               id="catalog-search"
+              aria-label="Search Sounds"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search the catalog"
+              placeholder="Search"
             />
             <div
               className="catalog-filters"
@@ -762,7 +750,7 @@ export default function App({
                 (value) => (
                   <button
                     key={value}
-                    className="secondary-button"
+                    className={`secondary-button${filter === value ? ' active' : ''}`}
                     aria-pressed={filter === value}
                     onClick={() => setFilter(value)}
                   >
