@@ -11,7 +11,7 @@ Issues and specs for this repo live as GitHub issues. Use the `gh` CLI for all o
 - **Apply / remove labels**: `gh issue edit <number> --add-label "..."` / `--remove-label "..."`
 - **Close**: `gh issue close <number> --comment "..."`
 
-Infer the repo from `git remote -v`; `gh` does this automatically when run inside a clone. This repo currently has no configured Git remote, so add a GitHub remote before using these commands.
+Infer the repo from `git remote -v`; `gh` does this automatically when run inside a clone. If the remote is missing or points at the wrong repository, stop and resolve that before using issue commands.
 
 ## Pull requests as a triage surface
 
