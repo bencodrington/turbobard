@@ -6,6 +6,12 @@ export type Sound = {
   kind: SoundKind
   placement: Placement
   volume: number
+  index?: number
+  name?: string
+  source?: { author?: string; urls: string[] }
+  tags?: string[]
+  fileName?: string
+  muted?: boolean
   variations?: string[]
   minIntervalSeconds?: number
   maxIntervalSeconds?: number
@@ -19,6 +25,9 @@ export type Environment = {
   sounds: Sound[]
   playing: boolean
   combatMode: boolean
+  expanded: boolean
+  icon: string | null
+  iconColor: string | null
 }
 
 export type AudioCommand =
@@ -75,16 +84,17 @@ export function activeSounds(environment: Environment): Sound[] {
 }
 
 export function restoreEnvironment(
-  raw: Partial<Environment> & { combatTracks?: Sound[] },
+  raw: Partial<Environment>,
   createId: () => string = () => 'restored-environment',
 ): Environment {
   return {
     id: raw.id ?? createId(),
     name: raw.name ?? 'Untitled Environment',
     volume: raw.volume ?? 1,
-    sounds: [...(raw.sounds ?? []), ...(raw.combatTracks ?? [])].map(
-      (sound) => ({ ...sound, loaded: false }),
-    ),
+    expanded: raw.expanded ?? true,
+    icon: raw.icon ?? null,
+    iconColor: raw.iconColor ?? null,
+    sounds: (raw.sounds ?? []).map((sound) => ({ ...sound, loaded: false })),
     playing: false,
     combatMode: false,
   }
