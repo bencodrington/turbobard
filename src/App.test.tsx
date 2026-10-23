@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 
@@ -29,7 +29,7 @@ describe('Environment workspace', () => {
     expect(screen.getByText(/no environments yet/i)).toBeVisible()
   })
 
-  it('restores saved Environments without starting playback', () => {
+  it('restores saved Environments without starting playback', async () => {
     localStorage.setItem(
       'environments',
       JSON.stringify({
@@ -50,7 +50,9 @@ describe('Environment workspace', () => {
     render(<App />)
 
     expect(screen.getByDisplayValue('Forest')).toBeVisible()
-    expect(screen.getByRole('status')).toHaveTextContent('1 Environment saved.')
+    expect(screen.getAllByRole('status')[0]).toHaveTextContent(
+      '1 Environment saved.',
+    )
   })
 
   it('does not construct audio while restoring Environments', () => {
@@ -87,5 +89,30 @@ describe('Environment workspace', () => {
       version: 1,
       environments: [{ name: 'Persisted Scene' }],
     })
+  })
+
+  it('searches the catalog and composes Sounds with placement and removal', async () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search Sounds' }), {
+      target: { value: 'rain' },
+    })
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Add' })).toBeEnabled(),
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }))
+
+    expect(screen.getAllByText('Rainfall')[1]).toBeVisible()
+    fireEvent.change(
+      screen.getByRole('combobox', { name: 'Placement for Rainfall' }),
+      {
+        target: { value: 'combat' },
+      },
+    )
+    expect(
+      screen.getByRole('combobox', { name: 'Placement for Rainfall' }),
+    ).toHaveValue('combat')
+    fireEvent.click(screen.getByRole('button', { name: 'Remove' }))
+    expect(screen.getByText('No Sounds added yet.')).toBeVisible()
   })
 })
