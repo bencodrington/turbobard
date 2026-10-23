@@ -94,6 +94,93 @@ describe('Environment workspace', () => {
     })
   })
 
+  it('lets users adjust One-shot timing', () => {
+    localStorage.setItem(
+      'environments',
+      JSON.stringify({
+        version: 1,
+        environments: [
+          {
+            id: 'forest',
+            name: 'Forest',
+            sounds: [
+              {
+                id: 'owl',
+                name: 'Owl',
+                kind: 'one-shot',
+                placement: 'ambiance',
+                volume: 1,
+                variations: ['owl.mp3'],
+                minIntervalSeconds: 2,
+                maxIntervalSeconds: 6,
+              },
+            ],
+          },
+        ],
+      }),
+    )
+
+    render(<App />)
+
+    const minimum = screen.getByRole('spinbutton', {
+      name: 'Minimum interval for Owl',
+    })
+    const maximum = screen.getByRole('spinbutton', {
+      name: 'Maximum interval for Owl',
+    })
+    fireEvent.change(minimum, { target: { value: '3' } })
+    fireEvent.change(maximum, { target: { value: '8' } })
+
+    expect(minimum).toHaveValue(3)
+    expect(maximum).toHaveValue(8)
+    expect(JSON.parse(localStorage.getItem('environments')!)).toMatchObject({
+      environments: [
+        {
+          sounds: [{ minIntervalSeconds: 3, maxIntervalSeconds: 8 }],
+        },
+      ],
+    })
+  })
+
+  it('plays a One-shot immediately while its Environment is stopped', () => {
+    localStorage.setItem(
+      'environments',
+      JSON.stringify({
+        version: 1,
+        environments: [
+          {
+            id: 'forest',
+            name: 'Forest',
+            sounds: [
+              {
+                id: 'owl',
+                name: 'Owl',
+                kind: 'one-shot',
+                placement: 'ambiance',
+                volume: 1,
+                variations: ['owl.mp3'],
+              },
+            ],
+          },
+        ],
+      }),
+    )
+    const play = vi.fn(() => Promise.resolve())
+    vi.spyOn(window, 'Audio').mockImplementation(function MockAudio() {
+      return {
+        volume: 1,
+        play,
+        addEventListener: vi.fn(),
+      } as unknown as HTMLAudioElement
+    } as unknown as typeof Audio)
+
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: 'Play now' }))
+
+    expect(play).toHaveBeenCalledOnce()
+    expect(screen.getByRole('button', { name: 'Play' })).toBeVisible()
+  })
+
   it('shows the legacy catalog failure state', async () => {
     vi.spyOn(globalThis, 'fetch').mockRejectedValueOnce(new Error('offline'))
     render(<App />)

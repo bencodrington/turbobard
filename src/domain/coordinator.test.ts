@@ -183,4 +183,34 @@ describe('playback coordinator', () => {
     expect(port.playOneShot).not.toHaveBeenCalled()
     expect(port.stop).toHaveBeenCalledWith('thunder', 2000)
   })
+
+  it('restarts an active One-shot timer when its timing changes', () => {
+    const clock = fakeClock()
+    const port = audio()
+    const sound: Sound = {
+      id: 'thunder',
+      kind: 'one-shot',
+      placement: 'ambiance',
+      volume: 1,
+      variations: ['thunder.mp3'],
+      minIntervalSeconds: 2,
+      maxIntervalSeconds: 2,
+    }
+    const coordinator = createPlaybackCoordinator({
+      audio: port,
+      clock,
+      random: { next: () => 0 },
+    })
+    const scene = { ...environment, sounds: [sound] }
+    coordinator.start(scene)
+    coordinator.sync({
+      ...scene,
+      sounds: [{ ...sound, minIntervalSeconds: 5, maxIntervalSeconds: 5 }],
+    })
+
+    clock.advance(2_000)
+    expect(port.playOneShot).not.toHaveBeenCalled()
+    clock.advance(3_000)
+    expect(port.playOneShot).toHaveBeenCalledOnce()
+  })
 })

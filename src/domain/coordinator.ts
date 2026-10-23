@@ -132,6 +132,17 @@ export function createPlaybackCoordinator({
     for (const sound of nextSounds.values()) {
       if (!previousSounds.has(sound.id)) startSound(environment, sound)
     }
+    for (const sound of nextSounds.values()) {
+      const previousSound = previousSounds.get(sound.id)
+      if (
+        previousSound?.kind === 'one-shot' &&
+        sound.kind === 'one-shot' &&
+        (previousSound.minIntervalSeconds !== sound.minIntervalSeconds ||
+          previousSound.maxIntervalSeconds !== sound.maxIntervalSeconds)
+      ) {
+        scheduleOneShot(environment, sound)
+      }
+    }
     activeEnvironment = environment
   }
 

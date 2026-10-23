@@ -81,3 +81,18 @@ export function placeSound(
     sound.id === soundId ? { ...sound, placement } : sound,
   )
 }
+
+export function setSoundTiming(
+  sounds: Sound[],
+  soundId: string,
+  minIntervalSeconds: number,
+  maxIntervalSeconds: number,
+): Sound[] {
+  const minimum = Math.max(0, minIntervalSeconds)
+  const maximum = Math.max(minimum, maxIntervalSeconds)
+  return sounds.map((sound) =>
+    sound.id === soundId
+      ? { ...sound, minIntervalSeconds: minimum, maxIntervalSeconds: maximum }
+      : sound,
+  )
+}

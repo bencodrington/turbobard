@@ -98,4 +98,19 @@ describe('browser audio port', () => {
       vi.useRealTimers()
     }
   })
+
+  it('reports manual playback errors through the audio port listener', () => {
+    const createAudio = vi.fn(element)
+    const port = createBrowserAudioPort(createAudio)
+    const onError = vi.fn()
+    port.onError?.(onError)
+
+    port.playManualOneShot(sound, 'thunder-a.mp3')
+    const created = createAudio.mock.results[0]?.value as HTMLAudioElement
+    const errorListener = vi.mocked(created.addEventListener).mock
+      .calls[0]?.[1] as EventListener | undefined
+    errorListener?.(new Event('error'))
+
+    expect(onError).toHaveBeenCalledWith('thunder', null)
+  })
 })
