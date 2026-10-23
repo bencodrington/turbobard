@@ -71,7 +71,7 @@ async function stubCatalogAndAudio(page: Page) {
 async function addAndPlayHeavyRain(page: Page) {
   await page.goto('/')
   await page.getByRole('button', { name: 'Create Environment' }).click()
-  const environment = page.getByRole('listitem')
+  const environment = page.getByRole('region', { name: 'New Environment' })
   await page.getByRole('textbox', { name: 'Search Sounds' }).fill('rain')
   await page.getByRole('button', { name: 'Add' }).click()
   await expect(page.getByText('Heavy Rain').last()).toBeVisible()
@@ -152,7 +152,7 @@ test('plays a sound added to an already-playing Environment', async ({
   await stubCatalogAndAudio(page)
   await page.goto('/')
   await page.getByRole('button', { name: 'Create Environment' }).click()
-  const environment = page.getByRole('listitem')
+  const environment = page.getByRole('region', { name: 'New Environment' })
   await environment.getByRole('button', { name: 'Play' }).click()
   await page.getByRole('textbox', { name: 'Search Sounds' }).fill('rain')
   await page.getByRole('button', { name: 'Add' }).click()
@@ -258,7 +258,7 @@ test('toggling Combat mode fades ordinary music and starts combat music', async 
   await stubCatalogWithCombat(page)
   await page.goto('/')
   await page.getByRole('button', { name: 'Create Environment' }).click()
-  const environment = page.getByRole('listitem')
+  const environment = page.getByRole('region', { name: 'New Environment' })
 
   // Add Heavy Rain as ambiance (search by exact name so only one result shows)
   await page.getByRole('textbox', { name: 'Search Sounds' }).fill('heavy rain')

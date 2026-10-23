@@ -9,6 +9,43 @@ describe('Environment workspace', () => {
     vi.restoreAllMocks()
   })
 
+  it('uses tiles for normal playback and edit mode opens the Environment editor', () => {
+    render(<App />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+    fireEvent.change(
+      screen.getByRole('textbox', { name: 'Environment name' }),
+      { target: { value: 'Misty Moor' } },
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Close Environment' }))
+
+    expect(
+      screen.getByRole('button', { name: /play misty moor/i }),
+    ).toBeVisible()
+    expect(
+      screen.queryByRole('textbox', { name: 'Environment name' }),
+    ).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /edit environments/i }))
+    fireEvent.click(screen.getByRole('button', { name: /open misty moor/i }))
+
+    expect(
+      screen.getByRole('textbox', { name: 'Environment name' }),
+    ).toHaveValue('Misty Moor')
+  })
+
+  it('opens About as an overlay and closes it with Escape', () => {
+    render(<App />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'About' }))
+    expect(screen.getByRole('dialog', { name: 'About' })).toBeVisible()
+
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(
+      screen.queryByRole('dialog', { name: 'About' }),
+    ).not.toBeInTheDocument()
+  })
+
   it('lets a user create, rename, select, collapse, expand, and delete an Environment', () => {
     render(<App />)
 
@@ -17,11 +54,6 @@ describe('Environment workspace', () => {
     fireEvent.change(name, { target: { value: 'Ruined Keep' } })
 
     expect(screen.getByDisplayValue('Ruined Keep')).toBeVisible()
-    expect(screen.getByRole('button', { name: 'Selected' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    )
-
     fireEvent.click(screen.getByRole('button', { name: 'Collapse' }))
     expect(screen.getByRole('button', { name: 'Expand' })).toHaveAttribute(
       'aria-expanded',
@@ -291,18 +323,23 @@ describe('Environment workspace', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
     fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
 
-    const [play1, play2] = screen.getAllByRole('button', { name: 'Play' })
-
-    // Play first environment and enable Combat mode
-    fireEvent.click(play1)
+    // Open and play the first Environment, then enable Combat mode
+    fireEvent.click(screen.getByRole('button', { name: 'Edit environments' }))
+    fireEvent.click(
+      screen.getAllByRole('button', { name: 'Open New Environment' })[0],
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Play' }))
     fireEvent.click(screen.getByRole('button', { name: /combat/i }))
     expect(screen.getByRole('button', { name: /combat/i })).toHaveAttribute(
       'aria-pressed',
       'true',
     )
 
-    // Switch to second environment — it should start in normal mode
-    fireEvent.click(play2)
+    // Open and play the second Environment — it should start in normal mode
+    fireEvent.click(
+      screen.getAllByRole('button', { name: 'Open New Environment' })[1],
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Play' }))
     expect(screen.getByRole('button', { name: /combat/i })).toHaveAttribute(
       'aria-pressed',
       'false',
