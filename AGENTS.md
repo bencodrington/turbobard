@@ -11,3 +11,7 @@ Use the canonical labels `needs-triage`, `needs-info`, `ready-for-agent`, `ready
 ### Domain docs
 
 This is a single-context repo using root `GLOSSARY.md` and `docs/adr/`. See `docs/agents/domain.md`.
+
+### Implementing ticket work
+
+When using the `implement` skill with a ticket, start from `main` on a new branch named with the issue number followed by a short kebab-case description, such as `2-playback-contract`.
