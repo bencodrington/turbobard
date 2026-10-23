@@ -1,0 +1,52 @@
+import { describe, expect, it, vi } from 'vitest'
+import { createBrowserAudioPort } from './browser'
+import type { Sound } from '../domain/playback'
+
+function element() {
+  return {
+    preload: '',
+    loop: false,
+    volume: 1,
+    currentTime: 0,
+    src: '',
+    error: null,
+    addEventListener: vi.fn(),
+    load: vi.fn(),
+    play: vi.fn(() => Promise.resolve()),
+    pause: vi.fn(),
+    removeAttribute: vi.fn(),
+  } as unknown as HTMLAudioElement
+}
+
+const sound: Sound = {
+  id: 'thunder',
+  kind: 'one-shot',
+  placement: 'ambiance',
+  volume: 1,
+  source: { urls: ['thunder.mp3'] },
+  variations: ['thunder-a.mp3'],
+}
+
+describe('browser audio port', () => {
+  it('does not construct an audio element until a sound is loaded', () => {
+    const createAudio = vi.fn(element)
+    const port = createBrowserAudioPort(createAudio)
+
+    expect(createAudio).not.toHaveBeenCalled()
+    port.load(sound)
+
+    expect(createAudio).toHaveBeenCalledWith('thunder.mp3')
+  })
+
+  it('switches a one-shot element to the requested variation', () => {
+    const createAudio = vi.fn(element)
+    const port = createBrowserAudioPort(createAudio)
+
+    port.playOneShot(sound, 'thunder-a.mp3', 0.7)
+
+    const created = createAudio.mock.results[0]?.value as HTMLAudioElement
+    expect(created.src).toContain('thunder-a.mp3')
+    expect(created.volume).toBe(0.7)
+    expect(created.play).toHaveBeenCalled()
+  })
+})

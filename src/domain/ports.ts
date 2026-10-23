@@ -11,10 +11,14 @@ export type EnvironmentPersistence = {
 }
 export type SoundCatalog = { search: (query: string) => Promise<Sound[]> }
 export type AudioPort = {
-  playLoop: (environment: Environment, sound: Sound) => void
-  playManualOneShot: (sound: Sound, variation: string) => void
+  load: (sound: Sound) => void
+  playLoop: (sound: Sound, volume: number, fadeMs: number) => void
+  playOneShot: (sound: Sound, variation: string, volume: number) => void
+  playManualOneShot: (sound: Sound, variation: string, volume?: number) => void
+  setVolume: (soundId: string, volume: number) => void
   stop: (soundId: string, fadeMs: number) => void
   unload: (soundId: string) => void
+  onError?: (callback: (soundId: string, error: unknown) => void) => () => void
 }
 
 export function deterministicRandom(values: number[]): RandomSource {
