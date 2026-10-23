@@ -4,7 +4,7 @@ Attempt at better cross-platform audio behavior.
 
 ## Prerequisites
 
-- Node.js 24 LTS (see `.nvmrc`)
+- Node.js 26 (see `.nvmrc`)
 - npm 11 or newer
 
 ## Development
