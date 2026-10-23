@@ -11,6 +11,18 @@ test('loads the Turbobard workspace', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Search' })).toBeVisible()
 })
 
+test('creates an Environment without the Search panel intercepting the action', async ({
+  page,
+}) => {
+  await page.goto('/')
+
+  await page.getByRole('button', { name: 'Create Environment' }).click()
+
+  await expect(
+    page.getByRole('region', { name: 'New Environment' }),
+  ).toBeVisible()
+})
+
 async function stubCatalogAndAudio(page: Page) {
   await page.addInitScript(() => {
     const events: Array<{ type: string; source?: string }> = []
@@ -118,6 +130,31 @@ test('fades Heavy Rain out when it is removed from a playing Environment', async
       { timeout: 5_000 },
     )
     .toBe(true)
+})
+
+test('does not let a stopped fade pause Heavy Rain after it starts again', async ({
+  page,
+}) => {
+  await stubCatalogAndAudio(page)
+  await addAndPlayHeavyRain(page)
+  const environment = page.getByRole('region', { name: 'New Environment' })
+
+  await environment.getByRole('button', { name: 'Stop' }).click()
+  await environment.getByRole('button', { name: 'Play' }).click()
+  await page.waitForTimeout(2_100)
+
+  expect(
+    await page.evaluate(() =>
+      (
+        window as typeof window & {
+          __audioEvents: Array<{ type: string; source?: string }>
+        }
+      ).__audioEvents.some(
+        (event) =>
+          event.type === 'pause' && event.source?.endsWith('/heavy-rain.mp3'),
+      ),
+    ),
+  ).toBe(false)
 })
 
 test('fades Heavy Rain out when its playing Environment is deleted', async ({
@@ -362,16 +399,33 @@ test('searches, selects, and persists an Environment icon and color', async ({
     name: /select icon for new environment/i,
   })
   await iconTrigger.click()
+  await expect(iconTrigger.locator('.environment-icon')).toBeVisible()
 
   await expect(
     page.getByRole('heading', { name: 'Select an icon' }),
   ).toBeVisible()
+
+  const modal = page.getByRole('dialog')
+  const backdrop = page.locator('.modal-backdrop')
+  await modal.getByRole('heading', { name: 'Select an icon' }).click()
+  await expect(modal).toBeVisible()
+  await backdrop.click({ position: { x: 10, y: 10 } })
+  await expect(modal).toBeHidden()
+
+  await iconTrigger.click()
+  await expect(modal).toBeVisible()
 
   const iconSearch = page.getByRole('textbox', { name: 'Search icons' })
   await iconSearch.fill('fire')
 
   const fireButton = page.getByRole('button', { name: 'fire', exact: true })
   await expect(fireButton).toBeVisible()
+  await expect(fireButton.locator('.environment-icon')).toBeVisible()
+  await expect(
+    page
+      .getByRole('button', { name: 'campfire', exact: true })
+      .locator('.environment-icon'),
+  ).toBeVisible()
   await fireButton.click()
   await expect(fireButton).toHaveAttribute('aria-pressed', 'true')
 

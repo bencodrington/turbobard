@@ -38,6 +38,37 @@ function newEnvironmentId(): string {
     : `environment-${Date.now()}`
 }
 
+const ICON_GLYPHS: Record<string, string> = {
+  'mountain-sun': '⛰️',
+  burst: '✴️',
+  bell: '🔔',
+  snowflake: '❄️',
+  fire: '🔥',
+  guitar: '🎸',
+  leaf: '🍃',
+  fish: '🐟',
+  'wand-sparkles': '🪄',
+  poo: '💩',
+  skull: '💀',
+  'hat-wizard': '🧙',
+  'cloud-bolt': '🌩️',
+  'chess-rook': '♜',
+  heart: '❤️',
+  'hill-rockslide': '🏔️',
+  drum: '🥁',
+  'hands-clapping': '👏',
+  campground: '⛺',
+  'sack-dollar': '💰',
+}
+
+function EnvironmentIcon({ iconId }: { iconId: string }) {
+  return (
+    <span className="environment-icon" data-icon={iconId} aria-hidden="true">
+      {ICON_GLYPHS[iconId] ?? '✦'}
+    </span>
+  )
+}
+
 export type AppProps = {
   soundCatalog?: SoundCatalog
   iconCatalog?: IconCatalog
@@ -428,15 +459,18 @@ export default function App({
                       aria-label={`${isEditMode ? 'Open' : environment.playing ? 'Stop' : 'Play'} ${environment.name}`}
                       onClick={() => openEnvironment(environment)}
                     >
-                      <i
-                        className={`fa-solid fa-${environment.icon ?? DEFAULT_ENVIRONMENT_ICON}`}
+                      <span
+                        className="environment-tile-icon"
                         style={{
                           color:
                             environment.iconColor ??
                             DEFAULT_ENVIRONMENT_ICON_COLOR,
                         }}
-                        aria-hidden="true"
-                      />
+                      >
+                        <EnvironmentIcon
+                          iconId={environment.icon ?? DEFAULT_ENVIRONMENT_ICON}
+                        />
+                      </span>
                       <span>{environment.name}</span>
                       {environment.playing && (
                         <span className="tile-playing" aria-label="Playing">
@@ -502,9 +536,10 @@ export default function App({
                         DEFAULT_ENVIRONMENT_ICON_COLOR,
                     }}
                   >
-                    <i
-                      className={`fa-solid fa-fw fa-${selectedEnvironment.icon ?? DEFAULT_ENVIRONMENT_ICON}`}
-                      aria-hidden="true"
+                    <EnvironmentIcon
+                      iconId={
+                        selectedEnvironment.icon ?? DEFAULT_ENVIRONMENT_ICON
+                      }
                     />
                   </button>
                   <label
@@ -874,11 +909,17 @@ export default function App({
       {editingEnvironment && (
         <div
           className="modal-backdrop"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="icon-modal-title"
+          role="presentation"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setEditingIconEnvId(null)
+          }}
         >
-          <div className="modal-card">
+          <div
+            className="modal-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="icon-modal-title"
+          >
             <div className="modal-header">
               <div>
                 <h2 id="icon-modal-title">Select an icon</h2>
@@ -944,10 +985,7 @@ export default function App({
                             DEFAULT_ENVIRONMENT_ICON_COLOR,
                         }}
                       >
-                        <i
-                          className={`fa-solid fa-fw fa-${iconId}`}
-                          aria-hidden="true"
-                        />
+                        <EnvironmentIcon iconId={iconId} />
                         {isSelected && (
                           <span
                             className="icon-selected-badge"

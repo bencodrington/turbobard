@@ -1,7 +1,10 @@
 import type { AudioPort } from '../domain/ports'
 import type { Sound } from '../domain/playback'
 
-type AudioElement = HTMLAudioElement & { __fadeTimer?: number }
+type AudioElement = HTMLAudioElement & {
+  __fadeTimer?: number
+  __stopTimer?: number
+}
 
 function sourceFor(
   sound: Sound,
@@ -80,10 +83,15 @@ export function createBrowserAudioPort(
     }
     element.__fadeTimer = requestAnimationFrame(tick)
   }
+  const cancelStop = (element: AudioElement) => {
+    if (element.__stopTimer) window.clearTimeout(element.__stopTimer)
+    element.__stopTimer = undefined
+  }
   return {
     load: (sound) => void elementFor(sound).load(),
     playLoop(sound, volume, fadeMs) {
       const element = elementFor(sound)
+      cancelStop(element)
       element.loop = true
       element.volume = 0
       void element
@@ -95,6 +103,7 @@ export function createBrowserAudioPort(
     },
     playOneShot(sound, variation, volume) {
       const element = elementFor(sound, variation)
+      cancelStop(element)
       element.loop = false
       element.volume = clampVolume(volume)
       element.currentTime = 0
@@ -122,12 +131,17 @@ export function createBrowserAudioPort(
     },
     stop(soundId, fadeMs) {
       for (const [, element] of elementsForSound(soundId)) {
+        cancelStop(element)
         fade(element, 0, fadeMs)
-        window.setTimeout(() => element.pause(), fadeMs)
+        element.__stopTimer = window.setTimeout(() => {
+          element.__stopTimer = undefined
+          element.pause()
+        }, fadeMs)
       }
     },
     unload(soundId) {
       for (const [key, element] of elementsForSound(soundId)) {
+        cancelStop(element)
         if (element.__fadeTimer) cancelAnimationFrame(element.__fadeTimer)
         element.pause()
         element.removeAttribute('src')

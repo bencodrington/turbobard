@@ -118,6 +118,26 @@ describe('browser audio port', () => {
     }
   })
 
+  it('cancels a pending stop when a sound starts again during its fade', () => {
+    vi.useFakeTimers()
+    try {
+      const createAudio = vi.fn(element)
+      const port = createBrowserAudioPort(createAudio)
+
+      port.playLoop(sound, 0.7, 0)
+      const created = createAudio.mock.results[0]?.value as HTMLAudioElement
+
+      port.stop(sound.id, 2000)
+      port.playLoop(sound, 0.7, 2000)
+      vi.advanceTimersByTime(2000)
+
+      expect(created.pause).not.toHaveBeenCalled()
+      expect(created.play).toHaveBeenCalledTimes(2)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('reports manual playback errors through the audio port listener', () => {
     const createAudio = vi.fn(element)
     const port = createBrowserAudioPort(createAudio)

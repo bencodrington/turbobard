@@ -199,6 +199,14 @@ select {
   justify-content: space-between;
 }
 
+.environment-panel .section-heading {
+  flex-wrap: wrap;
+}
+
+.environment-panel .section-heading .primary-button {
+  flex: 1 0 100%;
+}
+
 .section-heading h2 {
   margin: 0;
 }
@@ -326,6 +334,15 @@ select {
     background-color 0.15s;
 }
 
+.environment-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+  font-size: 1.35em;
+}
+
 .icon-trigger-button:hover,
 .icon-trigger-button:focus-visible {
   border-color: #78e2ae;
@@ -416,6 +433,10 @@ select {
   transition:
     border-color 0.15s,
     background-color 0.15s;
+}
+
+.icon-option-button .environment-icon {
+  font-size: 1.5rem;
 }
 
 .icon-option-button:hover,
@@ -585,7 +606,7 @@ select {
   transform: translateY(1px);
 }
 
-.environment-tile > i {
+.environment-tile > .environment-tile-icon {
   font-size: 2.5rem;
 }
 

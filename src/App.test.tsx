@@ -427,6 +427,11 @@ describe('Environment workspace', () => {
         screen.getByRole('button', { name: 'mountain-sun' }),
       ).toBeVisible(),
     )
+    expect(
+      screen
+        .getByRole('button', { name: 'mountain-sun' })
+        .querySelector('.environment-icon'),
+    ).toBeVisible()
 
     fireEvent.change(screen.getByRole('textbox', { name: 'Search icons' }), {
       target: { value: 'flame' },
@@ -437,6 +442,16 @@ describe('Environment workspace', () => {
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'fire' }))
+    expect(
+      screen
+        .getByRole('button', { name: 'fire' })
+        .querySelector('.environment-icon'),
+    ).toHaveTextContent('🔥')
+    expect(
+      screen
+        .getByRole('button', { name: 'campfire' })
+        .querySelector('.environment-icon'),
+    ).toHaveTextContent('✦')
     expect(screen.getByRole('button', { name: 'fire' })).toHaveAttribute(
       'aria-pressed',
       'true',
@@ -468,6 +483,25 @@ describe('Environment workspace', () => {
     expect(JSON.parse(localStorage.getItem('environments')!)).toMatchObject({
       environments: [{ icon: 'fire', iconColor: '#F87C7C' }],
     })
+  })
+
+  it('closes the icon modal from the backdrop without closing when its card is clicked', async () => {
+    render(<App />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+    fireEvent.click(
+      screen.getByRole('button', { name: /select icon for new environment/i }),
+    )
+
+    const modal = screen.getByRole('dialog')
+    const backdrop = modal.parentElement
+    expect(backdrop).not.toBeNull()
+
+    fireEvent.click(modal)
+    expect(screen.getByRole('dialog')).toBeVisible()
+
+    fireEvent.click(backdrop!)
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   it('handles icon catalog loading, empty, and provider failure with retry without affecting playback', async () => {
