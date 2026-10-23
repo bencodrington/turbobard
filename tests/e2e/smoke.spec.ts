@@ -267,7 +267,9 @@ test('toggling Combat mode fades ordinary music and starts combat music', async 
   await expect(page.getByText('Heavy Rain').last()).toBeVisible()
 
   // Add Battle Drums and set it to combat placement
-  await page.getByRole('textbox', { name: 'Search Sounds' }).fill('battle drums')
+  await page
+    .getByRole('textbox', { name: 'Search Sounds' })
+    .fill('battle drums')
   await expect(page.getByRole('button', { name: 'Add' }).first()).toBeEnabled()
   await page.getByRole('button', { name: 'Add' }).first().click()
   await expect(page.getByText('Battle Drums').last()).toBeVisible()
@@ -317,8 +319,7 @@ test('toggling Combat mode fades ordinary music and starts combat music', async 
           (
             window as typeof window & { __audioEvents: Array<AudioEvent> }
           ).__audioEvents.some(
-            (e) =>
-              e.type === 'play' && e.source?.endsWith('/battle-drums.mp3'),
+            (e) => e.type === 'play' && e.source?.endsWith('/battle-drums.mp3'),
           ),
         ),
       { timeout: 5_000 },

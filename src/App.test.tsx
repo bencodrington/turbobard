@@ -205,9 +205,7 @@ describe('Environment workspace', () => {
     ).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Play' }))
-    expect(
-      screen.getByRole('button', { name: /combat/i }),
-    ).toBeVisible()
+    expect(screen.getByRole('button', { name: /combat/i })).toBeVisible()
 
     fireEvent.click(screen.getByRole('button', { name: 'Stop' }))
     expect(

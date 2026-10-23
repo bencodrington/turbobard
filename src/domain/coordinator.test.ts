@@ -175,7 +175,11 @@ describe('playback coordinator', () => {
 
     // Only ambiance loop started initially
     expect(port.playLoop).toHaveBeenCalledWith(loop, 0.4, 2000)
-    expect(port.playLoop).not.toHaveBeenCalledWith(combatLoop, expect.anything(), expect.anything())
+    expect(port.playLoop).not.toHaveBeenCalledWith(
+      combatLoop,
+      expect.anything(),
+      expect.anything(),
+    )
 
     coordinator.toggleCombat(scene)
 
@@ -183,7 +187,11 @@ describe('playback coordinator', () => {
     expect(port.stop).toHaveBeenCalledWith('rain', 2000)
     expect(port.playLoop).toHaveBeenCalledWith(combatLoop, 0.4, 2000)
     clock.advance(2_000)
-    expect(port.playOneShot).toHaveBeenCalledWith(combatOneShot, 'sword.mp3', 0.8)
+    expect(port.playOneShot).toHaveBeenCalledWith(
+      combatOneShot,
+      'sword.mp3',
+      0.8,
+    )
   })
 
   it('restores ordinary music and stops combat sounds when Combat mode is toggled off', () => {
@@ -209,7 +217,11 @@ describe('playback coordinator', () => {
     coordinator.start(scene)
 
     // Combat music started, not ambiance
-    expect(port.playLoop).not.toHaveBeenCalledWith(loop, expect.anything(), expect.anything())
+    expect(port.playLoop).not.toHaveBeenCalledWith(
+      loop,
+      expect.anything(),
+      expect.anything(),
+    )
     expect(port.playLoop).toHaveBeenCalledWith(combatLoop, 0.4, 2000)
 
     coordinator.toggleCombat(scene)
