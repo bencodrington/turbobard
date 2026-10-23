@@ -2,7 +2,13 @@ name: Verify
 
 on:
   push:
+    branches:
+      - main
   pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -18,10 +24,21 @@ jobs:
           node-version-file: '.nvmrc'
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps
-      - run: npm run verify
+      - name: Install Playwright browsers for pull requests
+        if: github.event_name == 'pull_request'
+        run: npx playwright install --with-deps chromium
+      - name: Install Playwright browsers for pushes
+        if: github.event_name == 'push'
+        run: npx playwright install --with-deps
+      - run: npm run verify:static
+      - name: Run Chromium E2E tests for pull requests
+        if: github.event_name == 'pull_request'
+        run: npm run test:e2e:chromium
+      - name: Run full browser E2E matrix for pushes
+        if: github.event_name == 'push'
+        run: npm run test:e2e
       - name: Upload Playwright artifacts
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
