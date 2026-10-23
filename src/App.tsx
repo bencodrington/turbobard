@@ -17,7 +17,7 @@ import {
 } from './domain/catalog'
 import { createPlaybackCoordinator } from './domain/coordinator'
 import { createBrowserAudioPort } from './audio/browser'
-import { demoSoundCatalog } from './demo/catalog'
+import { createLegacySoundCatalog } from './legacy/catalog'
 
 function newEnvironmentId(): string {
   return typeof crypto.randomUUID === 'function'
@@ -43,6 +43,7 @@ export default function App() {
   const [results, setResults] = useState<CatalogItem[]>([])
   const [catalogAttempt, setCatalogAttempt] = useState(0)
   const [audioError, setAudioError] = useState<string | undefined>()
+  const catalog = useMemo(() => createLegacySoundCatalog(), [])
   const selectedEnvironment = environments.find(
     (item) => item.id === selectedId,
   )
@@ -66,7 +67,7 @@ export default function App() {
     let active = true
     setCatalogLoading(true)
     setCatalogError(false)
-    demoSoundCatalog
+    catalog
       .search(query, filter)
       .then((next) => active && setResults(next))
       .catch(() => active && setCatalogError(true))
@@ -74,7 +75,7 @@ export default function App() {
     return () => {
       active = false
     }
-  }, [catalogAttempt, filter, query])
+  }, [catalog, catalogAttempt, filter, query])
 
   const updateEnvironments = (next: Environment[]) => {
     setEnvironments(next)
@@ -355,7 +356,8 @@ export default function App() {
             <p role="status">Loading Sounds…</p>
           ) : catalogError ? (
             <div role="alert">
-              Catalog unavailable.{' '}
+              Legacy sound catalog unavailable. Check your local API
+              configuration and network access.{' '}
               <button
                 className="text-button"
                 onClick={() => setCatalogAttempt((attempt) => attempt + 1)}

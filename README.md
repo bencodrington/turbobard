@@ -17,6 +17,12 @@ npm ci
 npm run dev
 ```
 
+The app searches the legacy Firebase API and streams its real music/SFX files.
+Copy `.env.example` to `.env.local` when overriding the default endpoints. Do
+not put credentials or private tokens in `VITE_*` variables: Vite exposes those
+values to the browser. If the legacy service later requires authentication, add
+a server-side proxy rather than committing or exposing a secret.
+
 ## Verification
 
 ```sh

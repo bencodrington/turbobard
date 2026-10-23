@@ -9,6 +9,8 @@ export type CatalogItem = {
   source?: { author?: string; urls: string[] }
   tags?: string[]
   variations?: string[]
+  minIntervalSeconds?: number
+  maxIntervalSeconds?: number
   packId?: string
   packName?: string
 }
@@ -48,6 +50,8 @@ export function addCatalogItem(
       source: item.source,
       tags: item.tags,
       variations: item.variations,
+      minIntervalSeconds: item.minIntervalSeconds,
+      maxIntervalSeconds: item.maxIntervalSeconds,
       loaded: false,
     },
   ]

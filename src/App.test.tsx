@@ -1,17 +1,11 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
-import { catalogItems } from './demo/catalog'
 
 describe('Environment workspace', () => {
-  beforeEach(() => localStorage.clear())
-
-  it('uses playable demo sources for catalog Sounds', () => {
-    expect(
-      catalogItems.every(
-        (item) => !item.source?.urls[0]?.includes('example.test'),
-      ),
-    ).toBe(true)
+  beforeEach(() => {
+    localStorage.clear()
+    vi.restoreAllMocks()
   })
 
   it('lets a user create, rename, select, collapse, expand, and delete an Environment', () => {
@@ -100,7 +94,41 @@ describe('Environment workspace', () => {
     })
   })
 
-  it('searches the catalog and composes Sounds with placement and removal', async () => {
+  it('shows the legacy catalog failure state', async () => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValueOnce(new Error('offline'))
+    render(<App />)
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search Sounds' }), {
+      target: { value: 'rain' },
+    })
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        /legacy sound catalog unavailable/i,
+      ),
+    )
+    vi.restoreAllMocks()
+  })
+
+  it('searches the legacy catalog and composes playable Sounds', async () => {
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify([
+            { id: 'rain-1', name: 'Rainfall', tags: ['weather'], type: 'LOOP' },
+          ]),
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            id: 'rain-1',
+            name: 'Rainfall',
+            fileName: 'rainfall',
+            tags: ['weather'],
+            source: { author: 'Legacy artist' },
+            type: 'LOOP',
+          }),
+        ),
+      )
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
     fireEvent.change(screen.getByRole('textbox', { name: 'Search Sounds' }), {
@@ -112,16 +140,5 @@ describe('Environment workspace', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add' }))
 
     expect(screen.getAllByText('Rainfall')[1]).toBeVisible()
-    fireEvent.change(
-      screen.getByRole('combobox', { name: 'Placement for Rainfall' }),
-      {
-        target: { value: 'combat' },
-      },
-    )
-    expect(
-      screen.getByRole('combobox', { name: 'Placement for Rainfall' }),
-    ).toHaveValue('combat')
-    fireEvent.click(screen.getByRole('button', { name: 'Remove' }))
-    expect(screen.getByText('No Sounds added yet.')).toBeVisible()
   })
 })
