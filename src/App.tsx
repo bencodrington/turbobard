@@ -31,6 +31,7 @@ import { createBrowserAudioPort } from './audio/browser'
 import { createLegacySoundCatalog } from './legacy/catalog'
 import { createLegacyIconCatalog } from './legacy/icons'
 import type { EnvironmentPersistence } from './domain/ports'
+import { FontAwesomeIconView } from './ui/icons'
 
 function newEnvironmentId(): string {
   return typeof crypto.randomUUID === 'function'
@@ -38,35 +39,8 @@ function newEnvironmentId(): string {
     : `environment-${Date.now()}`
 }
 
-const ICON_GLYPHS: Record<string, string> = {
-  'mountain-sun': '⛰️',
-  burst: '✴️',
-  bell: '🔔',
-  snowflake: '❄️',
-  fire: '🔥',
-  guitar: '🎸',
-  leaf: '🍃',
-  fish: '🐟',
-  'wand-sparkles': '🪄',
-  poo: '💩',
-  skull: '💀',
-  'hat-wizard': '🧙',
-  'cloud-bolt': '🌩️',
-  'chess-rook': '♜',
-  heart: '❤️',
-  'hill-rockslide': '🏔️',
-  drum: '🥁',
-  'hands-clapping': '👏',
-  campground: '⛺',
-  'sack-dollar': '💰',
-}
-
 function EnvironmentIcon({ iconId }: { iconId: string }) {
-  return (
-    <span className="environment-icon" data-icon={iconId} aria-hidden="true">
-      {ICON_GLYPHS[iconId] ?? '✦'}
-    </span>
-  )
+  return <FontAwesomeIconView iconId={iconId} className="environment-icon" />
 }
 
 export type AppProps = {
@@ -410,7 +384,7 @@ export default function App({
             aria-label="About"
             onClick={() => setIsAboutOpen(true)}
           >
-            <i className="fa-solid fa-circle-info" aria-hidden="true" />
+            <FontAwesomeIconView iconId="circle-info" />
             <span>About</span>
           </button>
         </header>
@@ -438,7 +412,7 @@ export default function App({
                 aria-pressed={isEditMode}
                 onClick={() => setIsEditMode((value) => !value)}
               >
-                <i className="fa-solid fa-pencil" aria-hidden="true" />
+                <FontAwesomeIconView iconId="pencil" />
               </button>
               <button className="primary-button" onClick={addEnvironment}>
                 Create Environment
@@ -474,10 +448,7 @@ export default function App({
                       <span>{environment.name}</span>
                       {environment.playing && (
                         <span className="tile-playing" aria-label="Playing">
-                          <i
-                            className="fa-solid fa-volume-high"
-                            aria-hidden="true"
-                          />
+                          <FontAwesomeIconView iconId="volume-high" />
                         </span>
                       )}
                     </button>
@@ -499,11 +470,7 @@ export default function App({
                 className="secondary-button mobile-search-button"
                 onClick={() => setIsSearchOpen(true)}
               >
-                <i
-                  className="fa-solid fa-magnifying-glass"
-                  aria-hidden="true"
-                />{' '}
-                Search Sounds
+                <FontAwesomeIconView iconId="magnifying-glass" /> Search Sounds
               </button>
               <div className="environment-card selected">
                 <div className="environment-card-header">
@@ -512,8 +479,7 @@ export default function App({
                     aria-label="Close Environment"
                     onClick={() => setIsEditorOpen(false)}
                   >
-                    <i className="fa-solid fa-arrow-left" aria-hidden="true" />{' '}
-                    Back
+                    <FontAwesomeIconView iconId="arrow-left" /> Back
                   </button>
                   <button
                     className="icon-trigger-button"
@@ -762,7 +728,7 @@ export default function App({
                 aria-label="Close search"
                 onClick={() => setIsSearchOpen(false)}
               >
-                <i className="fa-solid fa-arrow-left" aria-hidden="true" /> Back
+                <FontAwesomeIconView iconId="arrow-left" /> Back
               </button>
               <h2 id="catalog-heading">Search</h2>
             </div>
