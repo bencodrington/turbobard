@@ -52,6 +52,26 @@ describe('playback coordinator', () => {
     expect(port.playLoop).toHaveBeenCalledWith(loop, 0.4, 2000)
   })
 
+  it('isolates a sound that fails during startup and continues with the rest', () => {
+    const failingLoop = { ...loop, id: 'broken' }
+    const port = audio()
+    port.load.mockImplementation((sound) => {
+      if (sound.id === 'broken') throw new Error('codec unavailable')
+    })
+    const onSoundError = vi.fn()
+    const coordinator = createPlaybackCoordinator({
+      audio: port,
+      clock: fakeClock(),
+      random: { next: () => 0 },
+      onSoundError,
+    })
+
+    coordinator.start({ ...environment, sounds: [failingLoop, loop] })
+
+    expect(onSoundError).toHaveBeenCalledWith('broken', expect.any(Error))
+    expect(port.playLoop).toHaveBeenCalledWith(loop, 0.4, 2000)
+  })
+
   it('stops loops with a two-second fade and unloads them', () => {
     const port = audio()
     const clock = fakeClock()

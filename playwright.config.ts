@@ -46,6 +46,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
+      grepInvert: /@mobile/,
       use: {
         ...devices['Desktop Chrome'],
         launchOptions: chromiumExecutablePath
@@ -53,8 +54,26 @@ export default defineConfig({
           : undefined,
       },
     },
-    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+    {
+      name: 'firefox',
+      grepInvert: /@mobile/,
+      use: { ...devices['Desktop Firefox'] },
+    },
+    {
+      name: 'webkit',
+      grepInvert: /@mobile/,
+      use: { ...devices['Desktop Safari'] },
+    },
+    {
+      name: 'chromium-mobile',
+      grep: /@mobile/,
+      use: { ...devices['Pixel 5'] },
+    },
+    {
+      name: 'webkit-mobile',
+      grep: /@mobile/,
+      use: { ...devices['iPhone 13'] },
+    },
   ],
   webServer: {
     command: `npm run preview -- --host 127.0.0.1 --port ${e2ePort} --strictPort`,

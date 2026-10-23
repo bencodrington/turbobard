@@ -21,7 +21,7 @@ body {
   min-height: 100vh;
   place-items: center;
   padding: 2rem;
-  background: radial-gradient(circle at top, #25365f, #0d1321 58%);
+  background: #0d1321;
 }
 
 .workspace {
@@ -77,6 +77,12 @@ h1 {
   cursor: pointer;
   font: inherit;
   font-weight: 700;
+}
+
+button,
+input,
+select {
+  touch-action: manipulation;
 }
 
 .primary-button {
@@ -193,6 +199,14 @@ h1 {
   justify-content: space-between;
 }
 
+.environment-panel .section-heading {
+  flex-wrap: wrap;
+}
+
+.environment-panel .section-heading .primary-button {
+  flex: 1 0 100%;
+}
+
 .section-heading h2 {
   margin: 0;
 }
@@ -265,6 +279,33 @@ h1 {
 
   .primary-button {
     width: 100%;
+  }
+
+  .environment-card-header,
+  .environment-actions,
+  .sound-row {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  .environment-card-header > input {
+    flex-basis: calc(100% - 3.25rem);
+  }
+
+  .environment-card-header > button,
+  .environment-actions > button,
+  .sound-row > button,
+  .sound-row > select {
+    min-height: 2.75rem;
+  }
+
+  .sound-row > input[type='range'] {
+    min-width: min(100%, 12rem);
+    flex: 1 1 10rem;
+  }
+
+  .sound-row > label {
+    flex: 1 1 12rem;
   }
 }
 
@@ -459,4 +500,275 @@ h1 {
   border-radius: 0.45rem;
   background: #3d1b1b;
   color: #ffb4b4;
+}
+
+/* Layout shell: the environment grid is the primary navigation surface. */
+.app-shell {
+  display: block;
+  min-height: 100vh;
+  padding: 0;
+  background: #0d1321;
+}
+
+.workspace {
+  width: min(100%, 96rem);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.app-header,
+.workspace-header,
+.editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.app-header {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #34476e;
+}
+
+.app-header h1 {
+  font-size: 2rem;
+  letter-spacing: -0.04em;
+}
+
+.header-button,
+.icon-only-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.workspace-header {
+  justify-content: flex-end;
+  padding: 1rem 0;
+}
+
+.workspace-body {
+  display: grid;
+  grid-template-columns: minmax(12rem, 18rem) minmax(0, 1fr) minmax(
+      16rem,
+      22rem
+    );
+  align-items: start;
+  gap: 1rem;
+}
+
+.environment-panel,
+.environment-editor,
+.catalog-panel {
+  min-width: 0;
+  margin-top: 0;
+  height: fit-content;
+}
+
+.environment-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.environment-tile {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 8rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  border: 1px solid #34476e;
+  border-radius: 0.75rem;
+  color: #eef2ff;
+  background: #1a2847;
+  cursor: pointer;
+  font: inherit;
+  text-align: center;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s,
+    transform 0.15s;
+}
+
+.environment-tile:hover,
+.environment-tile:focus-visible,
+.environment-tile.selected {
+  border-color: #78e2ae;
+  background: #23375e;
+}
+
+.environment-tile:active {
+  transform: translateY(1px);
+}
+
+.environment-tile > .environment-tile-icon {
+  font-size: 2.5rem;
+}
+
+.environment-tile > span:not(.tile-playing) {
+  overflow: hidden;
+  max-width: 100%;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.environment-tile.playing {
+  box-shadow: inset 0 0 0 2px #78e2ae55;
+}
+
+.tile-playing {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  color: #78e2ae;
+  font-size: 0.8rem;
+}
+
+.icon-only-button {
+  width: 2.4rem;
+  height: 2.4rem;
+  padding: 0;
+  border: 1px solid #435783;
+  background: #1a2847;
+}
+
+.icon-only-button.active {
+  border-color: #78e2ae;
+  color: #78e2ae;
+}
+
+.secondary-button.active {
+  border: 1px solid #78e2ae;
+  color: #78e2ae;
+  background: #23375e;
+}
+
+.environment-editor {
+  padding: 1.25rem;
+  border: 1px solid #435783;
+  border-radius: 1rem;
+  background: #121d35cc;
+}
+
+.editor-header {
+  margin-bottom: 1rem;
+}
+
+.editor-header h2 {
+  margin: 0;
+  overflow: hidden;
+  font-size: 1.25rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.environment-editor .environment-card {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.editor-back-button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.about-body section + section {
+  padding-top: 1rem;
+  border-top: 1px solid #34476e;
+}
+
+.about-body h3 {
+  margin: 0 0 0.35rem;
+}
+
+.about-body p {
+  margin: 0 0 0.5rem;
+}
+
+@media (max-width: 899px) {
+  .workspace-body {
+    display: block;
+  }
+
+  .environment-panel {
+    min-height: calc(100vh - 9rem);
+  }
+
+  .environment-editor {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    overflow: auto;
+    border: 0;
+    border-radius: 0;
+    padding: 1rem;
+    background: #121d35;
+  }
+
+  .workspace-body:not(.search-open) .catalog-panel {
+    display: none;
+  }
+
+  .workspace-body.search-open .environment-editor {
+    display: none;
+  }
+
+  .catalog-panel.mobile-search-open {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 11;
+    overflow: auto;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background: #121d35;
+  }
+
+  .mobile-search-button,
+  .mobile-search-close {
+    display: inline-flex;
+  }
+}
+
+.mobile-search-button,
+.mobile-search-close {
+  display: none;
+}
+
+@media (max-width: 899px) {
+  .mobile-search-button,
+  .mobile-search-close {
+    display: inline-flex;
+  }
+}
+
+@media (max-width: 640px) {
+  .workspace {
+    padding: 0.75rem;
+  }
+
+  .workspace-header .primary-button {
+    width: auto;
+  }
+
+  .environment-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .environment-tile {
+    min-height: 7rem;
+  }
+
+  .mobile-search-button,
+  .mobile-search-close {
+    display: inline-flex;
+  }
 }
