@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   createEnvironment,
   deleteEnvironment,
@@ -7,6 +7,55 @@ import {
 } from './domain/environments'
 import type { Environment } from './domain/playback'
 import { createEnvironmentPersistence } from './persistence/environments'
+import {
+  addCatalogItem,
+  addCatalogPack,
+  catalogMatches,
+  placeSound,
+  removeSound,
+  type CatalogFilter,
+  type CatalogItem,
+  type SoundCatalog,
+} from './domain/catalog'
+
+const catalogItems: CatalogItem[] = [
+  {
+    id: 'rain',
+    name: 'Rainfall',
+    kind: 'loop',
+    tags: ['weather', 'music'],
+    source: {
+      author: 'Turbobard Library',
+      urls: ['https://example.test/rain'],
+    },
+  },
+  {
+    id: 'forest',
+    name: 'Forest Ambiance',
+    kind: 'loop',
+    tags: ['nature', 'ambiance'],
+    source: {
+      author: 'Turbobard Library',
+      urls: ['https://example.test/forest'],
+    },
+  },
+  {
+    id: 'thunder',
+    name: 'Thunder Crack',
+    kind: 'one-shot',
+    tags: ['weather', 'ambiance'],
+    variations: ['thunder-1'],
+    source: {
+      author: 'Turbobard Library',
+      urls: ['https://example.test/thunder'],
+    },
+  },
+]
+
+const demoSoundCatalog: SoundCatalog = {
+  search: async (query, filter) =>
+    catalogItems.filter((item) => catalogMatches(item, query, filter)),
+}
 
 function newEnvironmentId(): string {
   return typeof crypto.randomUUID === 'function'
@@ -25,6 +74,28 @@ export default function App() {
   const [selectedId, setSelectedId] = useState<string | undefined>(
     () => environments[0]?.id,
   )
+  const [query, setQuery] = useState('')
+  const [filter, setFilter] = useState<CatalogFilter>('everything')
+  const [catalogError, setCatalogError] = useState(false)
+  const [catalogLoading, setCatalogLoading] = useState(false)
+  const [results, setResults] = useState<CatalogItem[]>([])
+  const [catalogAttempt, setCatalogAttempt] = useState(0)
+  const selectedEnvironment = environments.find(
+    (item) => item.id === selectedId,
+  )
+  useEffect(() => {
+    let active = true
+    setCatalogLoading(true)
+    setCatalogError(false)
+    demoSoundCatalog
+      .search(query, filter)
+      .then((next) => active && setResults(next))
+      .catch(() => active && setCatalogError(true))
+      .finally(() => active && setCatalogLoading(false))
+    return () => {
+      active = false
+    }
+  }, [catalogAttempt, filter, query])
 
   const updateEnvironments = (next: Environment[]) => {
     setEnvironments(next)
@@ -55,6 +126,15 @@ export default function App() {
     updateEnvironments(
       environments.map((item) =>
         item.id === environment.id ? toggleEnvironmentExpanded(item) : item,
+      ),
+    )
+  }
+
+  const updateSelectedSounds = (sounds: Environment['sounds']) => {
+    if (!selectedEnvironment) return
+    updateEnvironments(
+      environments.map((item) =>
+        item.id === selectedEnvironment.id ? { ...item, sounds } : item,
       ),
     )
   }
@@ -152,6 +232,137 @@ export default function App() {
                   </article>
                 )
               })}
+            </div>
+          )}
+        </section>
+        <section className="catalog-panel" aria-labelledby="catalog-heading">
+          <div className="section-heading">
+            <h2 id="catalog-heading">Sound catalog</h2>
+            <span>
+              {selectedEnvironment
+                ? `Editing ${selectedEnvironment.name}`
+                : 'Select an Environment'}
+            </span>
+          </div>
+          <label htmlFor="catalog-search">Search Sounds</label>
+          <input
+            id="catalog-search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search the catalog"
+          />
+          <div
+            className="catalog-filters"
+            role="group"
+            aria-label="Catalog filters"
+          >
+            {(['everything', 'music', 'ambiance'] as CatalogFilter[]).map(
+              (value) => (
+                <button
+                  key={value}
+                  className="secondary-button"
+                  aria-pressed={filter === value}
+                  onClick={() => setFilter(value)}
+                >
+                  {value[0].toUpperCase() + value.slice(1)}
+                </button>
+              ),
+            )}
+          </div>
+          {catalogLoading ? (
+            <p role="status">Loading Sounds…</p>
+          ) : catalogError ? (
+            <div role="alert">
+              Catalog unavailable.{' '}
+              <button
+                className="text-button"
+                onClick={() => setCatalogAttempt((attempt) => attempt + 1)}
+              >
+                Retry
+              </button>
+            </div>
+          ) : results.length === 0 ? (
+            <p className="empty-state">No Sounds found.</p>
+          ) : (
+            <div className="catalog-results">
+              {results.map((item) => (
+                <article className="catalog-item" key={item.id}>
+                  <div>
+                    <strong>{item.name}</strong>
+                    <small>
+                      {item.kind === 'loop' ? 'Music' : 'Ambiance'} ·{' '}
+                      {item.source?.author ?? 'Unknown source'}
+                    </small>
+                  </div>
+                  <button
+                    className="secondary-button"
+                    disabled={!selectedEnvironment}
+                    onClick={() =>
+                      updateSelectedSounds(
+                        addCatalogItem(selectedEnvironment?.sounds ?? [], item),
+                      )
+                    }
+                  >
+                    Add
+                  </button>
+                  <details>
+                    <summary>Source details</summary>
+                    <p>{item.source?.author ?? 'Unknown source'}</p>
+                  </details>
+                </article>
+              ))}
+            </div>
+          )}
+          {selectedEnvironment && results.length > 1 && (
+            <button
+              className="primary-button"
+              onClick={() =>
+                updateSelectedSounds(
+                  addCatalogPack(selectedEnvironment.sounds, results),
+                )
+              }
+            >
+              Add results as pack
+            </button>
+          )}
+          {selectedEnvironment && (
+            <div className="sound-list">
+              <h3>Sounds in Environment</h3>
+              {selectedEnvironment.sounds.length === 0 ? (
+                <p className="empty-state">No Sounds added yet.</p>
+              ) : (
+                selectedEnvironment.sounds.map((sound) => (
+                  <div className="sound-row" key={sound.id}>
+                    <span>{sound.name ?? sound.id}</span>
+                    <select
+                      aria-label={`Placement for ${sound.name ?? sound.id}`}
+                      value={sound.placement}
+                      onChange={(event) =>
+                        updateSelectedSounds(
+                          placeSound(
+                            selectedEnvironment.sounds,
+                            sound.id,
+                            event.target.value as 'ambiance' | 'combat',
+                          ),
+                        )
+                      }
+                    >
+                      <option value="ambiance">Ambiance</option>
+                      <option value="combat">Combat</option>
+                    </select>
+                    <button
+                      className="text-button danger-button"
+                      onClick={() =>
+                        updateSelectedSounds(
+                          removeSound(selectedEnvironment.sounds, sound.id),
+                        )
+                      }
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
           )}
         </section>
