@@ -1,4 +1,26 @@
-import { defineConfig, devices } from '@playwright/test'
+import { chromium, defineConfig, devices } from '@playwright/test'
+import { existsSync } from 'node:fs'
+import path from 'node:path'
+
+// Codex's Windows sandbox gives child processes an isolated LOCALAPPDATA,
+// while Playwright's browsers are installed in the user's normal cache.
+// Prefer the explicit user cache when it exists so browser launch does not
+// wait indefinitely for an executable that is outside the sandbox cache.
+let chromiumExecutablePath: string | undefined
+if (
+  process.platform === 'win32' &&
+  !process.env.PLAYWRIGHT_BROWSERS_PATH &&
+  process.env.USERPROFILE
+) {
+  process.env.PLAYWRIGHT_BROWSERS_PATH = path.join(
+    process.env.USERPROFILE,
+    'AppData',
+    'Local',
+    'ms-playwright',
+  )
+  const candidate = chromium.executablePath()
+  if (existsSync(candidate)) chromiumExecutablePath = candidate
+}
 
 const e2ePort = Number(process.env.E2E_PORT ?? 4173)
 const e2eBaseUrl = `http://127.0.0.1:${e2ePort}`
@@ -22,7 +44,15 @@ export default defineConfig({
     video: 'retain-on-failure',
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    {
+      name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        launchOptions: chromiumExecutablePath
+          ? { executablePath: chromiumExecutablePath }
+          : undefined,
+      },
+    },
     { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
     { name: 'webkit', use: { ...devices['Desktop Safari'] } },
   ],

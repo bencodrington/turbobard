@@ -25,6 +25,8 @@ npm run test:e2e:chromium:debug
 
 The Playwright configuration provides a line reporter, a 30-second test and preview-server timeout, and a two-minute global timeout. The debug command keeps full traces on failure. Inspect `playwright-report/` for the HTML report and `test-results/` for traces, screenshots, and videos.
 
+On Windows sandboxed environments, the Playwright config points `PLAYWRIGHT_BROWSERS_PATH` at the standard per-user cache under `%USERPROFILE%\AppData\Local\ms-playwright`. This avoids resolving the browser from an isolated `LOCALAPPDATA` cache that may not contain the installed executable.
+
 Browser launch is also bounded at 30 seconds. To verify test discovery without launching a browser, use `npm run test:e2e:chromium:list`.
 
 If the run fails before a test begins, run `npm run test:e2e:install` and retry. The preview server uses strict port `4173` and never silently reuses an existing server. Check that the port is free and that `npm run build` succeeds:

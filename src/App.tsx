@@ -114,9 +114,11 @@ export default function App() {
 
   const updateSelectedSounds = (sounds: Environment['sounds']) => {
     if (!selectedEnvironment) return
+    const next = { ...selectedEnvironment, sounds }
+    if (selectedEnvironment.playing) playback.sync(next)
     updateEnvironments(
       environments.map((item) =>
-        item.id === selectedEnvironment.id ? { ...item, sounds } : item,
+        item.id === selectedEnvironment.id ? next : item,
       ),
     )
   }

@@ -28,6 +28,16 @@ const sound: Sound = {
 }
 
 describe('browser audio port', () => {
+  it('keeps media volume assignments inside the browser-supported range', () => {
+    const createAudio = vi.fn(element)
+    const port = createBrowserAudioPort(createAudio)
+
+    port.playLoop(sound, -0.001318, 0)
+    const created = createAudio.mock.results[0]?.value as HTMLAudioElement
+
+    expect(created.volume).toBe(0)
+  })
+
   it('does not construct an audio element until a sound is loaded', () => {
     const createAudio = vi.fn(element)
     const port = createBrowserAudioPort(createAudio)
@@ -63,5 +73,29 @@ describe('browser audio port', () => {
       'thunder-a.mp3',
     ])
     expect(createAudio.mock.results[1]?.value.play).toHaveBeenCalled()
+  })
+
+  it('fades and unloads every automatic one-shot variation when stopped', () => {
+    vi.useFakeTimers()
+    try {
+      const createAudio = vi.fn(element)
+      const port = createBrowserAudioPort(createAudio)
+
+      port.load(sound)
+      port.playOneShot(sound, 'thunder-a.mp3', 0.7)
+      const base = createAudio.mock.results[0]?.value as HTMLAudioElement
+      const variation = createAudio.mock.results[1]?.value as HTMLAudioElement
+
+      port.stop(sound.id, 2000)
+      vi.advanceTimersByTime(2000)
+
+      expect(base.pause).toHaveBeenCalled()
+      expect(variation.pause).toHaveBeenCalled()
+      port.unload(sound.id)
+      expect(base.removeAttribute).toHaveBeenCalledWith('src')
+      expect(variation.removeAttribute).toHaveBeenCalledWith('src')
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

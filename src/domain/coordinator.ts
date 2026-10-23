@@ -10,6 +10,7 @@ import {
 
 export type PlaybackCoordinator = {
   start: (environment: Environment) => void
+  sync: (environment: Environment) => void
   stop: (environment: Environment) => void
   toggleCombat: (environment: Environment) => void
   setEnvironmentVolume: (environment: Environment) => void
@@ -44,6 +45,10 @@ export function createPlaybackCoordinator({
     timers.delete(soundId)
   }
 
+  const clearUnloadTimer = (soundId: string) => {
+    clearTimer(`unload:${soundId}`)
+  }
+
   const scheduleOneShot = (environment: Environment, sound: Sound) => {
     clearTimer(sound.id)
     const delay = nextOneShotDelayMs(sound, random.next())
@@ -67,28 +72,33 @@ export function createPlaybackCoordinator({
     timers.set(sound.id, timer)
   }
 
-  const stopLoops = (environment: Environment) => {
-    for (const sound of environment.sounds.filter(
-      (item) => item.kind === 'loop',
-    )) {
-      clearTimer(sound.id)
-      audio.stop(sound.id, FADE_MS)
-      const unloadTimer = clock.setTimeout(
-        () => audio.unload(sound.id),
-        FADE_MS,
-      )
-      timers.set(`unload:${sound.id}`, unloadTimer)
+  const stopSound = (sound: Sound) => {
+    clearTimer(sound.id)
+    audio.stop(sound.id, FADE_MS)
+    const unloadTimer = clock.setTimeout(() => audio.unload(sound.id), FADE_MS)
+    timers.set(`unload:${sound.id}`, unloadTimer)
+  }
+
+  const stopSounds = (sounds: Sound[]) => {
+    for (const sound of sounds) {
+      clearUnloadTimer(sound.id)
+      stopSound(sound)
+    }
+  }
+
+  const startSound = (environment: Environment, sound: Sound) => {
+    clearUnloadTimer(sound.id)
+    audio.load(sound)
+    if (sound.kind === 'loop') {
+      audio.playLoop(sound, environment.volume * sound.volume, FADE_MS)
+    } else {
+      scheduleOneShot(environment, sound)
     }
   }
 
   const stop = (environment: Environment) => {
     if (activeId === environment.id) activeId = undefined
-    stopLoops(environment)
-    for (const sound of environment.sounds.filter(
-      (item) => item.kind === 'one-shot',
-    )) {
-      clearTimer(sound.id)
-    }
+    stopSounds(activeSounds(environment))
     if (activeEnvironment?.id === environment.id) activeEnvironment = undefined
   }
 
@@ -99,20 +109,37 @@ export function createPlaybackCoordinator({
     activeId = environment.id
     activeEnvironment = environment
     for (const sound of activeSounds(environment)) {
-      clearTimer(`unload:${sound.id}`)
-      audio.load(sound)
-      if (sound.kind === 'loop') {
-        audio.playLoop(sound, environment.volume * sound.volume, FADE_MS)
-      } else {
-        scheduleOneShot(environment, sound)
-      }
+      startSound(environment, sound)
     }
+  }
+
+  const sync = (environment: Environment) => {
+    if (activeId !== environment.id) return
+    const previous = activeEnvironment
+    if (!previous) {
+      start(environment)
+      return
+    }
+    const previousSounds = new Map(
+      activeSounds(previous).map((sound) => [sound.id, sound]),
+    )
+    const nextSounds = new Map(
+      activeSounds(environment).map((sound) => [sound.id, sound]),
+    )
+    for (const sound of previousSounds.values()) {
+      if (!nextSounds.has(sound.id)) stopSound(sound)
+    }
+    for (const sound of nextSounds.values()) {
+      if (!previousSounds.has(sound.id)) startSound(environment, sound)
+    }
+    activeEnvironment = environment
   }
 
   return {
     start(environment) {
       start(environment)
     },
+    sync,
     stop,
     toggleCombat(environment) {
       if (activeId !== environment.id) return

@@ -78,6 +78,7 @@ Rebuild the legacy application as a testable browser application that preserves 
 - Add browser-audio adapter tests for real fade, looping, cleanup, codec selection, autoplay policy, and iOS behavior where a fake port cannot provide evidence.
 - Add component tests for the Environment editor, search, add/remove flows, timing controls, Play now, volume controls, and now-playing Combat controls.
 - Add focused Playwright workflows for the major user journeys and responsive desktop/mobile interactions. Retain Chromium, Firefox, and WebKit verification.
+- Keep the Environment playback regression workflow covered end to end: create an Environment, search for `rain`, add `Heavy Rain`, play it, and verify that removing either the Sound or its Environment pauses the audio after the fade-out.
 - The existing repository prior art is the Vitest/Testing Library unit and component setup plus Playwright smoke testing; the new tests should extend that foundation.
 
 ## Out of Scope

@@ -100,4 +100,87 @@ describe('playback coordinator', () => {
       0.8,
     )
   })
+
+  it('starts added active loops and schedules added one-shots without immediate playback', () => {
+    const clock = fakeClock()
+    const port = audio()
+    const sound: Sound = {
+      id: 'wind',
+      kind: 'one-shot',
+      placement: 'ambiance',
+      volume: 1,
+      variations: ['wind.mp3'],
+      minIntervalSeconds: 2,
+      maxIntervalSeconds: 4,
+    }
+    const coordinator = createPlaybackCoordinator({
+      audio: port,
+      clock,
+      random: { next: () => 0 },
+    })
+    coordinator.start({ ...environment, sounds: [] })
+
+    coordinator.sync({ ...environment, sounds: [loop, sound] })
+
+    expect(port.playLoop).toHaveBeenCalledWith(loop, 0.4, 2000)
+    expect(port.playOneShot).not.toHaveBeenCalled()
+    clock.advance(2_000)
+    expect(port.playOneShot).toHaveBeenCalledWith(sound, 'wind.mp3', 0.8)
+  })
+
+  it('does not start combat sounds until Combat mode is active', () => {
+    const port = audio()
+    const combatLoop = { ...loop, id: 'battle', placement: 'combat' as const }
+    const coordinator = createPlaybackCoordinator({
+      audio: port,
+      clock: fakeClock(),
+      random: { next: () => 0 },
+    })
+    coordinator.start({ ...environment, sounds: [] })
+    coordinator.sync({ ...environment, sounds: [combatLoop] })
+
+    expect(port.playLoop).not.toHaveBeenCalled()
+  })
+
+  it('fades and unloads sounds removed from a playing Environment', () => {
+    const clock = fakeClock()
+    const port = audio()
+    const coordinator = createPlaybackCoordinator({
+      audio: port,
+      clock,
+      random: { next: () => 0 },
+    })
+    coordinator.start(environment)
+    coordinator.sync({ ...environment, sounds: [] })
+
+    expect(port.stop).toHaveBeenCalledWith('rain', 2000)
+    clock.advance(2_000)
+    expect(port.unload).toHaveBeenCalledWith('rain')
+  })
+
+  it('cancels a removed one-shot before its next scheduled firing', () => {
+    const clock = fakeClock()
+    const port = audio()
+    const sound: Sound = {
+      id: 'thunder',
+      kind: 'one-shot',
+      placement: 'ambiance',
+      volume: 1,
+      variations: ['thunder.mp3'],
+      minIntervalSeconds: 2,
+      maxIntervalSeconds: 2,
+    }
+    const scene = { ...environment, sounds: [sound] }
+    const coordinator = createPlaybackCoordinator({
+      audio: port,
+      clock,
+      random: { next: () => 0 },
+    })
+    coordinator.start(scene)
+    coordinator.sync({ ...scene, sounds: [] })
+    clock.advance(2_000)
+
+    expect(port.playOneShot).not.toHaveBeenCalled()
+    expect(port.stop).toHaveBeenCalledWith('thunder', 2000)
+  })
 })
