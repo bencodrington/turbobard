@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import type { IconCatalog } from './domain/icons'
@@ -32,6 +38,23 @@ describe('Environment workspace', () => {
     expect(
       screen.getByRole('textbox', { name: 'Environment name' }),
     ).toHaveValue('Misty Moor')
+  })
+
+  it('keeps the Environment sounds in the editor column', () => {
+    render(<App />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+
+    const editor = screen.getByRole('region', { name: 'New Environment' })
+    expect(
+      within(editor).getByRole('heading', { name: 'Sounds in Environment' }),
+    ).toBeVisible()
+    expect(
+      within(screen.getByRole('region', { name: 'Sound catalog' })).queryByRole(
+        'heading',
+        { name: 'Sounds in Environment' },
+      ),
+    ).not.toBeInTheDocument()
   })
 
   it('opens About as an overlay and closes it with Escape', () => {

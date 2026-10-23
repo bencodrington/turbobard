@@ -592,114 +592,6 @@ export default function App({
                   </div>
                 )}
               </div>
-            </section>
-          )}
-
-          <section
-            className={`catalog-panel${isSearchOpen ? ' mobile-search-open' : ''}`}
-            aria-labelledby="catalog-heading"
-          >
-            <div className="section-heading">
-              <button
-                className="text-button mobile-search-close"
-                aria-label="Close search"
-                onClick={() => setIsSearchOpen(false)}
-              >
-                <i className="fa-solid fa-arrow-left" aria-hidden="true" /> Back
-              </button>
-              <h2 id="catalog-heading">Sound catalog</h2>
-              <span>
-                {selectedEnvironment
-                  ? `Editing ${selectedEnvironment.name}`
-                  : 'Select an Environment'}
-              </span>
-            </div>
-            <label htmlFor="catalog-search">Search Sounds</label>
-            <input
-              id="catalog-search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search the catalog"
-            />
-            <div
-              className="catalog-filters"
-              role="group"
-              aria-label="Catalog filters"
-            >
-              {(['everything', 'music', 'ambiance'] as CatalogFilter[]).map(
-                (value) => (
-                  <button
-                    key={value}
-                    className="secondary-button"
-                    aria-pressed={filter === value}
-                    onClick={() => setFilter(value)}
-                  >
-                    {value[0].toUpperCase() + value.slice(1)}
-                  </button>
-                ),
-              )}
-            </div>
-            {catalogLoading ? (
-              <p role="status">Loading Sounds…</p>
-            ) : catalogError ? (
-              <div role="alert">
-                Legacy sound catalog unavailable. Check your local API
-                configuration and network access.{' '}
-                <button
-                  className="text-button"
-                  onClick={() => setCatalogAttempt((attempt) => attempt + 1)}
-                >
-                  Retry
-                </button>
-              </div>
-            ) : results.length === 0 ? (
-              <p className="empty-state">No Sounds found.</p>
-            ) : (
-              <div className="catalog-results">
-                {results.map((item) => (
-                  <article className="catalog-item" key={item.id}>
-                    <div>
-                      <strong>{item.name}</strong>
-                      <small>
-                        {item.kind === 'loop' ? 'Music' : 'Ambiance'} ·{' '}
-                        {item.source?.author ?? 'Unknown source'}
-                      </small>
-                    </div>
-                    <button
-                      className="secondary-button"
-                      disabled={!selectedEnvironment}
-                      onClick={() =>
-                        updateSelectedSounds(
-                          addCatalogItem(
-                            selectedEnvironment?.sounds ?? [],
-                            item,
-                          ),
-                        )
-                      }
-                    >
-                      Add
-                    </button>
-                    <details>
-                      <summary>Source details</summary>
-                      <p>{item.source?.author ?? 'Unknown source'}</p>
-                    </details>
-                  </article>
-                ))}
-              </div>
-            )}
-            {selectedEnvironment && results.length > 1 && (
-              <button
-                className="primary-button"
-                onClick={() =>
-                  updateSelectedSounds(
-                    addCatalogPack(selectedEnvironment.sounds, results),
-                  )
-                }
-              >
-                Add results as pack
-              </button>
-            )}
-            {selectedEnvironment && (
               <div className="sound-list">
                 <h3>Sounds in Environment</h3>
                 {selectedEnvironment.sounds.length === 0 ? (
@@ -832,6 +724,112 @@ export default function App({
                   ))
                 )}
               </div>
+            </section>
+          )}
+
+          <section
+            className={`catalog-panel${isSearchOpen ? ' mobile-search-open' : ''}`}
+            aria-labelledby="catalog-heading"
+          >
+            <div className="section-heading">
+              <button
+                className="text-button mobile-search-close"
+                aria-label="Close search"
+                onClick={() => setIsSearchOpen(false)}
+              >
+                <i className="fa-solid fa-arrow-left" aria-hidden="true" /> Back
+              </button>
+              <h2 id="catalog-heading">Sound catalog</h2>
+              <span>
+                {selectedEnvironment
+                  ? `Editing ${selectedEnvironment.name}`
+                  : 'Select an Environment'}
+              </span>
+            </div>
+            <label htmlFor="catalog-search">Search Sounds</label>
+            <input
+              id="catalog-search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search the catalog"
+            />
+            <div
+              className="catalog-filters"
+              role="group"
+              aria-label="Catalog filters"
+            >
+              {(['everything', 'music', 'ambiance'] as CatalogFilter[]).map(
+                (value) => (
+                  <button
+                    key={value}
+                    className="secondary-button"
+                    aria-pressed={filter === value}
+                    onClick={() => setFilter(value)}
+                  >
+                    {value[0].toUpperCase() + value.slice(1)}
+                  </button>
+                ),
+              )}
+            </div>
+            {catalogLoading ? (
+              <p role="status">Loading Sounds…</p>
+            ) : catalogError ? (
+              <div role="alert">
+                Legacy sound catalog unavailable. Check your local API
+                configuration and network access.{' '}
+                <button
+                  className="text-button"
+                  onClick={() => setCatalogAttempt((attempt) => attempt + 1)}
+                >
+                  Retry
+                </button>
+              </div>
+            ) : results.length === 0 ? (
+              <p className="empty-state">No Sounds found.</p>
+            ) : (
+              <div className="catalog-results">
+                {results.map((item) => (
+                  <article className="catalog-item" key={item.id}>
+                    <div>
+                      <strong>{item.name}</strong>
+                      <small>
+                        {item.kind === 'loop' ? 'Music' : 'Ambiance'} ·{' '}
+                        {item.source?.author ?? 'Unknown source'}
+                      </small>
+                    </div>
+                    <button
+                      className="secondary-button"
+                      disabled={!selectedEnvironment}
+                      onClick={() =>
+                        updateSelectedSounds(
+                          addCatalogItem(
+                            selectedEnvironment?.sounds ?? [],
+                            item,
+                          ),
+                        )
+                      }
+                    >
+                      Add
+                    </button>
+                    <details>
+                      <summary>Source details</summary>
+                      <p>{item.source?.author ?? 'Unknown source'}</p>
+                    </details>
+                  </article>
+                ))}
+              </div>
+            )}
+            {selectedEnvironment && results.length > 1 && (
+              <button
+                className="primary-button"
+                onClick={() =>
+                  updateSelectedSounds(
+                    addCatalogPack(selectedEnvironment.sounds, results),
+                  )
+                }
+              >
+                Add results as pack
+              </button>
             )}
           </section>
         </div>
