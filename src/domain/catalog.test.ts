@@ -5,6 +5,7 @@ import {
   catalogMatches,
   placeSound,
   removeSound,
+  setSoundTiming,
 } from './catalog'
 import type { CatalogItem } from './catalog'
 
@@ -46,5 +47,22 @@ describe('Sound catalog composition', () => {
       expect.objectContaining({ id: 'thunder', placement: 'combat' }),
     ])
     expect(removeSound(sounds, 'rain')).toHaveLength(1)
+  })
+
+  it('updates One-shot timing without allowing negative or inverted ranges', () => {
+    const sounds = addCatalogItem([], thunder)
+
+    expect(setSoundTiming(sounds, 'thunder', -2, 1)).toEqual([
+      expect.objectContaining({
+        minIntervalSeconds: 0,
+        maxIntervalSeconds: 1,
+      }),
+    ])
+    expect(setSoundTiming(sounds, 'thunder', 5, 2)).toEqual([
+      expect.objectContaining({
+        minIntervalSeconds: 5,
+        maxIntervalSeconds: 5,
+      }),
+    ])
   })
 })

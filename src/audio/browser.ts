@@ -19,6 +19,12 @@ export function createBrowserAudioPort(
 ): AudioPort {
   const elements = new Map<string, AudioElement>()
   const listeners = new Set<(soundId: string, error: unknown) => void>()
+  const listenForErrors = (sound: Sound, element: HTMLAudioElement) => {
+    element.addEventListener('error', () =>
+      listeners.forEach((listener) => listener(sound.id, element.error)),
+    )
+    return element
+  }
   const elementFor = (sound: Sound, variation?: string) => {
     // Automatic one-shots need one element per variation. Reusing the element
     // that was loaded for the first sample and swapping `src` while a load or
@@ -31,9 +37,7 @@ export function createBrowserAudioPort(
     if (!element) {
       element = createAudio(sourceFor(sound, variation)) as AudioElement
       element.preload = 'auto'
-      element.addEventListener('error', () =>
-        listeners.forEach((listener) => listener(sound.id, element?.error)),
-      )
+      listenForErrors(sound, element)
       elements.set(key, element)
     }
     return element
@@ -83,7 +87,10 @@ export function createBrowserAudioPort(
         )
     },
     playManualOneShot(sound, variation, volume = sound.volume) {
-      const element = createAudio(sourceFor(sound, variation))
+      const element = listenForErrors(
+        sound,
+        createAudio(sourceFor(sound, variation)),
+      )
       element.volume = clampVolume(volume)
       void element
         .play()

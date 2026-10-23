@@ -12,6 +12,7 @@ import {
   addCatalogPack,
   placeSound,
   removeSound,
+  setSoundTiming,
   type CatalogFilter,
   type CatalogItem,
 } from './domain/catalog'
@@ -174,6 +175,29 @@ export default function App() {
     const next = { ...environment, sounds }
     if (environment.playing)
       playback.setSoundVolume({ ...sound, volume }, environment.volume)
+    updateEnvironments(
+      environments.map((item) => (item.id === environment.id ? next : item)),
+    )
+  }
+
+  const updateSoundTiming = (
+    environment: Environment,
+    sound: Environment['sounds'][number],
+    field: 'minIntervalSeconds' | 'maxIntervalSeconds',
+    value: number,
+  ) => {
+    const minimum = sound.minIntervalSeconds ?? 0
+    const maximum = sound.maxIntervalSeconds ?? minimum
+    const nextMinimum = field === 'minIntervalSeconds' ? value : minimum
+    const nextMaximum = field === 'maxIntervalSeconds' ? value : maximum
+    const sounds = setSoundTiming(
+      environment.sounds,
+      sound.id,
+      nextMinimum,
+      nextMaximum,
+    )
+    const next = { ...environment, sounds }
+    if (environment.playing) playback.sync(next)
     updateEnvironments(
       environments.map((item) => (item.id === environment.id ? next : item)),
     )
@@ -462,14 +486,59 @@ export default function App() {
                       Remove
                     </button>
                     {sound.kind === 'one-shot' && (
-                      <button
-                        className="text-button"
-                        onClick={() =>
-                          playback.playManualOneShot(selectedEnvironment, sound)
-                        }
-                      >
-                        Play now
-                      </button>
+                      <>
+                        <label>
+                          Minimum interval (seconds)
+                          <input
+                            aria-label={`Minimum interval for ${sound.name ?? sound.id}`}
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={sound.minIntervalSeconds ?? 0}
+                            onChange={(event) =>
+                              updateSoundTiming(
+                                selectedEnvironment,
+                                sound,
+                                'minIntervalSeconds',
+                                Number(event.target.value),
+                              )
+                            }
+                          />
+                        </label>
+                        <label>
+                          Maximum interval (seconds)
+                          <input
+                            aria-label={`Maximum interval for ${sound.name ?? sound.id}`}
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={
+                              sound.maxIntervalSeconds ??
+                              sound.minIntervalSeconds ??
+                              0
+                            }
+                            onChange={(event) =>
+                              updateSoundTiming(
+                                selectedEnvironment,
+                                sound,
+                                'maxIntervalSeconds',
+                                Number(event.target.value),
+                              )
+                            }
+                          />
+                        </label>
+                        <button
+                          className="text-button"
+                          onClick={() =>
+                            playback.playManualOneShot(
+                              selectedEnvironment,
+                              sound,
+                            )
+                          }
+                        >
+                          Play now
+                        </button>
+                      </>
                     )}
                   </div>
                 ))
