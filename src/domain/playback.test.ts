@@ -32,6 +32,9 @@ const environment: Environment = {
   id: 'forest',
   name: 'Forest',
   volume: 0.8,
+  expanded: true,
+  icon: null,
+  iconColor: null,
   sounds: [
     loop('music'),
     loop('combat-music', 'combat'),
