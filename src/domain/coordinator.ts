@@ -123,6 +123,14 @@ export function createPlaybackCoordinator({
     }
   }
 
+  const safelyStartSound = (environment: Environment, sound: Sound) => {
+    try {
+      startSound(environment, sound)
+    } catch (error) {
+      onSoundError?.(sound.id, error)
+    }
+  }
+
   const stop = (environment: Environment) => {
     if (activeId === environment.id) activeId = undefined
     stopSounds(activeSounds(environment))
@@ -136,7 +144,7 @@ export function createPlaybackCoordinator({
     activeId = environment.id
     activeEnvironment = environment
     for (const sound of activeSounds(environment)) {
-      startSound(environment, sound)
+      safelyStartSound(environment, sound)
     }
   }
 
@@ -157,7 +165,7 @@ export function createPlaybackCoordinator({
       if (!nextSounds.has(sound.id)) stopSound(sound)
     }
     for (const sound of nextSounds.values()) {
-      if (!previousSounds.has(sound.id)) startSound(environment, sound)
+      if (!previousSounds.has(sound.id)) safelyStartSound(environment, sound)
     }
     for (const sound of nextSounds.values()) {
       const previousSound = previousSounds.get(sound.id)

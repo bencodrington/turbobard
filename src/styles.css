@@ -79,6 +79,12 @@ h1 {
   font-weight: 700;
 }
 
+button,
+input,
+select {
+  touch-action: manipulation;
+}
+
 .primary-button {
   padding: 0.8rem 1rem;
   background: #78e2ae;
@@ -265,6 +271,33 @@ h1 {
 
   .primary-button {
     width: 100%;
+  }
+
+  .environment-card-header,
+  .environment-actions,
+  .sound-row {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  .environment-card-header > input {
+    flex-basis: calc(100% - 3.25rem);
+  }
+
+  .environment-card-header > button,
+  .environment-actions > button,
+  .sound-row > button,
+  .sound-row > select {
+    min-height: 2.75rem;
+  }
+
+  .sound-row > input[type='range'] {
+    min-width: min(100%, 12rem);
+    flex: 1 1 10rem;
+  }
+
+  .sound-row > label {
+    flex: 1 1 12rem;
   }
 }
 

@@ -483,4 +483,18 @@ describe('Environment workspace', () => {
     )
     expect(screen.getByRole('button', { name: 'Stop' })).toBeVisible()
   })
+
+  it('closes the icon picker with Escape', () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+    fireEvent.click(
+      screen.getByRole('button', { name: /select icon for new environment/i }),
+    )
+
+    const dialog = screen.getByRole('dialog')
+    expect(dialog).toBeVisible()
+    fireEvent.keyDown(document, { key: 'Escape' })
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
 })

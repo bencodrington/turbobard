@@ -24,18 +24,10 @@ jobs:
           node-version-file: '.nvmrc'
           cache: npm
       - run: npm ci
-      - name: Install Playwright browsers for pull requests
-        if: github.event_name == 'pull_request'
-        run: npx playwright install chromium
-      - name: Install Playwright browsers for pushes
-        if: github.event_name == 'push'
+      - name: Install supported Playwright browsers
         run: npx playwright install --with-deps
       - run: npm run verify:static
-      - name: Run Chromium E2E tests for pull requests
-        if: github.event_name == 'pull_request'
-        run: npm run test:e2e:chromium
-      - name: Run full browser E2E matrix for pushes
-        if: github.event_name == 'push'
+      - name: Run full browser E2E matrix
         run: npm run test:e2e
       - name: Upload Playwright artifacts
         if: failure()

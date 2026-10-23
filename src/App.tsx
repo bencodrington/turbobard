@@ -151,6 +151,15 @@ export default function App({
 
   useEffect(() => {
     if (!editingIconEnvId) return
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setEditingIconEnvId(null)
+    }
+    document.addEventListener('keydown', closeOnEscape, true)
+    return () => document.removeEventListener('keydown', closeOnEscape, true)
+  }, [editingIconEnvId])
+
+  useEffect(() => {
+    if (!editingIconEnvId) return
     let active = true
     setIconLoading(true)
     setIconError(false)

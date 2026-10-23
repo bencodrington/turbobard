@@ -3,9 +3,20 @@ import type { Sound } from '../domain/playback'
 
 type AudioElement = HTMLAudioElement & { __fadeTimer?: number }
 
-function sourceFor(sound: Sound, variation?: string): string | undefined {
+function sourceFor(
+  sound: Sound,
+  variation?: string,
+  canPlayType?: (mimeType: string) => string,
+): string | undefined {
   if (variation) return variation
-  return sound.source?.urls[0] ?? sound.fileName
+  const urls = sound.source?.urls ?? []
+  const webm = urls.find((url) => /\.webm(?:$|[?#])/i.test(url))
+  if (webm && canPlayType?.('audio/webm')) return webm
+  return (
+    urls.find((url) => /\.mp3(?:$|[?#])/i.test(url)) ??
+    urls[0] ??
+    sound.fileName
+  )
 }
 
 function clampVolume(volume: number): number {
@@ -19,6 +30,11 @@ export function createBrowserAudioPort(
 ): AudioPort {
   const elements = new Map<string, AudioElement>()
   const listeners = new Set<(soundId: string, error: unknown) => void>()
+  const probe =
+    typeof document === 'undefined'
+      ? undefined
+      : document.createElement('audio')
+  const canPlayType = probe?.canPlayType.bind(probe)
   const listenForErrors = (sound: Sound, element: HTMLAudioElement) => {
     element.addEventListener('error', () =>
       listeners.forEach((listener) => listener(sound.id, element.error)),
@@ -35,7 +51,9 @@ export function createBrowserAudioPort(
         : sound.id
     let element = elements.get(key)
     if (!element) {
-      element = createAudio(sourceFor(sound, variation)) as AudioElement
+      element = createAudio(
+        sourceFor(sound, variation, canPlayType),
+      ) as AudioElement
       element.preload = 'auto'
       listenForErrors(sound, element)
       elements.set(key, element)
@@ -89,7 +107,7 @@ export function createBrowserAudioPort(
     playManualOneShot(sound, variation, volume = sound.volume) {
       const element = listenForErrors(
         sound,
-        createAudio(sourceFor(sound, variation)),
+        createAudio(sourceFor(sound, variation, canPlayType)),
       )
       element.volume = clampVolume(volume)
       void element

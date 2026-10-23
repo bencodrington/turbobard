@@ -48,6 +48,25 @@ describe('browser audio port', () => {
     expect(createAudio).toHaveBeenCalledWith('thunder.mp3')
   })
 
+  it('prefers a playable WebM source over MP3 when the browser supports it', () => {
+    const originalCreateElement = document.createElement.bind(document)
+    vi.spyOn(document, 'createElement').mockImplementation((tagName) => {
+      if (tagName === 'audio') {
+        return { canPlayType: () => 'probably' } as unknown as HTMLAudioElement
+      }
+      return originalCreateElement(tagName)
+    })
+    const webmSound: Sound = {
+      ...sound,
+      source: { urls: ['thunder.mp3', 'thunder.webm'] },
+    }
+    const createAudio = vi.fn(element)
+
+    createBrowserAudioPort(createAudio).load(webmSound)
+
+    expect(createAudio).toHaveBeenCalledWith('thunder.webm')
+  })
+
   it('switches a one-shot element to the requested variation', () => {
     const createAudio = vi.fn(element)
     const port = createBrowserAudioPort(createAudio)
