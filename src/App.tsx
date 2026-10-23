@@ -741,11 +741,17 @@ export default function App({
       {editingEnvironment && (
         <div
           className="modal-backdrop"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="icon-modal-title"
+          role="presentation"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setEditingIconEnvId(null)
+          }}
         >
-          <div className="modal-card">
+          <div
+            className="modal-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="icon-modal-title"
+          >
             <div className="modal-header">
               <div>
                 <h2 id="icon-modal-title">Select an icon</h2>

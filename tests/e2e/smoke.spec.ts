@@ -392,6 +392,16 @@ test('searches, selects, and persists an Environment icon and color', async ({
     page.getByRole('heading', { name: 'Select an icon' }),
   ).toBeVisible()
 
+  const modal = page.getByRole('dialog')
+  const backdrop = page.locator('.modal-backdrop')
+  await modal.getByRole('heading', { name: 'Select an icon' }).click()
+  await expect(modal).toBeVisible()
+  await backdrop.click({ position: { x: 10, y: 10 } })
+  await expect(modal).toBeHidden()
+
+  await iconTrigger.click()
+  await expect(modal).toBeVisible()
+
   const iconSearch = page.getByRole('textbox', { name: 'Search icons' })
   await iconSearch.fill('fire')
 

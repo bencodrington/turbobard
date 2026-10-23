@@ -425,6 +425,25 @@ describe('Environment workspace', () => {
     })
   })
 
+  it('closes the icon modal from the backdrop without closing when its card is clicked', async () => {
+    render(<App />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+    fireEvent.click(
+      screen.getByRole('button', { name: /select icon for new environment/i }),
+    )
+
+    const modal = screen.getByRole('dialog')
+    const backdrop = modal.parentElement
+    expect(backdrop).not.toBeNull()
+
+    fireEvent.click(modal)
+    expect(screen.getByRole('dialog')).toBeVisible()
+
+    fireEvent.click(backdrop!)
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
   it('handles icon catalog loading, empty, and provider failure with retry without affecting playback', async () => {
     let resolveLoading: (icons: string[]) => void = () => {}
     let failedOnce = false
