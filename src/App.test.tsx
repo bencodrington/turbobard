@@ -446,12 +446,16 @@ describe('Environment workspace', () => {
       screen
         .getByRole('button', { name: 'fire' })
         .querySelector('.environment-icon'),
-    ).toHaveTextContent('🔥')
+    ).toContainElement(
+      screen.getByRole('button', { name: 'fire' }).querySelector('svg'),
+    )
     expect(
       screen
         .getByRole('button', { name: 'campfire' })
         .querySelector('.environment-icon'),
-    ).toHaveTextContent('✦')
+    ).toContainElement(
+      screen.getByRole('button', { name: 'campfire' }).querySelector('svg'),
+    )
     expect(screen.getByRole('button', { name: 'fire' })).toHaveAttribute(
       'aria-pressed',
       'true',
