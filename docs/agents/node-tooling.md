@@ -21,7 +21,7 @@ $nodeRoot = Get-ChildItem "$env:USERPROFILE\.nvm\versions\node" -Directory |
   Where-Object { $_.Name -like "v$((Get-Content .nvmrc).Trim()).*" } |
   Sort-Object Name -Descending |
   Select-Object -First 1 -ExpandProperty FullName
-$env:Path = "$nodeRoot;$env:Path"
+$env:Path = "$nodeRoot\bin;$nodeRoot;$env:Path"
 npm ci
 ```
 
