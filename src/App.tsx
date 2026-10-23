@@ -10,54 +10,14 @@ import { createEnvironmentPersistence } from './persistence/environments'
 import {
   addCatalogItem,
   addCatalogPack,
-  catalogMatches,
   placeSound,
   removeSound,
   type CatalogFilter,
   type CatalogItem,
-  type SoundCatalog,
 } from './domain/catalog'
 import { createPlaybackCoordinator } from './domain/coordinator'
 import { createBrowserAudioPort } from './audio/browser'
-
-const catalogItems: CatalogItem[] = [
-  {
-    id: 'rain',
-    name: 'Rainfall',
-    kind: 'loop',
-    tags: ['weather', 'music'],
-    source: {
-      author: 'Turbobard Library',
-      urls: ['https://example.test/rain'],
-    },
-  },
-  {
-    id: 'forest',
-    name: 'Forest Ambiance',
-    kind: 'loop',
-    tags: ['nature', 'ambiance'],
-    source: {
-      author: 'Turbobard Library',
-      urls: ['https://example.test/forest'],
-    },
-  },
-  {
-    id: 'thunder',
-    name: 'Thunder Crack',
-    kind: 'one-shot',
-    tags: ['weather', 'ambiance'],
-    variations: ['thunder-1'],
-    source: {
-      author: 'Turbobard Library',
-      urls: ['https://example.test/thunder'],
-    },
-  },
-]
-
-const demoSoundCatalog: SoundCatalog = {
-  search: async (query, filter) =>
-    catalogItems.filter((item) => catalogMatches(item, query, filter)),
-}
+import { demoSoundCatalog } from './demo/catalog'
 
 function newEnvironmentId(): string {
   return typeof crypto.randomUUID === 'function'
