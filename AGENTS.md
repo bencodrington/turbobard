@@ -19,7 +19,3 @@ When using the `implement` skill with a ticket, start from `main` on a new branc
 ### Node tooling
 
 When running Node or npm commands, read `docs/agents/node-tooling.md` first and use the Node version declared in `.nvmrc`.
-
-### Git in OneDrive
-
-If Git cannot create a lock file under `.git` in this OneDrive workspace, rerun the specific Git operation with elevated execution. Check `git status` first; do not delete lock files or change repository permissions as a workaround.
