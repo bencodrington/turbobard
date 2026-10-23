@@ -326,3 +326,68 @@ test('toggling Combat mode fades ordinary music and starts combat music', async 
     )
     .toBe(true)
 })
+
+test('searches, selects, and persists an Environment icon and color', async ({
+  page,
+}) => {
+  await page.route('https://api.fontawesome.com', (route) => {
+    return route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: {
+          search: [
+            {
+              id: 'fire',
+              familyStylesByLicense: {
+                free: [{ style: 'solid' }],
+              },
+            },
+            {
+              id: 'campfire',
+              familyStylesByLicense: {
+                free: [{ style: 'solid' }],
+              },
+            },
+          ],
+        },
+      }),
+    })
+  })
+
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Create Environment' }).click()
+
+  const iconTrigger = page.getByRole('button', {
+    name: /select icon for new environment/i,
+  })
+  await iconTrigger.click()
+
+  await expect(
+    page.getByRole('heading', { name: 'Select an icon' }),
+  ).toBeVisible()
+
+  const iconSearch = page.getByRole('textbox', { name: 'Search icons' })
+  await iconSearch.fill('fire')
+
+  const fireButton = page.getByRole('button', { name: 'fire', exact: true })
+  await expect(fireButton).toBeVisible()
+  await fireButton.click()
+  await expect(fireButton).toHaveAttribute('aria-pressed', 'true')
+
+  const colorButton = page.getByRole('button', { name: 'Select color #F87C7C' })
+  await colorButton.click()
+  await expect(colorButton).toHaveAttribute('aria-pressed', 'true')
+
+  await page.getByRole('button', { name: 'Close icon picker' }).click()
+
+  await expect(iconTrigger).toHaveAttribute('data-icon', 'fire')
+  await expect(iconTrigger).toHaveAttribute('data-color', '#F87C7C')
+
+  await page.reload()
+
+  const reloadedIconTrigger = page.getByRole('button', {
+    name: /select icon for new environment/i,
+  })
+  await expect(reloadedIconTrigger).toHaveAttribute('data-icon', 'fire')
+  await expect(reloadedIconTrigger).toHaveAttribute('data-color', '#F87C7C')
+})

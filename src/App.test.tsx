@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
+import type { IconCatalog } from './domain/icons'
 
 describe('Environment workspace', () => {
   beforeEach(() => {
@@ -296,5 +297,146 @@ describe('Environment workspace', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add' }))
 
     expect(screen.getAllByText('Rainfall')[1]).toBeVisible()
+  })
+
+  it('lets a user select an icon and an icon color for an Environment and persists them', async () => {
+    const fakeIconCatalog: IconCatalog = {
+      search: vi.fn(async (q: string) =>
+        q === 'flame' ? ['fire', 'campfire'] : ['mountain-sun', 'bell'],
+      ),
+    }
+
+    const { unmount } = render(<App iconCatalog={fakeIconCatalog} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /select icon for new environment/i }),
+    )
+
+    expect(
+      screen.getByRole('heading', { name: 'Select an icon' }),
+    ).toBeVisible()
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole('button', { name: 'mountain-sun' }),
+      ).toBeVisible(),
+    )
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search icons' }), {
+      target: { value: 'flame' },
+    })
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'fire' })).toBeVisible(),
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'fire' }))
+    expect(screen.getByRole('button', { name: 'fire' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Select color #F87C7C' }),
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close icon picker' }))
+
+    expect(
+      screen.getByRole('button', { name: /select icon for new environment/i }),
+    ).toHaveAttribute('data-icon', 'fire')
+    expect(
+      screen.getByRole('button', { name: /select icon for new environment/i }),
+    ).toHaveAttribute('data-color', '#F87C7C')
+
+    unmount()
+    render(<App iconCatalog={fakeIconCatalog} />)
+
+    expect(
+      screen.getByRole('button', { name: /select icon for new environment/i }),
+    ).toHaveAttribute('data-icon', 'fire')
+    expect(
+      screen.getByRole('button', { name: /select icon for new environment/i }),
+    ).toHaveAttribute('data-color', '#F87C7C')
+
+    expect(JSON.parse(localStorage.getItem('environments')!)).toMatchObject({
+      environments: [{ icon: 'fire', iconColor: '#F87C7C' }],
+    })
+  })
+
+  it('handles icon catalog loading, empty, and provider failure with retry without affecting playback', async () => {
+    let resolveLoading: (icons: string[]) => void = () => {}
+    let failedOnce = false
+    const searchMock = vi.fn((q: string) => {
+      if (q === 'loading-test') {
+        return new Promise<string[]>((resolve) => {
+          resolveLoading = resolve
+        })
+      }
+      if (q === 'retry-test') {
+        if (!failedOnce) {
+          failedOnce = true
+          return Promise.reject(new Error('Network error'))
+        }
+        return Promise.resolve(['guitar'])
+      }
+      return Promise.resolve(['mountain-sun'])
+    })
+
+    const fakeIconCatalog: IconCatalog = {
+      search: searchMock,
+    }
+
+    render(<App iconCatalog={fakeIconCatalog} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+    const playButton = screen.getByRole('button', { name: 'Play' })
+    fireEvent.click(playButton)
+    expect(screen.getByRole('button', { name: 'Stop' })).toBeVisible()
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /select icon for new environment/i }),
+    )
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole('button', { name: 'mountain-sun' }),
+      ).toBeVisible(),
+    )
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search icons' }), {
+      target: { value: 'loading-test' },
+    })
+
+    expect(screen.getByText('Loading icons…')).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Stop' })).toBeVisible()
+
+    resolveLoading([])
+    await waitFor(() =>
+      expect(
+        screen.getByText(/no icons found for "loading-test"/i),
+      ).toBeVisible(),
+    )
+    expect(screen.getByRole('button', { name: 'Stop' })).toBeVisible()
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search icons' }), {
+      target: { value: 'retry-test' },
+    })
+
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        /legacy icon catalog unavailable/i,
+      ),
+    )
+    expect(screen.getByRole('button', { name: 'Stop' })).toBeVisible()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'guitar' })).toBeVisible(),
+    )
+    expect(screen.getByRole('button', { name: 'Stop' })).toBeVisible()
   })
 })

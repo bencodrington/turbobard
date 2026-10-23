@@ -3,6 +3,8 @@ import {
   createEnvironment,
   deleteEnvironment,
   renameEnvironment,
+  setEnvironmentIcon,
+  setEnvironmentIconColor,
   toggleEnvironmentExpanded,
 } from './domain/environments'
 import type { Environment } from './domain/playback'
@@ -15,10 +17,20 @@ import {
   setSoundTiming,
   type CatalogFilter,
   type CatalogItem,
+  type SoundCatalog,
 } from './domain/catalog'
+import {
+  DEFAULT_ENVIRONMENT_ICON,
+  DEFAULT_ENVIRONMENT_ICON_COLOR,
+  DEFAULT_ICON_OPTIONS,
+  ICON_COLOR_OPTIONS,
+  type IconCatalog,
+} from './domain/icons'
 import { createPlaybackCoordinator } from './domain/coordinator'
 import { createBrowserAudioPort } from './audio/browser'
 import { createLegacySoundCatalog } from './legacy/catalog'
+import { createLegacyIconCatalog } from './legacy/icons'
+import type { EnvironmentPersistence } from './domain/ports'
 
 function newEnvironmentId(): string {
   return typeof crypto.randomUUID === 'function'
@@ -26,10 +38,20 @@ function newEnvironmentId(): string {
     : `environment-${Date.now()}`
 }
 
-export default function App() {
+export type AppProps = {
+  soundCatalog?: SoundCatalog
+  iconCatalog?: IconCatalog
+  persistence?: EnvironmentPersistence
+}
+
+export default function App({
+  soundCatalog,
+  iconCatalog,
+  persistence: persistenceProp,
+}: AppProps = {}) {
   const persistence = useMemo(
-    () => createEnvironmentPersistence(window.localStorage),
-    [],
+    () => persistenceProp ?? createEnvironmentPersistence(window.localStorage),
+    [persistenceProp],
   )
   const [environments, setEnvironments] = useState<Environment[]>(() =>
     persistence.load(),
@@ -44,9 +66,27 @@ export default function App() {
   const [results, setResults] = useState<CatalogItem[]>([])
   const [catalogAttempt, setCatalogAttempt] = useState(0)
   const [audioError, setAudioError] = useState<string | undefined>()
-  const catalog = useMemo(() => createLegacySoundCatalog(), [])
+  const catalog = useMemo(
+    () => soundCatalog ?? createLegacySoundCatalog(),
+    [soundCatalog],
+  )
+  const icons = useMemo(
+    () => iconCatalog ?? createLegacyIconCatalog(),
+    [iconCatalog],
+  )
+  const [editingIconEnvId, setEditingIconEnvId] = useState<string | null>(null)
+  const [iconQuery, setIconQuery] = useState('')
+  const [iconResults, setIconResults] = useState<string[]>(() => [
+    ...DEFAULT_ICON_OPTIONS,
+  ])
+  const [iconLoading, setIconLoading] = useState(false)
+  const [iconError, setIconError] = useState(false)
+  const [iconAttempt, setIconAttempt] = useState(0)
   const selectedEnvironment = environments.find(
     (item) => item.id === selectedId,
+  )
+  const editingEnvironment = environments.find(
+    (item) => item.id === editingIconEnvId,
   )
   const playback = useMemo(
     () =>
@@ -78,9 +118,51 @@ export default function App() {
     }
   }, [catalog, catalogAttempt, filter, query])
 
+  useEffect(() => {
+    if (!editingIconEnvId) return
+    let active = true
+    setIconLoading(true)
+    setIconError(false)
+    icons
+      .search(iconQuery)
+      .then((next) => {
+        if (active) setIconResults(next)
+      })
+      .catch(() => {
+        if (active) setIconError(true)
+      })
+      .finally(() => {
+        if (active) setIconLoading(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [editingIconEnvId, iconAttempt, iconQuery, icons])
+
   const updateEnvironments = (next: Environment[]) => {
     setEnvironments(next)
     persistence.save(next)
+  }
+
+  const updateEnvironmentIcon = (environment: Environment, icon: string) => {
+    updateEnvironments(
+      environments.map((item) =>
+        item.id === environment.id ? setEnvironmentIcon(item, icon) : item,
+      ),
+    )
+  }
+
+  const updateEnvironmentIconColor = (
+    environment: Environment,
+    iconColor: string,
+  ) => {
+    updateEnvironments(
+      environments.map((item) =>
+        item.id === environment.id
+          ? setEnvironmentIconColor(item, iconColor)
+          : item,
+      ),
+    )
   }
 
   const addEnvironment = () => {
@@ -259,6 +341,30 @@ export default function App() {
                     role="listitem"
                   >
                     <div className="environment-card-header">
+                      <button
+                        className="icon-trigger-button"
+                        aria-label={`Select icon for ${environment.name}`}
+                        data-icon={environment.icon ?? DEFAULT_ENVIRONMENT_ICON}
+                        data-color={
+                          environment.iconColor ??
+                          DEFAULT_ENVIRONMENT_ICON_COLOR
+                        }
+                        onClick={() => {
+                          setEditingIconEnvId(environment.id)
+                          setIconQuery('')
+                          setIconError(false)
+                        }}
+                        style={{
+                          color:
+                            environment.iconColor ??
+                            DEFAULT_ENVIRONMENT_ICON_COLOR,
+                        }}
+                      >
+                        <i
+                          className={`fa-solid fa-fw fa-${environment.icon ?? DEFAULT_ENVIRONMENT_ICON}`}
+                          aria-hidden="true"
+                        />
+                      </button>
                       <label
                         className="sr-only"
                         htmlFor={`name-${environment.id}`}
@@ -547,6 +653,123 @@ export default function App() {
           )}
         </section>
       </section>
+      {editingEnvironment && (
+        <div
+          className="modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="icon-modal-title"
+        >
+          <div className="modal-card">
+            <div className="modal-header">
+              <div>
+                <h2 id="icon-modal-title">Select an icon</h2>
+                <p className="modal-subtitle">{editingEnvironment.name}</p>
+              </div>
+              <button
+                className="text-button"
+                aria-label="Close icon picker"
+                onClick={() => setEditingIconEnvId(null)}
+              >
+                Close
+              </button>
+            </div>
+            <div className="modal-body">
+              <label htmlFor="icon-search">Search icons</label>
+              <input
+                id="icon-search"
+                value={iconQuery}
+                onChange={(event) => setIconQuery(event.target.value)}
+                placeholder="Search for icons"
+              />
+              {iconLoading ? (
+                <p role="status">Loading icons…</p>
+              ) : iconError ? (
+                <div role="alert" className="icon-error">
+                  Legacy icon catalog unavailable. Check your local API
+                  configuration and network access.{' '}
+                  <button
+                    className="text-button"
+                    onClick={() => setIconAttempt((attempt) => attempt + 1)}
+                  >
+                    Retry
+                  </button>
+                </div>
+              ) : iconResults.length === 0 ? (
+                <p className="empty-state">
+                  {iconQuery.trim()
+                    ? `No icons found for "${iconQuery}".`
+                    : 'No icons found.'}
+                </p>
+              ) : (
+                <div
+                  className="icon-grid"
+                  role="group"
+                  aria-label="Available icons"
+                >
+                  {iconResults.map((iconId) => {
+                    const isSelected =
+                      (editingEnvironment.icon ?? DEFAULT_ENVIRONMENT_ICON) ===
+                      iconId
+                    return (
+                      <button
+                        key={iconId}
+                        className={`icon-option-button${isSelected ? ' selected' : ''}`}
+                        aria-label={iconId}
+                        aria-pressed={isSelected}
+                        onClick={() =>
+                          updateEnvironmentIcon(editingEnvironment, iconId)
+                        }
+                        style={{
+                          color:
+                            editingEnvironment.iconColor ??
+                            DEFAULT_ENVIRONMENT_ICON_COLOR,
+                        }}
+                      >
+                        <i
+                          className={`fa-solid fa-fw fa-${iconId}`}
+                          aria-hidden="true"
+                        />
+                        {isSelected && (
+                          <span
+                            className="icon-selected-badge"
+                            aria-hidden="true"
+                          >
+                            ✓
+                          </span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+              <div
+                className="color-options"
+                role="group"
+                aria-label="Icon colors"
+              >
+                {ICON_COLOR_OPTIONS.map((color) => {
+                  const isColorSelected =
+                    (editingEnvironment.iconColor ??
+                      DEFAULT_ENVIRONMENT_ICON_COLOR) === color
+                  return (
+                    <button
+                      key={color}
+                      className={`color-option-button${isColorSelected ? ' selected' : ''}`}
+                      aria-label={`Select color ${color}`}
+                      aria-pressed={isColorSelected}
+                      onClick={() =>
+                        updateEnvironmentIconColor(editingEnvironment, color)
+                      }
+                      style={{ backgroundColor: color }}
+                    />
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }
