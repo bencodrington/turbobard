@@ -2,13 +2,13 @@ import { describe, expect, it, vi } from 'vitest'
 import { createBrowserAudioPort } from './browser'
 import type { Sound } from '../domain/playback'
 
-function element() {
+function element(source = '') {
   return {
     preload: '',
     loop: false,
     volume: 1,
     currentTime: 0,
-    src: '',
+    src: source,
     error: null,
     addEventListener: vi.fn(),
     load: vi.fn(),
@@ -48,5 +48,20 @@ describe('browser audio port', () => {
     expect(created.src).toContain('thunder-a.mp3')
     expect(created.volume).toBe(0.7)
     expect(created.play).toHaveBeenCalled()
+  })
+
+  it('keeps automatic one-shot variations in separate audio instances after loading', () => {
+    const createAudio = vi.fn(element)
+    const port = createBrowserAudioPort(createAudio)
+
+    port.load(sound)
+    port.playOneShot(sound, 'thunder-a.mp3', 0.7)
+
+    expect(createAudio).toHaveBeenCalledTimes(2)
+    expect(createAudio.mock.calls.map((call) => call[0] as string)).toEqual([
+      'thunder.mp3',
+      'thunder-a.mp3',
+    ])
+    expect(createAudio.mock.results[1]?.value.play).toHaveBeenCalled()
   })
 })
