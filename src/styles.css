@@ -293,6 +293,15 @@ h1 {
     background-color 0.15s;
 }
 
+.environment-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+  font-size: 1.35em;
+}
+
 .icon-trigger-button:hover,
 .icon-trigger-button:focus-visible {
   border-color: #78e2ae;
@@ -383,6 +392,10 @@ h1 {
   transition:
     border-color 0.15s,
     background-color 0.15s;
+}
+
+.icon-option-button .environment-icon {
+  font-size: 1.5rem;
 }
 
 .icon-option-button:hover,
