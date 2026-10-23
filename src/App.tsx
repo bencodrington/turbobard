@@ -458,17 +458,9 @@ export default function App({
               className="environment-editor"
               aria-labelledby="editor-heading"
             >
-              <div className="editor-header">
-                <button
-                  className="text-button"
-                  aria-label="Close Environment"
-                  onClick={() => setIsEditorOpen(false)}
-                >
-                  <i className="fa-solid fa-arrow-left" aria-hidden="true" />{' '}
-                  Back
-                </button>
-                <h2 id="editor-heading">{selectedEnvironment.name}</h2>
-              </div>
+              <h2 id="editor-heading" className="sr-only">
+                {selectedEnvironment.name}
+              </h2>
               <button
                 className="secondary-button mobile-search-button"
                 onClick={() => setIsSearchOpen(true)}
@@ -481,6 +473,14 @@ export default function App({
               </button>
               <div className="environment-card selected">
                 <div className="environment-card-header">
+                  <button
+                    className="text-button editor-back-button"
+                    aria-label="Close Environment"
+                    onClick={() => setIsEditorOpen(false)}
+                  >
+                    <i className="fa-solid fa-arrow-left" aria-hidden="true" />{' '}
+                    Back
+                  </button>
                   <button
                     className="icon-trigger-button"
                     aria-label={`Select icon for ${selectedEnvironment.name}`}

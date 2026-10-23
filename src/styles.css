@@ -653,6 +653,11 @@ select {
   background: transparent;
 }
 
+.editor-back-button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
 .about-body section + section {
   padding-top: 1rem;
   border-top: 1px solid #34476e;
