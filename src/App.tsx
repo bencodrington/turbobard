@@ -1,12 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
-import {
-  createEnvironment,
-  deleteEnvironment,
-  renameEnvironment,
-  setEnvironmentIcon,
-  setEnvironmentIconColor,
-  toggleEnvironmentExpanded,
-} from './domain/environments'
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import type { Environment } from './domain/playback'
 import { createEnvironmentPersistence } from './persistence/environments'
 import {
@@ -14,7 +6,6 @@ import {
   addCatalogPack,
   placeSound,
   removeSound,
-  setSoundTiming,
   type CatalogFilter,
   type CatalogItem,
   type SoundCatalog,
@@ -32,6 +23,7 @@ import { createLegacySoundCatalog } from './legacy/catalog'
 import { createLegacyIconCatalog } from './legacy/icons'
 import type { EnvironmentPersistence } from './domain/ports'
 import { FontAwesomeIconView } from './ui/icons'
+import { createEnvironmentWorkspace } from './workspace/environmentWorkspace'
 
 function newEnvironmentId(): string {
   return typeof crypto.randomUUID === 'function'
@@ -58,18 +50,8 @@ export default function App({
     () => persistenceProp ?? createEnvironmentPersistence(window.localStorage),
     [persistenceProp],
   )
-  const [environments, setEnvironments] = useState<Environment[]>(() =>
-    persistence.load(),
-  )
-  const [selectedId, setSelectedId] = useState<string | undefined>(
-    () => environments[0]?.id,
-  )
+  const [selectedId, setSelectedId] = useState<string | undefined>()
   const [isEditMode, setIsEditMode] = useState(false)
-  const [isEditorOpen, setIsEditorOpen] = useState(
-    () =>
-      environments.length > 0 &&
-      (window.matchMedia?.('(min-width: 900px)').matches ?? true),
-  )
   const [isAboutOpen, setIsAboutOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [query, setQuery] = useState('')
@@ -95,21 +77,6 @@ export default function App({
   const [iconLoading, setIconLoading] = useState(false)
   const [iconError, setIconError] = useState(false)
   const [iconAttempt, setIconAttempt] = useState(0)
-  const selectedEnvironment = environments.find(
-    (item) => item.id === selectedId,
-  )
-  const editingEnvironment = environments.find(
-    (item) => item.id === editingIconEnvId,
-  )
-  const displayedIcons = useMemo(() => {
-    if (
-      editingEnvironment?.icon &&
-      !iconResults.includes(editingEnvironment.icon)
-    ) {
-      return [editingEnvironment.icon, ...iconResults]
-    }
-    return iconResults
-  }, [editingEnvironment?.icon, iconResults])
   const playback = useMemo(
     () =>
       createPlaybackCoordinator({
@@ -126,7 +93,44 @@ export default function App({
       }),
     [],
   )
+  const workspace = useMemo(
+    () =>
+      createEnvironmentWorkspace({
+        persistence,
+        playback,
+        createId: newEnvironmentId,
+      }),
+    [persistence, playback],
+  )
+  const { environments } = useSyncExternalStore(
+    workspace.subscribe,
+    workspace.getSnapshot,
+    workspace.getSnapshot,
+  )
+  const [isEditorOpen, setIsEditorOpen] = useState(
+    () =>
+      workspace.getSnapshot().environments.length > 0 &&
+      (window.matchMedia?.('(min-width: 900px)').matches ?? true),
+  )
+  const selectedEnvironment = environments.find(
+    (item) => item.id === selectedId,
+  )
+  const editingEnvironment = environments.find(
+    (item) => item.id === editingIconEnvId,
+  )
+  const displayedIcons = useMemo(() => {
+    if (
+      editingEnvironment?.icon &&
+      !iconResults.includes(editingEnvironment.icon)
+    ) {
+      return [editingEnvironment.icon, ...iconResults]
+    }
+    return iconResults
+  }, [editingEnvironment?.icon, iconResults])
   const [, setPlaybackRevision] = useState(0)
+  useEffect(() => {
+    setSelectedId((current) => current ?? environments[0]?.id)
+  }, [environments])
   useEffect(() => {
     let frame: number | undefined
     let running = false
@@ -205,35 +209,19 @@ export default function App({
     }
   }, [editingIconEnvId, iconAttempt, iconQuery, icons])
 
-  const updateEnvironments = (next: Environment[]) => {
-    setEnvironments(next)
-    persistence.save(next)
-  }
-
   const updateEnvironmentIcon = (environment: Environment, icon: string) => {
-    updateEnvironments(
-      environments.map((item) =>
-        item.id === environment.id ? setEnvironmentIcon(item, icon) : item,
-      ),
-    )
+    workspace.setIcon(environment.id, icon)
   }
 
   const updateEnvironmentIconColor = (
     environment: Environment,
     iconColor: string,
   ) => {
-    updateEnvironments(
-      environments.map((item) =>
-        item.id === environment.id
-          ? setEnvironmentIconColor(item, iconColor)
-          : item,
-      ),
-    )
+    workspace.setIconColor(environment.id, iconColor)
   }
 
   const addEnvironment = () => {
-    const environment = createEnvironment(newEnvironmentId(), 'New Environment')
-    updateEnvironments([...environments, environment])
+    const environment = workspace.addEnvironment()
     setSelectedId(environment.id)
     setIsEditorOpen(true)
   }
@@ -246,8 +234,8 @@ export default function App({
       setIsSearchOpen(false)
       return
     }
-    if (environment.playing) stopEnvironment(environment)
-    else playEnvironment(environment)
+    if (environment.playing) workspace.stop(environment.id)
+    else workspace.play(environment.id)
     if (isDesktop) {
       setIsEditorOpen(true)
       setIsSearchOpen(false)
@@ -255,18 +243,12 @@ export default function App({
   }
 
   const renameEnvironmentInState = (environment: Environment, name: string) => {
-    updateEnvironments(
-      environments.map((item) =>
-        item.id === environment.id ? renameEnvironment(item, name) : item,
-      ),
-    )
+    workspace.renameEnvironment(environment.id, name)
   }
 
   const removeEnvironment = (environmentId: string) => {
-    const removed = environments.find((item) => item.id === environmentId)
-    if (removed?.playing) playback.stop(removed)
-    const next = deleteEnvironment(environments, environmentId)
-    updateEnvironments(next)
+    const next = environments.filter((item) => item.id !== environmentId)
+    workspace.removeEnvironment(environmentId)
     if (selectedId === environmentId) {
       setSelectedId(next[0]?.id)
       setIsEditorOpen(false)
@@ -275,62 +257,31 @@ export default function App({
   }
 
   const toggleExpanded = (environment: Environment) => {
-    updateEnvironments(
-      environments.map((item) =>
-        item.id === environment.id ? toggleEnvironmentExpanded(item) : item,
-      ),
-    )
+    workspace.toggleExpanded(environment.id)
   }
 
   const updateSelectedSounds = (sounds: Environment['sounds']) => {
     if (!selectedEnvironment) return
-    const next = { ...selectedEnvironment, sounds }
-    if (selectedEnvironment.playing) playback.sync(next)
-    updateEnvironments(
-      environments.map((item) =>
-        item.id === selectedEnvironment.id ? next : item,
-      ),
-    )
+    workspace.updateSounds(selectedEnvironment.id, sounds)
   }
 
   const playEnvironment = (environment: Environment) => {
-    const current = environments.find((item) => item.playing)
-    if (current && current.id !== environment.id) playback.stop(current)
-    playback.start(environment)
-    updateEnvironments(
-      environments.map((item) => ({
-        ...item,
-        playing: item.id === environment.id,
-      })),
-    )
+    workspace.play(environment.id)
   }
 
   const stopEnvironment = (environment: Environment) => {
-    playback.stop(environment)
-    updateEnvironments(
-      environments.map((item) =>
-        item.id === environment.id ? { ...item, playing: false } : item,
-      ),
-    )
+    workspace.stop(environment.id)
   }
 
   const toggleCombat = (environment: Environment) => {
-    const next = { ...environment, combatMode: !environment.combatMode }
-    if (environment.playing) playback.toggleCombat(environment)
-    updateEnvironments(
-      environments.map((item) => (item.id === environment.id ? next : item)),
-    )
+    workspace.toggleCombat(environment.id)
   }
 
   const updateEnvironmentVolume = (
     environment: Environment,
     volume: number,
   ) => {
-    const next = { ...environment, volume }
-    if (environment.playing) playback.setEnvironmentVolume(next)
-    updateEnvironments(
-      environments.map((item) => (item.id === environment.id ? next : item)),
-    )
+    workspace.setEnvironmentVolume(environment.id, volume)
   }
 
   const updateSoundVolume = (
@@ -338,15 +289,7 @@ export default function App({
     sound: Environment['sounds'][number],
     volume: number,
   ) => {
-    const sounds = environment.sounds.map((item) =>
-      item.id === sound.id ? { ...item, volume } : item,
-    )
-    const next = { ...environment, sounds }
-    if (environment.playing)
-      playback.setSoundVolume({ ...sound, volume }, environment.volume)
-    updateEnvironments(
-      environments.map((item) => (item.id === environment.id ? next : item)),
-    )
+    workspace.setSoundVolume(environment.id, sound.id, volume)
   }
 
   const updateSoundTiming = (
@@ -359,17 +302,7 @@ export default function App({
     const maximum = sound.maxIntervalSeconds ?? minimum
     const nextMinimum = field === 'minIntervalSeconds' ? value : minimum
     const nextMaximum = field === 'maxIntervalSeconds' ? value : maximum
-    const sounds = setSoundTiming(
-      environment.sounds,
-      sound.id,
-      nextMinimum,
-      nextMaximum,
-    )
-    const next = { ...environment, sounds }
-    if (environment.playing) playback.sync(next)
-    updateEnvironments(
-      environments.map((item) => (item.id === environment.id ? next : item)),
-    )
+    workspace.setSoundTiming(environment.id, sound.id, nextMinimum, nextMaximum)
   }
 
   return (
@@ -701,9 +634,9 @@ export default function App({
                           <button
                             className="text-button"
                             onClick={() =>
-                              playback.playManualOneShot(
-                                selectedEnvironment,
-                                sound,
+                              workspace.playManualOneShot(
+                                selectedEnvironment.id,
+                                sound.id,
                               )
                             }
                           >
