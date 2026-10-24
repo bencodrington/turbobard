@@ -826,11 +826,17 @@ export default function App({
       {isAboutOpen && (
         <div
           className="modal-backdrop"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="about-title"
+          role="presentation"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setIsAboutOpen(false)
+          }}
         >
-          <div className="modal-card about-card">
+          <div
+            className="modal-card about-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="about-title"
+          >
             <div className="modal-header">
               <h2 id="about-title">About</h2>
               <button

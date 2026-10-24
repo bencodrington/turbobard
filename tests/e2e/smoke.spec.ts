@@ -11,6 +11,22 @@ test('loads the Turbobard workspace', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Search' })).toBeVisible()
 })
 
+test('closes the About modal when its backdrop is clicked', async ({
+  page,
+}) => {
+  await page.goto('/')
+
+  await page.getByRole('button', { name: 'About' }).click()
+
+  const modal = page.getByRole('dialog', { name: 'About' })
+  const backdrop = page.locator('.modal-backdrop')
+  await modal.getByRole('heading', { name: 'About' }).click()
+  await expect(modal).toBeVisible()
+
+  await backdrop.click({ position: { x: 10, y: 10 } })
+  await expect(modal).toBeHidden()
+})
+
 test('creates an Environment without the Search panel intercepting the action', async ({
   page,
 }) => {

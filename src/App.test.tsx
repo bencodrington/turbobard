@@ -69,6 +69,24 @@ describe('Environment workspace', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('closes About from the backdrop without closing when its card is clicked', () => {
+    render(<App />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'About' }))
+
+    const modal = screen.getByRole('dialog', { name: 'About' })
+    const backdrop = modal.parentElement
+    expect(backdrop).not.toBeNull()
+
+    fireEvent.click(modal)
+    expect(screen.getByRole('dialog', { name: 'About' })).toBeVisible()
+
+    fireEvent.click(backdrop!)
+    expect(
+      screen.queryByRole('dialog', { name: 'About' }),
+    ).not.toBeInTheDocument()
+  })
+
   it('lets a user create, rename, select, collapse, expand, and delete an Environment', () => {
     render(<App />)
 
