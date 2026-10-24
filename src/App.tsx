@@ -23,6 +23,9 @@ import { createLegacySoundCatalog } from './legacy/catalog'
 import { createLegacyIconCatalog } from './legacy/icons'
 import type { EnvironmentPersistence } from './domain/ports'
 import { FontAwesomeIconView } from './ui/icons'
+import { AsyncSearchState } from './ui/AsyncSearchState'
+import { LabeledNumberField, LabeledRangeField } from './ui/LabeledFields'
+import { ModalShell } from './ui/ModalShell'
 import { createEnvironmentWorkspace } from './workspace/environmentWorkspace'
 
 function newEnvironmentId(): string {
@@ -496,23 +499,22 @@ export default function App({
                 </div>
                 {selectedEnvironment.expanded && (
                   <div className="environment-details">
-                    <label>
-                      Environment volume
-                      <input
-                        aria-label={`Volume for ${selectedEnvironment.name}`}
-                        type="range"
-                        min="0"
-                        max="1"
-                        step="0.01"
-                        value={selectedEnvironment.volume}
-                        onChange={(event) =>
-                          updateEnvironmentVolume(
-                            selectedEnvironment,
-                            Number(event.target.value),
-                          )
-                        }
-                      />
-                    </label>
+                    <LabeledRangeField
+                      label="Environment volume"
+                      value={selectedEnvironment.volume}
+                      inputProps={{
+                        'aria-label': `Volume for ${selectedEnvironment.name}`,
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                      }}
+                      onChange={(event) =>
+                        updateEnvironmentVolume(
+                          selectedEnvironment,
+                          Number(event.target.value),
+                        )
+                      }
+                    />
                   </div>
                 )}
               </div>
@@ -548,13 +550,15 @@ export default function App({
                             )
                           })()}
                       </span>
-                      <input
-                        aria-label={`Volume for ${sound.name ?? sound.id}`}
-                        type="range"
-                        min="0"
-                        max="1"
-                        step="0.01"
+                      <LabeledRangeField
+                        label={null}
                         value={sound.volume}
+                        inputProps={{
+                          'aria-label': `Volume for ${sound.name ?? sound.id}`,
+                          min: 0,
+                          max: 1,
+                          step: 0.01,
+                        }}
                         onChange={(event) =>
                           updateSoundVolume(
                             selectedEnvironment,
@@ -591,46 +595,44 @@ export default function App({
                       </button>
                       {sound.kind === 'one-shot' && (
                         <>
-                          <label>
-                            Minimum interval (seconds)
-                            <input
-                              aria-label={`Minimum interval for ${sound.name ?? sound.id}`}
-                              type="number"
-                              min="0"
-                              step="1"
-                              value={sound.minIntervalSeconds ?? 0}
-                              onChange={(event) =>
-                                updateSoundTiming(
-                                  selectedEnvironment,
-                                  sound,
-                                  'minIntervalSeconds',
-                                  Number(event.target.value),
-                                )
-                              }
-                            />
-                          </label>
-                          <label>
-                            Maximum interval (seconds)
-                            <input
-                              aria-label={`Maximum interval for ${sound.name ?? sound.id}`}
-                              type="number"
-                              min="0"
-                              step="1"
-                              value={
-                                sound.maxIntervalSeconds ??
-                                sound.minIntervalSeconds ??
-                                0
-                              }
-                              onChange={(event) =>
-                                updateSoundTiming(
-                                  selectedEnvironment,
-                                  sound,
-                                  'maxIntervalSeconds',
-                                  Number(event.target.value),
-                                )
-                              }
-                            />
-                          </label>
+                          <LabeledNumberField
+                            label="Minimum interval (seconds)"
+                            value={sound.minIntervalSeconds ?? 0}
+                            inputProps={{
+                              'aria-label': `Minimum interval for ${sound.name ?? sound.id}`,
+                              min: 0,
+                              step: 1,
+                            }}
+                            onChange={(event) =>
+                              updateSoundTiming(
+                                selectedEnvironment,
+                                sound,
+                                'minIntervalSeconds',
+                                Number(event.target.value),
+                              )
+                            }
+                          />
+                          <LabeledNumberField
+                            label="Maximum interval (seconds)"
+                            value={
+                              sound.maxIntervalSeconds ??
+                              sound.minIntervalSeconds ??
+                              0
+                            }
+                            inputProps={{
+                              'aria-label': `Maximum interval for ${sound.name ?? sound.id}`,
+                              min: 0,
+                              step: 1,
+                            }}
+                            onChange={(event) =>
+                              updateSoundTiming(
+                                selectedEnvironment,
+                                sound,
+                                'maxIntervalSeconds',
+                                Number(event.target.value),
+                              )
+                            }
+                          />
                           <button
                             className="text-button"
                             onClick={() =>
@@ -693,22 +695,20 @@ export default function App({
                 ),
               )}
             </div>
-            {catalogLoading ? (
-              <p role="status">Loading Sounds…</p>
-            ) : catalogError ? (
-              <div role="alert">
-                Legacy sound catalog unavailable. Check your local API
-                configuration and network access.{' '}
-                <button
-                  className="text-button"
-                  onClick={() => setCatalogAttempt((attempt) => attempt + 1)}
-                >
-                  Retry
-                </button>
-              </div>
-            ) : results.length === 0 ? (
-              <p className="empty-state">No Sounds found.</p>
-            ) : (
+            <AsyncSearchState
+              loading={catalogLoading}
+              error={catalogError}
+              empty={results.length === 0}
+              loadingMessage="Loading Sounds…"
+              errorMessage={
+                <>
+                  Legacy sound catalog unavailable. Check your local API
+                  configuration and network access.
+                </>
+              }
+              emptyMessage={<p className="empty-state">No Sounds found.</p>}
+              onRetry={() => setCatalogAttempt((attempt) => attempt + 1)}
+            >
               <div className="catalog-results">
                 {results.map((item) => (
                   <article className="catalog-item" key={item.id}>
@@ -740,7 +740,7 @@ export default function App({
                   </article>
                 ))}
               </div>
-            )}
+            </AsyncSearchState>
             {selectedEnvironment && results.length > 1 && (
               <button
                 className="primary-button"
@@ -757,179 +757,134 @@ export default function App({
         </div>
       </section>
       {isAboutOpen && (
-        <div
-          className="modal-backdrop"
-          role="presentation"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) setIsAboutOpen(false)
-          }}
+        <ModalShell
+          title="About"
+          titleId="about-title"
+          className="about-card"
+          closeLabel="Close About"
+          onClose={() => setIsAboutOpen(false)}
         >
-          <div
-            className="modal-card about-card"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="about-title"
-          >
-            <div className="modal-header">
-              <h2 id="about-title">About</h2>
-              <button
-                className="text-button"
-                aria-label="Close About"
-                onClick={() => setIsAboutOpen(false)}
-              >
-                Close
-              </button>
-            </div>
-            <div className="modal-body about-body">
-              <section>
-                <h3>TurboBard is a passion project.</h3>
-                <p>
-                  If you'd like, you can donate to help cover the costs of
-                  running it.
-                </p>
-                <a href="https://ko-fi.com/projectbench">Support me</a>
-              </section>
-              <section>
-                <h3>Data policy.</h3>
-                <p>No personal data is recorded at any time.</p>
-              </section>
-              <section>
-                <h3>About the audio.</h3>
-                <p>
-                  I've collected sounds with permissive licenses, and linked the
-                  source wherever possible.
-                </p>
-              </section>
-              <section>
-                <h3>Contact me.</h3>
-                <p>
-                  Please send any feedback, bugs, or ideas to{' '}
-                  <a href="mailto:phanarydev@gmail.com">phanarydev@gmail.com</a>
-                </p>
-              </section>
-            </div>
+          <div className="about-body">
+            <section>
+              <h3>TurboBard is a passion project.</h3>
+              <p>
+                If you'd like, you can donate to help cover the costs of running
+                it.
+              </p>
+              <a href="https://ko-fi.com/projectbench">Support me</a>
+            </section>
+            <section>
+              <h3>Data policy.</h3>
+              <p>No personal data is recorded at any time.</p>
+            </section>
+            <section>
+              <h3>About the audio.</h3>
+              <p>
+                I've collected sounds with permissive licenses, and linked the
+                source wherever possible.
+              </p>
+            </section>
+            <section>
+              <h3>Contact me.</h3>
+              <p>
+                Please send any feedback, bugs, or ideas to{' '}
+                <a href="mailto:phanarydev@gmail.com">phanarydev@gmail.com</a>
+              </p>
+            </section>
           </div>
-        </div>
+        </ModalShell>
       )}
       {editingEnvironment && (
-        <div
-          className="modal-backdrop"
-          role="presentation"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) setEditingIconEnvId(null)
-          }}
+        <ModalShell
+          title="Select an icon"
+          titleId="icon-modal-title"
+          subtitle={editingEnvironment.name}
+          closeLabel="Close icon picker"
+          onClose={() => setEditingIconEnvId(null)}
         >
-          <div
-            className="modal-card"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="icon-modal-title"
+          <label htmlFor="icon-search">Search icons</label>
+          <input
+            id="icon-search"
+            value={iconQuery}
+            onChange={(event) => setIconQuery(event.target.value)}
+            placeholder="Search for icons"
+          />
+          <AsyncSearchState
+            loading={iconLoading}
+            error={iconError}
+            empty={displayedIcons.length === 0}
+            loadingMessage="Loading icons…"
+            errorMessage={
+              <>
+                Icon catalog unavailable. Check your local API configuration and
+                network access.
+              </>
+            }
+            errorClassName="icon-error"
+            emptyMessage={
+              <p className="empty-state">
+                {iconQuery.trim()
+                  ? `No icons found for "${iconQuery}".`
+                  : 'No icons found.'}
+              </p>
+            }
+            onRetry={() => setIconAttempt((attempt) => attempt + 1)}
           >
-            <div className="modal-header">
-              <div>
-                <h2 id="icon-modal-title">Select an icon</h2>
-                <p className="modal-subtitle">{editingEnvironment.name}</p>
-              </div>
-              <button
-                className="text-button"
-                aria-label="Close icon picker"
-                onClick={() => setEditingIconEnvId(null)}
-              >
-                Close
-              </button>
-            </div>
-            <div className="modal-body">
-              <label htmlFor="icon-search">Search icons</label>
-              <input
-                id="icon-search"
-                value={iconQuery}
-                onChange={(event) => setIconQuery(event.target.value)}
-                placeholder="Search for icons"
-              />
-              {iconLoading ? (
-                <p role="status">Loading icons…</p>
-              ) : iconError ? (
-                <div role="alert" className="icon-error">
-                  Icon catalog unavailable. Check your local API configuration
-                  and network access.{' '}
+            <div
+              className="icon-grid"
+              role="group"
+              aria-label="Available icons"
+            >
+              {displayedIcons.map((iconId) => {
+                const isSelected =
+                  (editingEnvironment.icon ?? DEFAULT_ENVIRONMENT_ICON) ===
+                  iconId
+                return (
                   <button
-                    className="text-button"
-                    onClick={() => setIconAttempt((attempt) => attempt + 1)}
+                    key={iconId}
+                    className={`icon-option-button${isSelected ? ' selected' : ''}`}
+                    aria-label={iconId}
+                    aria-pressed={isSelected}
+                    onClick={() =>
+                      updateEnvironmentIcon(editingEnvironment, iconId)
+                    }
+                    style={{
+                      color:
+                        editingEnvironment.iconColor ??
+                        DEFAULT_ENVIRONMENT_ICON_COLOR,
+                    }}
                   >
-                    Retry
+                    <EnvironmentIcon iconId={iconId} />
+                    {isSelected && (
+                      <span className="icon-selected-badge" aria-hidden="true">
+                        ✓
+                      </span>
+                    )}
                   </button>
-                </div>
-              ) : displayedIcons.length === 0 ? (
-                <p className="empty-state">
-                  {iconQuery.trim()
-                    ? `No icons found for "${iconQuery}".`
-                    : 'No icons found.'}
-                </p>
-              ) : (
-                <div
-                  className="icon-grid"
-                  role="group"
-                  aria-label="Available icons"
-                >
-                  {displayedIcons.map((iconId) => {
-                    const isSelected =
-                      (editingEnvironment.icon ?? DEFAULT_ENVIRONMENT_ICON) ===
-                      iconId
-                    return (
-                      <button
-                        key={iconId}
-                        className={`icon-option-button${isSelected ? ' selected' : ''}`}
-                        aria-label={iconId}
-                        aria-pressed={isSelected}
-                        onClick={() =>
-                          updateEnvironmentIcon(editingEnvironment, iconId)
-                        }
-                        style={{
-                          color:
-                            editingEnvironment.iconColor ??
-                            DEFAULT_ENVIRONMENT_ICON_COLOR,
-                        }}
-                      >
-                        <EnvironmentIcon iconId={iconId} />
-                        {isSelected && (
-                          <span
-                            className="icon-selected-badge"
-                            aria-hidden="true"
-                          >
-                            ✓
-                          </span>
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
-              <div
-                className="color-options"
-                role="group"
-                aria-label="Icon colors"
-              >
-                {ICON_COLOR_OPTIONS.map((color) => {
-                  const isColorSelected =
-                    (editingEnvironment.iconColor ??
-                      DEFAULT_ENVIRONMENT_ICON_COLOR) === color
-                  return (
-                    <button
-                      key={color}
-                      className={`color-option-button${isColorSelected ? ' selected' : ''}`}
-                      aria-label={`Select color ${color}`}
-                      aria-pressed={isColorSelected}
-                      onClick={() =>
-                        updateEnvironmentIconColor(editingEnvironment, color)
-                      }
-                      style={{ backgroundColor: color }}
-                    />
-                  )
-                })}
-              </div>
+                )
+              })}
             </div>
+          </AsyncSearchState>
+          <div className="color-options" role="group" aria-label="Icon colors">
+            {ICON_COLOR_OPTIONS.map((color) => {
+              const isColorSelected =
+                (editingEnvironment.iconColor ??
+                  DEFAULT_ENVIRONMENT_ICON_COLOR) === color
+              return (
+                <button
+                  key={color}
+                  className={`color-option-button${isColorSelected ? ' selected' : ''}`}
+                  aria-label={`Select color ${color}`}
+                  aria-pressed={isColorSelected}
+                  onClick={() =>
+                    updateEnvironmentIconColor(editingEnvironment, color)
+                  }
+                  style={{ backgroundColor: color }}
+                />
+              )
+            })}
           </div>
-        </div>
+        </ModalShell>
       )}
     </main>
   )
