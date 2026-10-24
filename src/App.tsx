@@ -609,7 +609,7 @@ export default function App({
                                 aria-label={`${sound.name ?? sound.id}: next sound in ${remainingLabel}`}
                                 title={`Next sound in ${remainingLabel}`}
                                 style={{
-                                  background: `conic-gradient(#78e2ae ${state.fractionRemaining * 360}deg, #31466f 0deg)`,
+                                  background: `conic-gradient(var(--accent) ${state.fractionRemaining * 360}deg, var(--border-strong) 0deg)`,
                                 }}
                               />
                             )

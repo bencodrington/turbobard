@@ -20,7 +20,7 @@ test('closes the About modal when its backdrop is clicked', async ({
 
   const modal = page.getByRole('dialog', { name: 'About' })
   const backdrop = page.locator('.modal-backdrop')
-  await modal.getByRole('heading', { name: 'About' }).click()
+  await modal.getByRole('heading', { name: 'About', exact: true }).click()
   await expect(modal).toBeVisible()
 
   await backdrop.click({ position: { x: 10, y: 10 } })
