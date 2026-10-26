@@ -34,6 +34,7 @@ import { FontAwesomeIconView } from './ui/icons'
 import { AsyncSearchState } from './ui/AsyncSearchState'
 import { LabeledNumberField, LabeledRangeField } from './ui/LabeledFields'
 import { ModalShell } from './ui/ModalShell'
+import { NowPlayingBar } from './ui/NowPlayingBar'
 import { createEnvironmentWorkspace } from './workspace/environmentWorkspace'
 
 function newEnvironmentId(): string {
@@ -113,11 +114,12 @@ export default function App({
       }),
     [persistence, playback],
   )
-  const { environments } = useSyncExternalStore(
-    workspace.subscribe,
-    workspace.getSnapshot,
-    workspace.getSnapshot,
-  )
+  const { environments, mostRecentlyPlayedEnvironmentId } =
+    useSyncExternalStore(
+      workspace.subscribe,
+      workspace.getSnapshot,
+      workspace.getSnapshot,
+    )
   const [isEditorOpen, setIsEditorOpen] = useState(
     () =>
       workspace.getSnapshot().environments.length > 0 &&
@@ -125,6 +127,9 @@ export default function App({
   )
   const selectedEnvironment = environments.find(
     (item) => item.id === selectedId,
+  )
+  const mostRecentlyPlayedEnvironment = environments.find(
+    (item) => item.id === mostRecentlyPlayedEnvironmentId,
   )
   const editingEnvironment = environments.find(
     (item) => item.id === editingIconEnvId,
@@ -767,6 +772,14 @@ export default function App({
           </section>
         </div>
       </section>
+      {mostRecentlyPlayedEnvironment && (
+        <NowPlayingBar
+          environment={mostRecentlyPlayedEnvironment}
+          onPlay={() => playEnvironment(mostRecentlyPlayedEnvironment)}
+          onStop={() => stopEnvironment(mostRecentlyPlayedEnvironment)}
+          onToggleCombat={() => toggleCombat(mostRecentlyPlayedEnvironment)}
+        />
+      )}
       {isAboutOpen && (
         <ModalShell
           title="About"

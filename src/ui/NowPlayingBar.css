@@ -1,0 +1,257 @@
+@property --now-playing-angle {
+  syntax: '<angle>';
+  initial-value: 20deg;
+  inherits: false;
+}
+
+.now-playing-bar {
+  --dark-blue: color-mix(in srgb, black, var(--deep-blue) 20%);
+  --dark-primary: color-mix(in srgb, black, var(--gradient-color-1) 20%);
+  --dark-accent: color-mix(in srgb, black, var(--gradient-color-2) 20%);
+  --dark-gold: color-mix(in srgb, black, var(--gradient-color-3) 20%);
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1rem 2rem;
+  background: linear-gradient(to bottom, var(--grey-2) 0 1%, black 1% 100%);
+}
+
+.now-playing-bar > :not(.now-playing-border) {
+  position: relative;
+  z-index: 2;
+}
+
+.now-playing-bar::before {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  background: linear-gradient(
+    20deg,
+    var(--dark-blue),
+    var(--dark-primary) 17%,
+    var(--dark-accent) 53%,
+    var(--dark-gold) 83%
+  );
+  transition: opacity 0.05s ease;
+}
+
+.now-playing-border,
+.now-playing-bar::after {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  inset: -2px 0 0;
+  background: conic-gradient(
+    from var(--now-playing-angle),
+    var(--gradient-color-1),
+    var(--gradient-color-2),
+    var(--gradient-color-3),
+    var(--gradient-color-1)
+  );
+  animation: now-playing-spin 3s linear infinite;
+  transition: opacity 1s ease;
+}
+
+.now-playing-bar::after {
+  filter: blur(1rem);
+  opacity: 0.5;
+}
+
+.now-playing-bar:not(.is-playing) .now-playing-border,
+.now-playing-bar:not(.is-playing)::after {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.now-playing-bar:not(.is-playing)::before {
+  opacity: 0;
+  transition: opacity 2s ease;
+}
+
+.now-playing-name {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+}
+
+.now-playing-name > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.now-playing-icon {
+  display: inline-flex;
+  justify-content: center;
+  width: 2.25rem;
+  flex-shrink: 0;
+}
+
+.now-playing-combat {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
+  font-size: 0.875rem;
+  line-height: 1rem;
+  cursor: pointer;
+}
+
+.now-playing-combat.is-disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.now-playing-combat input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  min-height: 0;
+  padding: 0;
+}
+
+.now-playing-switch {
+  position: relative;
+  width: 2.5rem;
+  height: 1.25rem;
+  border: 1px solid var(--grey-3);
+  border-radius: 1.25rem;
+  background: var(--grey-0);
+  transition: background-color 0.1s;
+}
+
+.now-playing-thumb {
+  position: absolute;
+  inset: 0 auto auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(1.25rem - 2px);
+  height: calc(1.25rem - 2px);
+  border-radius: 50%;
+  background: white;
+  color: var(--grey-0);
+  transition: transform 0.1s;
+}
+
+.now-playing-thumb svg {
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+
+.now-playing-combat input:checked + .now-playing-switch {
+  background: var(--secondary);
+}
+
+.now-playing-combat input:checked + .now-playing-switch .now-playing-thumb {
+  transform: translateX(1.25rem);
+}
+
+.now-playing-combat input:checked + .now-playing-switch svg {
+  opacity: 1;
+}
+
+.now-playing-combat input:focus-visible + .now-playing-switch {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.now-playing-play.button {
+  width: 2.75rem;
+  height: 3rem;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.now-playing-play.button:not(:disabled):hover {
+  background: none;
+}
+
+.now-playing-hexagon {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.now-playing-hexagon path {
+  stroke: var(--grey-2);
+  fill: var(--grey-0);
+  transition: fill 0.3s ease;
+}
+
+.now-playing-play > :last-child {
+  position: relative;
+}
+
+.is-playing .now-playing-hexagon path {
+  animation: now-playing-shimmer 5s linear infinite;
+}
+
+/* Media-query rem uses the browser's initial font size. 480px is 40rem
+   at this app's 12px root size. Keep the bar within its outer margins. */
+@media (min-width: 480px) {
+  .now-playing-bar {
+    align-self: center;
+    width: min(40rem, calc(100% - 2rem));
+    margin: 1rem;
+    padding-bottom: 1rem;
+    border-radius: 4px;
+    background: black;
+  }
+
+  .now-playing-bar::before {
+    border-radius: 4px;
+  }
+
+  .now-playing-border {
+    inset: -2px;
+    border-radius: 6px;
+  }
+}
+
+@keyframes now-playing-spin {
+  from {
+    --now-playing-angle: 0deg;
+  }
+  to {
+    --now-playing-angle: 360deg;
+  }
+}
+
+@keyframes now-playing-shimmer {
+  0%,
+  100% {
+    stroke: var(--gradient-color-1);
+    fill: var(--dark-blue);
+  }
+  25% {
+    fill: var(--dark-primary);
+  }
+  50% {
+    stroke: var(--gradient-color-2);
+    fill: var(--dark-accent);
+  }
+  75% {
+    fill: var(--dark-gold);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .now-playing-bar *,
+  .now-playing-bar::before,
+  .now-playing-bar::after {
+    animation: none;
+    transition: none;
+  }
+}
