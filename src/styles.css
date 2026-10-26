@@ -338,6 +338,9 @@ input::placeholder {
   gap: var(--space-2);
   margin-top: var(--space-4);
 }
+.sound-list {
+  grid-template-columns: minmax(0, 1fr);
+}
 .sound-list h3 {
   font-size: var(--font-size-heading);
 }
@@ -353,10 +356,51 @@ input::placeholder {
   background: var(--surface-raised-strong);
 }
 .sound-name {
-  display: inline-flex;
-  min-width: 8rem;
+  display: flex;
+  min-width: 0;
   align-items: center;
   gap: var(--space-2);
+}
+.sound-name > span:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.sound-row {
+  min-width: 0;
+  flex-direction: column;
+  align-items: stretch;
+}
+.sound-controls,
+.sound-timing {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.sound-controls > input[type='range'] {
+  flex: 1 1 10rem;
+  min-width: 0;
+  max-width: 100%;
+}
+.sound-controls > select {
+  min-width: 0;
+  max-width: 100%;
+}
+.sound-timing {
+  align-items: end;
+}
+.sound-timing > label {
+  display: flex;
+  flex: 1 1 10rem;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.sound-timing input {
+  width: 100%;
+  min-width: 0;
 }
 .one-shot-wick {
   display: inline-block;
@@ -665,7 +709,6 @@ input::placeholder {
   }
   .environment-card-header,
   .environment-actions,
-  .sound-row,
   .catalog-item {
     align-items: stretch;
     flex-wrap: wrap;
@@ -675,13 +718,9 @@ input::placeholder {
   }
   .environment-card-header > button,
   .environment-actions > button,
-  .sound-row > button,
-  .sound-row > select {
+  .sound-controls > button,
+  .sound-controls > select,
+  .sound-timing > button {
     min-height: 2.75rem;
-  }
-  .sound-row > input[type='range'],
-  .sound-row > label {
-    min-width: min(100%, 12rem);
-    flex: 1 1 10rem;
   }
 }

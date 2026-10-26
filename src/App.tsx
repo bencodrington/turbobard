@@ -32,7 +32,8 @@ import { createLegacyIconCatalog } from './legacy/icons'
 import type { EnvironmentPersistence } from './domain/ports'
 import { FontAwesomeIconView } from './ui/icons'
 import { AsyncSearchState } from './ui/AsyncSearchState'
-import { LabeledNumberField, LabeledRangeField } from './ui/LabeledFields'
+import { LabeledRangeField } from './ui/LabeledFields'
+import { Sound } from './ui/Sound'
 import { ModalShell } from './ui/ModalShell'
 import { NowPlayingBar } from './ui/NowPlayingBar'
 import { createEnvironmentWorkspace } from './workspace/environmentWorkspace'
@@ -538,130 +539,46 @@ export default function App({
                   <p className="empty-state">No Sounds added yet.</p>
                 ) : (
                   selectedEnvironment.sounds.map((sound) => (
-                    <div className="sound-row" key={sound.id}>
-                      <span className="sound-name">
-                        {sound.name ?? sound.id}
-                        {selectedEnvironment.playing &&
-                          sound.kind === 'one-shot' &&
-                          (() => {
-                            const state = playback.oneShotState(sound.id)
-                            if (!state) return null
-                            const seconds = state.remainingMs / 1_000
-                            const remainingLabel =
-                              seconds < 1
-                                ? '<1 second'
-                                : `${Math.ceil(seconds)} seconds`
-                            return (
-                              <span
-                                className="one-shot-wick"
-                                role="img"
-                                aria-label={`${sound.name ?? sound.id}: next sound in ${remainingLabel}`}
-                                title={`Next sound in ${remainingLabel}`}
-                                style={{
-                                  background: `conic-gradient(var(--accent) ${state.fractionRemaining * 360}deg, var(--border-strong) 0deg)`,
-                                }}
-                              />
-                            )
-                          })()}
-                      </span>
-                      <LabeledRangeField
-                        label={null}
-                        value={sound.volume}
-                        inputProps={{
-                          'aria-label': `Volume for ${sound.name ?? sound.id}`,
-                          min: 0,
-                          max: 1,
-                          step: 0.01,
-                        }}
-                        onChange={(event) =>
-                          updateSoundVolume(
-                            selectedEnvironment,
-                            sound,
-                            Number(event.target.value),
-                          )
-                        }
-                      />
-                      <select
-                        aria-label={`Placement for ${sound.name ?? sound.id}`}
-                        value={sound.placement}
-                        onChange={(event) =>
-                          updateSelectedSounds(
-                            placeSound(
-                              selectedEnvironment.sounds,
-                              sound.id,
-                              event.target.value as 'ambiance' | 'combat',
-                            ),
-                          )
-                        }
-                      >
-                        <option value="ambiance">Ambiance</option>
-                        <option value="combat">Combat</option>
-                      </select>
-                      <Button
-                        variant="text"
-                        danger
-                        onClick={() =>
-                          updateSelectedSounds(
-                            removeSound(selectedEnvironment.sounds, sound.id),
-                          )
-                        }
-                      >
-                        Remove
-                      </Button>
-                      {sound.kind === 'one-shot' && (
-                        <>
-                          <LabeledNumberField
-                            label="Minimum interval (seconds)"
-                            value={sound.minIntervalSeconds ?? 0}
-                            inputProps={{
-                              'aria-label': `Minimum interval for ${sound.name ?? sound.id}`,
-                              min: 0,
-                              step: 1,
-                            }}
-                            onChange={(event) =>
-                              updateSoundTiming(
-                                selectedEnvironment,
-                                sound,
-                                'minIntervalSeconds',
-                                Number(event.target.value),
-                              )
-                            }
-                          />
-                          <LabeledNumberField
-                            label="Maximum interval (seconds)"
-                            value={
-                              sound.maxIntervalSeconds ??
-                              sound.minIntervalSeconds ??
-                              0
-                            }
-                            inputProps={{
-                              'aria-label': `Maximum interval for ${sound.name ?? sound.id}`,
-                              min: 0,
-                              step: 1,
-                            }}
-                            onChange={(event) =>
-                              updateSoundTiming(
-                                selectedEnvironment,
-                                sound,
-                                'maxIntervalSeconds',
-                                Number(event.target.value),
-                              )
-                            }
-                          />
-                          <Button
-                            variant="text"
-                            onClick={() =>
-                              workspace.playManualOneShot(
-                                selectedEnvironment.id,
-                                sound.id,
-                              )
-                            }
-                          >
-                            Play now
-                          </Button>
-                        </>
-                      )}
-                    </div>
+                    <Sound
+                      key={sound.id}
+                      sound={sound}
+                      oneShotState={
+                        selectedEnvironment.playing && sound.kind === 'one-shot'
+                          ? playback.oneShotState(sound.id)
+                          : undefined
+                      }
+                      onVolumeChange={(volume) =>
+                        updateSoundVolume(selectedEnvironment, sound, volume)
+                      }
+                      onPlacementChange={(placement) =>
+                        updateSelectedSounds(
+                          placeSound(
+                            selectedEnvironment.sounds,
+                            sound.id,
+                            placement,
+                          ),
+                        )
+                      }
+                      onRemove={() =>
+                        updateSelectedSounds(
+                          removeSound(selectedEnvironment.sounds, sound.id),
+                        )
+                      }
+                      onTimingChange={(field, value) =>
+                        updateSoundTiming(
+                          selectedEnvironment,
+                          sound,
+                          field,
+                          value,
+                        )
+                      }
+                      onPlayNow={() =>
+                        workspace.playManualOneShot(
+                          selectedEnvironment.id,
+                          sound.id,
+                        )
+                      }
+                    />
                   ))
                 )}
               </div>
