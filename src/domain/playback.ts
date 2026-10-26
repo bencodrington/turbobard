@@ -25,7 +25,6 @@ export type Environment = {
   sounds: Sound[]
   playing: boolean
   combatMode: boolean
-  expanded: boolean
   icon: string | null
   iconColor: string | null
 }
@@ -61,7 +60,6 @@ export function restoreEnvironment(
     id: raw.id ?? createId(),
     name: raw.name ?? 'Untitled Environment',
     volume: raw.volume ?? 1,
-    expanded: raw.expanded ?? true,
     icon: raw.icon ?? null,
     iconColor: raw.iconColor ?? null,
     sounds: (raw.sounds ?? []).map((sound) => ({ ...sound, loaded: false })),

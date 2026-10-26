@@ -5,7 +5,6 @@ import {
   renameEnvironment,
   setEnvironmentIcon,
   setEnvironmentIconColor,
-  toggleEnvironmentExpanded,
 } from './environments'
 
 describe('Environment management', () => {
@@ -17,23 +16,17 @@ describe('Environment management', () => {
       sounds: [],
       playing: false,
       combatMode: false,
-      expanded: true,
       icon: null,
       iconColor: null,
     })
   })
 
-  it('renames, expands, and deletes an Environment without changing other state', () => {
+  it('renames and deletes an Environment without changing other state', () => {
     const environment = createEnvironment('forest', 'Forest')
     const renamed = renameEnvironment(environment, 'Ruined Keep')
-    const collapsed = toggleEnvironmentExpanded(renamed)
-
-    expect(collapsed).toMatchObject({ name: 'Ruined Keep', expanded: false })
+    expect(renamed).toEqual({ ...environment, name: 'Ruined Keep' })
     expect(
-      deleteEnvironment(
-        [collapsed, createEnvironment('cave', 'Cave')],
-        'forest',
-      ),
+      deleteEnvironment([renamed, createEnvironment('cave', 'Cave')], 'forest'),
     ).toEqual([createEnvironment('cave', 'Cave')])
   })
 

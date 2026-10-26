@@ -18,7 +18,6 @@ const environment: Environment = {
   sounds: [loop],
   playing: false,
   combatMode: false,
-  expanded: true,
   icon: null,
   iconColor: null,
 }

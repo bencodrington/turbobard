@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+} from 'react'
+import logo from './assets/logo.svg'
 import type { Environment } from './domain/playback'
 import { createEnvironmentPersistence } from './persistence/environments'
 import {
@@ -259,10 +266,6 @@ export default function App({
     }
   }
 
-  const toggleExpanded = (environment: Environment) => {
-    workspace.toggleExpanded(environment.id)
-  }
-
   const updateSelectedSounds = (sounds: Environment['sounds']) => {
     if (!selectedEnvironment) return
     workspace.updateSounds(selectedEnvironment.id, sounds)
@@ -313,7 +316,10 @@ export default function App({
       <section className="workspace" aria-labelledby="app-title">
         <header className="app-header">
           <div>
-            <h1 id="app-title">Turbobard</h1>
+            <h1 id="app-title">
+              <img src={logo} alt="" className="app-logo" />
+              <span className="sr-only">Turbobard</span>
+            </h1>
           </div>
           <button
             className="secondary-button header-button"
@@ -350,9 +356,6 @@ export default function App({
               >
                 <FontAwesomeIconView iconId="pencil" />
               </button>
-              <button className="primary-button" onClick={addEnvironment}>
-                Create Environment
-              </button>
             </div>
             {environments.length === 0 ? (
               <p className="empty-state">
@@ -367,6 +370,13 @@ export default function App({
                       className={`environment-tile${selected ? ' selected' : ''}${environment.playing ? ' playing' : ''}`}
                       key={environment.id}
                       aria-label={`${isEditMode ? 'Open' : environment.playing ? 'Stop' : 'Play'} ${environment.name}`}
+                      style={
+                        {
+                          '--environment-color':
+                            environment.iconColor ??
+                            DEFAULT_ENVIRONMENT_ICON_COLOR,
+                        } as CSSProperties
+                      }
                       onClick={() => openEnvironment(environment)}
                     >
                       <span
@@ -392,6 +402,11 @@ export default function App({
                 })}
               </div>
             )}
+            <div className="environment-panel-footer">
+              <button className="primary-button" onClick={addEnvironment}>
+                Create Environment
+              </button>
+            </div>
           </section>
 
           {selectedEnvironment && isEditorOpen && (
@@ -484,39 +499,30 @@ export default function App({
                 </div>
                 <div className="environment-actions">
                   <button
-                    aria-expanded={selectedEnvironment.expanded}
-                    className="text-button"
-                    onClick={() => toggleExpanded(selectedEnvironment)}
-                  >
-                    {selectedEnvironment.expanded ? 'Collapse' : 'Expand'}
-                  </button>
-                  <button
                     className="text-button danger-button"
                     onClick={() => removeEnvironment(selectedEnvironment.id)}
                   >
                     Delete
                   </button>
                 </div>
-                {selectedEnvironment.expanded && (
-                  <div className="environment-details">
-                    <LabeledRangeField
-                      label="Environment volume"
-                      value={selectedEnvironment.volume}
-                      inputProps={{
-                        'aria-label': `Volume for ${selectedEnvironment.name}`,
-                        min: 0,
-                        max: 1,
-                        step: 0.01,
-                      }}
-                      onChange={(event) =>
-                        updateEnvironmentVolume(
-                          selectedEnvironment,
-                          Number(event.target.value),
-                        )
-                      }
-                    />
-                  </div>
-                )}
+                <div className="environment-details">
+                  <LabeledRangeField
+                    label="Environment volume"
+                    value={selectedEnvironment.volume}
+                    inputProps={{
+                      'aria-label': `Volume for ${selectedEnvironment.name}`,
+                      min: 0,
+                      max: 1,
+                      step: 0.01,
+                    }}
+                    onChange={(event) =>
+                      updateEnvironmentVolume(
+                        selectedEnvironment,
+                        Number(event.target.value),
+                      )
+                    }
+                  />
+                </div>
               </div>
               <div className="sound-list">
                 <h3>Sounds in Environment</h3>

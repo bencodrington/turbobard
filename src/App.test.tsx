@@ -87,7 +87,7 @@ describe('Environment workspace', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('lets a user create, rename, select, collapse, expand, and delete an Environment', () => {
+  it('lets a user create, rename, select, and delete an Environment', () => {
     render(<App />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
@@ -95,18 +95,15 @@ describe('Environment workspace', () => {
     fireEvent.change(name, { target: { value: 'Ruined Keep' } })
 
     expect(screen.getByDisplayValue('Ruined Keep')).toBeVisible()
-    fireEvent.click(screen.getByRole('button', { name: 'Collapse' }))
-    expect(screen.getByRole('button', { name: 'Expand' })).toHaveAttribute(
-      'aria-expanded',
-      'false',
-    )
-    fireEvent.click(screen.getByRole('button', { name: 'Expand' }))
+    expect(
+      screen.getByRole('slider', { name: 'Volume for Ruined Keep' }),
+    ).toBeVisible()
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
 
     expect(screen.getByText(/no environments yet/i)).toBeVisible()
   })
 
-  it('restores saved Environments without starting playback', async () => {
+  it('restores previously collapsed Environments with volume visible without starting playback', async () => {
     localStorage.setItem(
       'environments',
       JSON.stringify({
@@ -115,7 +112,7 @@ describe('Environment workspace', () => {
           {
             id: 'forest',
             name: 'Forest',
-            expanded: true,
+            expanded: false,
             sounds: [],
             playing: true,
             combatMode: true,
@@ -127,6 +124,9 @@ describe('Environment workspace', () => {
     render(<App />)
 
     expect(screen.getByDisplayValue('Forest')).toBeVisible()
+    expect(
+      screen.getByRole('slider', { name: 'Volume for Forest' }),
+    ).toBeVisible()
     expect(
       screen.queryByText(/ready for the first listening session/i),
     ).not.toBeInTheDocument()

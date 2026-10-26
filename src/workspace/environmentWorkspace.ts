@@ -6,7 +6,6 @@ import {
   renameEnvironment,
   setEnvironmentIcon,
   setEnvironmentIconColor,
-  toggleEnvironmentExpanded,
 } from '../domain/environments'
 import type { Environment, Sound } from '../domain/playback'
 
@@ -20,7 +19,6 @@ export type EnvironmentWorkspace = {
   addEnvironment: () => Environment
   renameEnvironment: (environmentId: string, name: string) => void
   removeEnvironment: (environmentId: string) => void
-  toggleExpanded: (environmentId: string) => void
   setIcon: (environmentId: string, icon: string | null) => void
   setIconColor: (environmentId: string, iconColor: string | null) => void
   updateSounds: (environmentId: string, sounds: Sound[]) => void
@@ -97,9 +95,6 @@ export function createEnvironmentWorkspace({
       const environment = environmentFor(environmentId)
       if (environment?.playing) playback.stop(environment)
       replace(deleteEnvironment(state.environments, environmentId))
-    },
-    toggleExpanded(environmentId) {
-      updateEnvironment(environmentId, toggleEnvironmentExpanded)
     },
     setIcon(environmentId, icon) {
       updateEnvironment(environmentId, (environment) =>

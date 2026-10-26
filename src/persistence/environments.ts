@@ -32,7 +32,6 @@ type LegacyGroup = {
   tracks?: unknown
   combatTracks?: unknown
   volume?: unknown
-  isExpanded?: unknown
   icon?: unknown
   iconColour?: unknown
 }
@@ -127,7 +126,6 @@ function migrateGroup(group: LegacyGroup, fallbackId: string): Environment {
           : fallbackId,
     name: asString(group.name, 'Untitled environment'),
     volume: asNumber(group.volume, 1),
-    expanded: asBoolean(group.isExpanded, true),
     icon: typeof group.icon === 'string' ? group.icon : null,
     iconColor: typeof group.iconColour === 'string' ? group.iconColour : null,
     playing: false,
@@ -153,7 +151,6 @@ function normalizeEnvironment(
     id: asString(value.id, fallbackId),
     name: asString(value.name, 'Untitled environment'),
     volume: asNumber(value.volume, 1),
-    expanded: asBoolean(value.expanded, true),
     icon: typeof value.icon === 'string' ? value.icon : null,
     iconColor: typeof value.iconColor === 'string' ? value.iconColor : null,
     playing: false,
@@ -232,7 +229,6 @@ export function serializeEnvironments(environments: Environment[]): string {
       id: environment.id,
       name: environment.name,
       volume: environment.volume,
-      expanded: environment.expanded,
       icon: environment.icon,
       iconColor: environment.iconColor,
       playing: false,

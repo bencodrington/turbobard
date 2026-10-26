@@ -11,7 +11,6 @@ export function createEnvironment(
     sounds: [],
     playing: false,
     combatMode: false,
-    expanded: true,
     icon: null,
     iconColor: null,
   }
@@ -22,12 +21,6 @@ export function renameEnvironment(
   name: string,
 ): Environment {
   return { ...environment, name }
-}
-
-export function toggleEnvironmentExpanded(
-  environment: Environment,
-): Environment {
-  return { ...environment, expanded: !environment.expanded }
 }
 
 export function deleteEnvironment(
