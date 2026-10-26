@@ -1,3 +1,4 @@
+import { Button } from './Button'
 import type { ReactNode } from 'react'
 
 export type AsyncSearchStateProps = {
@@ -28,9 +29,9 @@ export function AsyncSearchState({
     return (
       <div role="alert" className={errorClassName}>
         {errorMessage}{' '}
-        <button className="text-button" onClick={onRetry}>
+        <Button variant="text" onClick={onRetry}>
           Retry
-        </button>
+        </Button>
       </div>
     )
   if (empty) return emptyMessage
