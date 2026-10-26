@@ -15,6 +15,94 @@ describe('Environment workspace', () => {
     vi.restoreAllMocks()
   })
 
+  it('remembers the last played Environment after stop, but only for this session', () => {
+    const { unmount } = render(<App />)
+    expect(
+      screen.queryByRole('region', { name: 'Now playing' }),
+    ).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Play' }))
+
+    const bar = screen.getByRole('region', { name: 'Now playing' })
+    expect(within(bar).getByText('New Environment')).toBeVisible()
+    fireEvent.click(within(bar).getByRole('button', { name: 'Stop playback' }))
+    expect(screen.getByRole('button', { name: 'Play' })).toBeVisible()
+    expect(within(bar).getByRole('checkbox', { name: 'Combat' })).toBeDisabled()
+    fireEvent.click(
+      within(bar).getByRole('button', { name: 'Play last environment' }),
+    )
+    expect(screen.getByRole('button', { name: 'Stop' })).toBeVisible()
+
+    unmount()
+    render(<App />)
+    expect(
+      screen.queryByRole('region', { name: 'Now playing' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('synchronizes Combat with the editor and preserves it through bar restart', () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Play' }))
+    const bar = screen.getByRole('region', { name: 'Now playing' })
+    const combat = within(bar).getByRole('checkbox', { name: 'Combat' })
+    fireEvent.click(combat)
+    expect(screen.getByRole('button', { name: 'Combat on' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Combat on' }))
+    expect(combat).not.toBeChecked()
+    fireEvent.click(combat)
+    fireEvent.click(screen.getByRole('button', { name: 'Stop' }))
+    expect(combat).toBeChecked()
+    expect(combat).toBeDisabled()
+    fireEvent.click(
+      within(bar).getByRole('button', { name: 'Play last environment' }),
+    )
+    expect(combat).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Combat on' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+  })
+
+  it('follows tile playback, live edits and switching, then hides on deletion without falling back', () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+    fireEvent.change(
+      screen.getByRole('textbox', { name: 'Environment name' }),
+      { target: { value: 'Forest' } },
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Play Forest' }))
+    const bar = screen.getByRole('region', { name: 'Now playing' })
+    expect(within(bar).getByText('Forest')).toBeVisible()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+    fireEvent.change(
+      screen.getByRole('textbox', { name: 'Environment name' }),
+      { target: { value: 'Keep' } },
+    )
+    expect(within(bar).getByText('Forest')).toBeVisible()
+    fireEvent.click(screen.getByRole('button', { name: 'Play' }))
+    expect(within(bar).getByText('Keep')).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Play Forest' })).toBeVisible()
+    fireEvent.change(
+      screen.getByRole('textbox', { name: 'Environment name' }),
+      { target: { value: 'Ruined Keep' } },
+    )
+    expect(within(bar).getByText('Ruined Keep')).toBeVisible()
+    fireEvent.click(screen.getByRole('button', { name: 'Stop Ruined Keep' }))
+    expect(
+      within(bar).getByRole('button', { name: 'Play last environment' }),
+    ).toBeVisible()
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+    expect(
+      screen.queryByRole('region', { name: 'Now playing' }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Play Forest' })).toBeVisible()
+  })
+
   it('uses tiles for normal playback and edit mode opens the Environment editor', () => {
     render(<App />)
 

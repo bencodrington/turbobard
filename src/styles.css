@@ -134,17 +134,21 @@ input::placeholder {
 }
 
 .app-shell {
-  min-height: 100vh;
-  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
   padding: 0;
   background: var(--surface);
 }
 .workspace {
+  position: relative;
   display: flex;
   flex-direction: column;
+  flex: 1;
   width: 100%;
-  min-height: 100vh;
-  min-height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
   margin: 0 auto;
   padding: var(--space-4);
 }
@@ -159,6 +163,7 @@ input::placeholder {
   gap: var(--space-3);
 }
 .app-header {
+  flex-shrink: 0;
   justify-content: space-between;
   padding-bottom: var(--space-4);
   border-bottom: 1px solid var(--border-strong);
@@ -180,6 +185,8 @@ input::placeholder {
 .workspace-body {
   display: grid;
   flex: 1;
+  min-height: 0;
+  overflow: auto;
   grid-template-columns: minmax(12rem, 18rem) minmax(0, 1fr) minmax(
       16rem,
       22rem
@@ -608,9 +615,10 @@ input::placeholder {
     padding: 0;
   }
   .environment-editor {
-    position: fixed;
+    position: absolute;
     z-index: 10;
     inset: 0;
+    height: auto;
     overflow: auto;
     padding: var(--space-4);
     border: 0;
@@ -624,9 +632,10 @@ input::placeholder {
     display: none;
   }
   .catalog-panel.mobile-search-open {
-    position: fixed;
+    position: absolute;
     z-index: 11;
     inset: 0;
+    height: auto;
     display: block;
     overflow: auto;
     padding: var(--space-4);
