@@ -11,6 +11,7 @@ import type { Environment, Sound } from '../domain/playback'
 
 export type EnvironmentWorkspaceState = {
   environments: Environment[]
+  mostRecentlyPlayedEnvironmentId?: string
 }
 
 export type EnvironmentWorkspace = {
@@ -56,8 +57,18 @@ export function createEnvironmentWorkspace({
   const environmentFor = (environmentId: string) =>
     state.environments.find((environment) => environment.id === environmentId)
 
-  const replace = (environments: Environment[]) => {
-    state = { environments }
+  const replace = (
+    environments: Environment[],
+    mostRecentlyPlayedEnvironmentId = state.mostRecentlyPlayedEnvironmentId,
+  ) => {
+    state = {
+      environments,
+      mostRecentlyPlayedEnvironmentId: environments.some(
+        (environment) => environment.id === mostRecentlyPlayedEnvironmentId,
+      )
+        ? mostRecentlyPlayedEnvironmentId
+        : undefined,
+    }
     persistence.save(environments)
     notify()
   }
@@ -160,6 +171,7 @@ export function createEnvironmentWorkspace({
           ...item,
           playing: item.id === environment.id,
         })),
+        environment.id,
       )
     },
     stop(environmentId) {

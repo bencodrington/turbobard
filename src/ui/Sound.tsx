@@ -1,5 +1,6 @@
 import type { Placement, Sound as EnvironmentSound } from '../domain/playback'
 import type { OneShotState } from '../domain/coordinator'
+import { Button } from './Button'
 
 import { LabeledNumberField, LabeledRangeField } from './LabeledFields'
 
@@ -68,9 +69,9 @@ export function Sound({
           <option value="ambiance">Ambiance</option>
           <option value="combat">Combat</option>
         </select>
-        <button className="text-button danger-button" onClick={onRemove}>
+        <Button variant="text" danger onClick={onRemove}>
           Remove
-        </button>
+        </Button>
       </div>
       {sound.kind === 'one-shot' && (
         <div className="sound-timing">
@@ -98,9 +99,9 @@ export function Sound({
               onTimingChange('maxIntervalSeconds', Number(event.target.value))
             }
           />
-          <button className="text-button" onClick={onPlayNow}>
+          <Button variant="text" onClick={onPlayNow}>
             Play now
-          </button>
+          </Button>
         </div>
       )}
     </div>

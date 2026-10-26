@@ -134,17 +134,21 @@ input::placeholder {
 }
 
 .app-shell {
-  min-height: 100vh;
-  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
   padding: 0;
   background: var(--surface);
 }
 .workspace {
+  position: relative;
   display: flex;
   flex-direction: column;
+  flex: 1;
   width: 100%;
-  min-height: 100vh;
-  min-height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
   margin: 0 auto;
   padding: var(--space-4);
 }
@@ -159,6 +163,7 @@ input::placeholder {
   gap: var(--space-3);
 }
 .app-header {
+  flex-shrink: 0;
   justify-content: space-between;
   padding-bottom: var(--space-4);
   border-bottom: 1px solid var(--border-strong);
@@ -173,11 +178,6 @@ input::placeholder {
   width: auto;
   height: 2.5rem;
 }
-.header-button {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-}
 .workspace-header {
   justify-content: flex-end;
   padding: var(--space-4) 0;
@@ -185,6 +185,8 @@ input::placeholder {
 .workspace-body {
   display: grid;
   flex: 1;
+  min-height: 0;
+  overflow: auto;
   grid-template-columns: minmax(12rem, 18rem) minmax(0, 1fr) minmax(
       16rem,
       22rem
@@ -219,7 +221,7 @@ input::placeholder {
   padding-bottom: var(--space-4);
   background: var(--surface);
 }
-.environment-panel-footer .primary-button {
+.environment-panel-footer .button--primary {
   width: 100%;
 }
 #environments-heading,
@@ -433,59 +435,69 @@ input::placeholder {
   color: var(--text-muted);
 }
 
-.primary-button,
-.secondary-button,
-.icon-only-button,
-.icon-trigger-button {
+.button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--button-height);
+  padding: 0 var(--space-4);
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
+  font-weight: 500;
   transition:
     background-color 0.15s,
     border-color 0.15s,
     color 0.15s;
 }
-.primary-button,
-.secondary-button {
-  min-height: var(--button-height);
-  padding: 0 var(--space-4);
-  font-weight: 500;
-}
-.primary-button {
+.button--primary {
   background: var(--primary);
   color: var(--text);
 }
-.primary-button:hover {
+.button--primary:not(:disabled):hover {
   background: var(--accent);
 }
-.secondary-button,
-.icon-only-button,
-.icon-trigger-button {
-  border: 1px solid var(--border-strong);
+.button--secondary {
+  border-color: var(--border-strong);
   background: var(--surface-raised-strong);
 }
-.secondary-button:hover,
-.secondary-button.active,
-.icon-only-button:hover,
-.icon-only-button.active,
-.icon-trigger-button:hover {
+.button--ghost {
+  background: transparent;
+}
+.button--secondary:not(:disabled):hover,
+.button--secondary:not(:disabled)[aria-pressed='true'],
+.button--ghost:not(:disabled):hover,
+.button--ghost:not(:disabled)[aria-pressed='true'] {
   border-color: var(--accent);
   color: var(--text);
   background: #183c60;
 }
-.secondary-button.active,
-.icon-only-button.active {
+.button--secondary[aria-pressed='true'],
+.button--ghost[aria-pressed='true'] {
   box-shadow: inset 0 0 0 1px var(--accent);
 }
-.icon-only-button,
-.icon-trigger-button {
+.button--text {
+  min-height: 0;
+  padding: var(--space-1) 0;
+  border: 0;
+  color: var(--accent);
+  font-weight: normal;
+}
+.button--text:not(:disabled):hover {
+  color: var(--text);
+}
+.button--danger {
+  color: var(--danger);
+}
+.button--icon-only {
   width: 2.75rem;
   height: 2.75rem;
+  padding: 0;
   flex-shrink: 0;
 }
-.icon-trigger-button {
-  font-size: var(--font-size-button);
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 .environment-icon {
   display: inline-flex;
@@ -493,16 +505,6 @@ input::placeholder {
   justify-content: center;
   line-height: 1;
   font-size: inherit;
-}
-.text-button {
-  padding: var(--space-1) 0;
-  color: var(--accent);
-}
-.text-button:hover {
-  color: var(--text);
-}
-.danger-button {
-  color: var(--danger);
 }
 .status-card {
   display: inline-flex;
@@ -657,9 +659,10 @@ input::placeholder {
     padding: 0;
   }
   .environment-editor {
-    position: fixed;
+    position: absolute;
     z-index: 10;
     inset: 0;
+    height: auto;
     overflow: auto;
     padding: var(--space-4);
     border: 0;
@@ -673,9 +676,10 @@ input::placeholder {
     display: none;
   }
   .catalog-panel.mobile-search-open {
-    position: fixed;
+    position: absolute;
     z-index: 11;
     inset: 0;
+    height: auto;
     display: block;
     overflow: auto;
     padding: var(--space-4);
@@ -697,7 +701,7 @@ input::placeholder {
   .app-header {
     align-items: flex-start;
   }
-  .workspace-header .primary-button {
+  .workspace-header .button--primary {
     width: auto;
   }
   .environment-list {
