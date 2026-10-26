@@ -1,3 +1,4 @@
+import { Button } from './Button'
 import { useEffect, type ReactNode } from 'react'
 
 export type ModalShellProps = {
@@ -47,13 +48,9 @@ export function ModalShell({
             <h2 id={titleId}>{title}</h2>
             {subtitle && <p className="modal-subtitle">{subtitle}</p>}
           </div>
-          <button
-            className="text-button"
-            aria-label={closeLabel}
-            onClick={onClose}
-          >
+          <Button variant="text" aria-label={closeLabel} onClick={onClose}>
             Close
-          </button>
+          </Button>
         </div>
         <div className="modal-body">{children}</div>
       </div>

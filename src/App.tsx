@@ -1,3 +1,4 @@
+import { Button } from './ui/Button'
 import {
   useEffect,
   useMemo,
@@ -321,24 +322,21 @@ export default function App({
               <span className="sr-only">Turbobard</span>
             </h1>
           </div>
-          <button
-            className="secondary-button header-button"
+          <Button
+            variant="ghost"
+            iconOnly
             aria-label="About"
             onClick={() => setIsAboutOpen(true)}
           >
             <FontAwesomeIconView iconId="circle-info" />
-            <span>About</span>
-          </button>
+          </Button>
         </header>
         {audioError && (
           <div role="alert" className="audio-error">
             {audioError}{' '}
-            <button
-              className="text-button"
-              onClick={() => setAudioError(undefined)}
-            >
+            <Button variant="text" onClick={() => setAudioError(undefined)}>
               Dismiss
-            </button>
+            </Button>
           </div>
         )}
         <div className={`workspace-body${isSearchOpen ? ' search-open' : ''}`}>
@@ -348,14 +346,15 @@ export default function App({
           >
             <div className="section-heading">
               <h2 id="environments-heading">Environments</h2>
-              <button
-                className={`icon-only-button${isEditMode ? ' active' : ''}`}
+              <Button
+                variant="ghost"
+                iconOnly
                 aria-label="Edit environments"
                 aria-pressed={isEditMode}
                 onClick={() => setIsEditMode((value) => !value)}
               >
                 <FontAwesomeIconView iconId="pencil" />
-              </button>
+              </Button>
             </div>
             {environments.length === 0 ? (
               <p className="empty-state">
@@ -403,9 +402,9 @@ export default function App({
               </div>
             )}
             <div className="environment-panel-footer">
-              <button className="primary-button" onClick={addEnvironment}>
+              <Button variant="primary" onClick={addEnvironment}>
                 Create Environment
-              </button>
+              </Button>
             </div>
           </section>
 
@@ -417,23 +416,26 @@ export default function App({
               <h2 id="editor-heading" className="sr-only">
                 {selectedEnvironment.name}
               </h2>
-              <button
-                className="secondary-button mobile-search-button"
+              <Button
+                variant="secondary"
+                className="mobile-search-button"
                 onClick={() => setIsSearchOpen(true)}
               >
                 <FontAwesomeIconView iconId="magnifying-glass" /> Search Sounds
-              </button>
+              </Button>
               <div className="environment-card selected">
                 <div className="environment-card-header">
-                  <button
-                    className="text-button editor-back-button"
+                  <Button
+                    variant="text"
+                    className="editor-back-button"
                     aria-label="Close Environment"
                     onClick={() => setIsEditorOpen(false)}
                   >
                     <FontAwesomeIconView iconId="arrow-left" /> Back
-                  </button>
-                  <button
-                    className="icon-trigger-button"
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    iconOnly
                     aria-label={`Select icon for ${selectedEnvironment.name}`}
                     data-icon={
                       selectedEnvironment.icon ?? DEFAULT_ENVIRONMENT_ICON
@@ -458,7 +460,7 @@ export default function App({
                         selectedEnvironment.icon ?? DEFAULT_ENVIRONMENT_ICON
                       }
                     />
-                  </button>
+                  </Button>
                   <label
                     className="sr-only"
                     htmlFor={`name-${selectedEnvironment.id}`}
@@ -475,8 +477,8 @@ export default function App({
                       )
                     }
                   />
-                  <button
-                    className="primary-button"
+                  <Button
+                    variant="primary"
                     onClick={() =>
                       selectedEnvironment.playing
                         ? stopEnvironment(selectedEnvironment)
@@ -484,26 +486,27 @@ export default function App({
                     }
                   >
                     {selectedEnvironment.playing ? 'Stop' : 'Play'}
-                  </button>
+                  </Button>
                   {selectedEnvironment.playing && (
-                    <button
-                      className="secondary-button"
+                    <Button
+                      variant="secondary"
                       aria-pressed={selectedEnvironment.combatMode}
                       onClick={() => toggleCombat(selectedEnvironment)}
                     >
                       {selectedEnvironment.combatMode
                         ? 'Combat on'
                         : 'Combat off'}
-                    </button>
+                    </Button>
                   )}
                 </div>
                 <div className="environment-actions">
-                  <button
-                    className="text-button danger-button"
+                  <Button
+                    variant="text"
+                    danger
                     onClick={() => removeEnvironment(selectedEnvironment.id)}
                   >
                     Delete
-                  </button>
+                  </Button>
                 </div>
                 <div className="environment-details">
                   <LabeledRangeField
@@ -589,8 +592,9 @@ export default function App({
                         <option value="ambiance">Ambiance</option>
                         <option value="combat">Combat</option>
                       </select>
-                      <button
-                        className="text-button danger-button"
+                      <Button
+                        variant="text"
+                        danger
                         onClick={() =>
                           updateSelectedSounds(
                             removeSound(selectedEnvironment.sounds, sound.id),
@@ -598,7 +602,7 @@ export default function App({
                         }
                       >
                         Remove
-                      </button>
+                      </Button>
                       {sound.kind === 'one-shot' && (
                         <>
                           <LabeledNumberField
@@ -639,8 +643,8 @@ export default function App({
                               )
                             }
                           />
-                          <button
-                            className="text-button"
+                          <Button
+                            variant="text"
                             onClick={() =>
                               workspace.playManualOneShot(
                                 selectedEnvironment.id,
@@ -649,7 +653,7 @@ export default function App({
                             }
                           >
                             Play now
-                          </button>
+                          </Button>
                         </>
                       )}
                     </div>
@@ -664,13 +668,14 @@ export default function App({
             aria-labelledby="catalog-heading"
           >
             <div className="section-heading">
-              <button
-                className="text-button mobile-search-close"
+              <Button
+                variant="text"
+                className="mobile-search-close"
                 aria-label="Close search"
                 onClick={() => setIsSearchOpen(false)}
               >
                 <FontAwesomeIconView iconId="arrow-left" /> Back
-              </button>
+              </Button>
               <h2 id="catalog-heading">Search</h2>
             </div>
             <label className="sr-only" htmlFor="catalog-search">
@@ -690,14 +695,14 @@ export default function App({
             >
               {(['everything', 'music', 'ambiance'] as CatalogFilter[]).map(
                 (value) => (
-                  <button
+                  <Button
                     key={value}
-                    className={`secondary-button${filter === value ? ' active' : ''}`}
+                    variant="secondary"
                     aria-pressed={filter === value}
                     onClick={() => setFilter(value)}
                   >
                     {value[0].toUpperCase() + value.slice(1)}
-                  </button>
+                  </Button>
                 ),
               )}
             </div>
@@ -725,8 +730,8 @@ export default function App({
                         {item.source?.author ?? 'Unknown source'}
                       </small>
                     </div>
-                    <button
-                      className="secondary-button"
+                    <Button
+                      variant="secondary"
                       disabled={!selectedEnvironment}
                       onClick={() =>
                         updateSelectedSounds(
@@ -738,7 +743,7 @@ export default function App({
                       }
                     >
                       Add
-                    </button>
+                    </Button>
                     <details>
                       <summary>Source details</summary>
                       <p>{item.source?.author ?? 'Unknown source'}</p>
@@ -748,8 +753,8 @@ export default function App({
               </div>
             </AsyncSearchState>
             {selectedEnvironment && results.length > 1 && (
-              <button
-                className="primary-button"
+              <Button
+                variant="primary"
                 onClick={() =>
                   updateSelectedSounds(
                     addCatalogPack(selectedEnvironment.sounds, results),
@@ -757,7 +762,7 @@ export default function App({
                 }
               >
                 Add results as pack
-              </button>
+              </Button>
             )}
           </section>
         </div>
