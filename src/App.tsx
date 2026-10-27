@@ -1,4 +1,5 @@
 import { Button } from './ui/Button'
+import { PlaybackButton } from './ui/PlaybackButton'
 import {
   useEffect,
   useMemo,
@@ -32,7 +33,6 @@ import { createLegacyIconCatalog } from './legacy/icons'
 import type { EnvironmentPersistence } from './domain/ports'
 import { FontAwesomeIconView } from './ui/icons'
 import { AsyncSearchState } from './ui/AsyncSearchState'
-import { LabeledRangeField } from './ui/LabeledFields'
 import { Sound } from './ui/Sound'
 import { ModalShell } from './ui/ModalShell'
 import { NowPlayingBar } from './ui/NowPlayingBar'
@@ -352,15 +352,21 @@ export default function App({
           >
             <div className="section-heading">
               <h2 id="environments-heading">Environments</h2>
-              <Button
-                variant="ghost"
-                iconOnly
-                aria-label="Edit environments"
-                aria-pressed={isEditMode}
-                onClick={() => setIsEditMode((value) => !value)}
-              >
-                <FontAwesomeIconView iconId="pencil" />
-              </Button>
+              <div className="edit-mode-controls">
+                {isEditMode && <span className="edit-mode-label">editing</span>}
+                <Button
+                  variant="ghost"
+                  iconOnly={!isEditMode}
+                  aria-label={isEditMode ? undefined : 'Edit environments'}
+                  aria-pressed={isEditMode}
+                  onClick={() => setIsEditMode((value) => !value)}
+                >
+                  <FontAwesomeIconView
+                    iconId={isEditMode ? 'check' : 'pencil'}
+                  />
+                  {isEditMode && 'Done'}
+                </Button>
+              </div>
             </div>
             {environments.length === 0 ? (
               <p className="empty-state">
@@ -371,38 +377,57 @@ export default function App({
                 {environments.map((environment) => {
                   const selected = selectedId === environment.id && isEditorOpen
                   return (
-                    <button
-                      className={`environment-tile${selected ? ' selected' : ''}${environment.playing ? ' playing' : ''}`}
+                    <div
+                      className={`environment-tile-container${isEditMode ? ' is-editing' : ''}`}
                       key={environment.id}
-                      aria-label={`${isEditMode ? 'Open' : environment.playing ? 'Stop' : 'Play'} ${environment.name}`}
-                      style={
-                        {
-                          '--environment-color':
-                            environment.iconColor ??
-                            DEFAULT_ENVIRONMENT_ICON_COLOR,
-                        } as CSSProperties
-                      }
-                      onClick={() => openEnvironment(environment)}
+                      role="listitem"
                     >
-                      <span
-                        className="environment-tile-icon"
-                        style={{
-                          color:
-                            environment.iconColor ??
-                            DEFAULT_ENVIRONMENT_ICON_COLOR,
-                        }}
+                      <button
+                        className={`environment-tile${selected ? ' selected' : ''}${environment.playing ? ' playing' : ''}`}
+                        aria-label={`${isEditMode ? 'Open' : environment.playing ? 'Stop' : 'Play'} ${environment.name}`}
+                        style={
+                          {
+                            '--environment-color':
+                              environment.iconColor ??
+                              DEFAULT_ENVIRONMENT_ICON_COLOR,
+                          } as CSSProperties
+                        }
+                        onClick={() => openEnvironment(environment)}
                       >
-                        <EnvironmentIcon
-                          iconId={environment.icon ?? DEFAULT_ENVIRONMENT_ICON}
-                        />
-                      </span>
-                      <span>{environment.name}</span>
-                      {environment.playing && (
-                        <span className="tile-playing" aria-label="Playing">
-                          <FontAwesomeIconView iconId="volume-high" />
+                        <span
+                          className="environment-tile-icon"
+                          style={{
+                            color:
+                              environment.iconColor ??
+                              DEFAULT_ENVIRONMENT_ICON_COLOR,
+                          }}
+                        >
+                          <EnvironmentIcon
+                            iconId={
+                              environment.icon ?? DEFAULT_ENVIRONMENT_ICON
+                            }
+                          />
                         </span>
+                        <span>{environment.name}</span>
+                        {environment.playing && (
+                          <span className="tile-playing" aria-label="Playing">
+                            <FontAwesomeIconView iconId="volume-high" />
+                          </span>
+                        )}
+                      </button>
+                      {isEditMode && (
+                        <Button
+                          variant="ghost"
+                          iconOnly
+                          danger
+                          className="environment-tile-delete"
+                          aria-label={`Delete ${environment.name}`}
+                          onClick={() => removeEnvironment(environment.id)}
+                        >
+                          <FontAwesomeIconView iconId="trash-can" />
+                        </Button>
                       )}
-                    </button>
+                    </div>
                   )
                 })}
               </div>
@@ -422,22 +447,16 @@ export default function App({
               <h2 id="editor-heading" className="sr-only">
                 {selectedEnvironment.name}
               </h2>
-              <Button
-                variant="secondary"
-                className="mobile-search-button"
-                onClick={() => setIsSearchOpen(true)}
-              >
-                <FontAwesomeIconView iconId="magnifying-glass" /> Search Sounds
-              </Button>
               <div className="environment-card selected">
                 <div className="environment-card-header">
                   <Button
-                    variant="text"
+                    variant="ghost"
+                    iconOnly
                     className="editor-back-button"
                     aria-label="Close Environment"
                     onClick={() => setIsEditorOpen(false)}
                   >
-                    <FontAwesomeIconView iconId="arrow-left" /> Back
+                    <FontAwesomeIconView iconId="arrow-left" />
                   </Button>
                   <Button
                     variant="secondary"
@@ -483,104 +502,131 @@ export default function App({
                       )
                     }
                   />
-                  <Button
-                    variant="primary"
+                  <PlaybackButton
+                    playing={selectedEnvironment.playing}
+                    label={selectedEnvironment.playing ? 'Stop' : 'Play'}
                     onClick={() =>
                       selectedEnvironment.playing
                         ? stopEnvironment(selectedEnvironment)
                         : playEnvironment(selectedEnvironment)
                     }
-                  >
-                    {selectedEnvironment.playing ? 'Stop' : 'Play'}
-                  </Button>
-                  {selectedEnvironment.playing && (
-                    <Button
-                      variant="secondary"
-                      aria-pressed={selectedEnvironment.combatMode}
-                      onClick={() => toggleCombat(selectedEnvironment)}
-                    >
-                      {selectedEnvironment.combatMode
-                        ? 'Combat on'
-                        : 'Combat off'}
-                    </Button>
-                  )}
-                </div>
-                <div className="environment-actions">
-                  <Button
-                    variant="text"
-                    danger
-                    onClick={() => removeEnvironment(selectedEnvironment.id)}
-                  >
-                    Delete
-                  </Button>
-                </div>
-                <div className="environment-details">
-                  <LabeledRangeField
-                    label="Environment volume"
-                    value={selectedEnvironment.volume}
-                    inputProps={{
-                      'aria-label': `Volume for ${selectedEnvironment.name}`,
-                      min: 0,
-                      max: 1,
-                      step: 0.01,
-                    }}
-                    onChange={(event) =>
-                      updateEnvironmentVolume(
-                        selectedEnvironment,
-                        Number(event.target.value),
-                      )
-                    }
                   />
                 </div>
               </div>
               <div className="sound-list">
-                <h3>Sounds in Environment</h3>
-                {selectedEnvironment.sounds.length === 0 ? (
-                  <p className="empty-state">No Sounds added yet.</p>
-                ) : (
-                  selectedEnvironment.sounds.map((sound) => (
-                    <Sound
-                      key={sound.id}
-                      sound={sound}
-                      oneShotState={
-                        selectedEnvironment.playing && sound.kind === 'one-shot'
-                          ? playback.oneShotState(sound.id)
-                          : undefined
-                      }
-                      onVolumeChange={(volume) =>
-                        updateSoundVolume(selectedEnvironment, sound, volume)
-                      }
-                      onPlacementChange={(placement) =>
-                        updateSelectedSounds(
-                          placeSound(
-                            selectedEnvironment.sounds,
-                            sound.id,
-                            placement,
-                          ),
-                        )
-                      }
-                      onRemove={() =>
-                        updateSelectedSounds(
-                          removeSound(selectedEnvironment.sounds, sound.id),
-                        )
-                      }
-                      onTimingChange={(field, value) =>
-                        updateSoundTiming(
-                          selectedEnvironment,
-                          sound,
-                          field,
-                          value,
-                        )
-                      }
-                      onPlayNow={() =>
-                        workspace.playManualOneShot(
-                          selectedEnvironment.id,
-                          sound.id,
-                        )
-                      }
-                    />
-                  ))
-                )}
+                {(['ambiance', 'combat'] as const).map((placement) => (
+                  <section
+                    className={`sound-section sound-section--${placement}`}
+                    key={placement}
+                    aria-label={
+                      placement === 'combat'
+                        ? 'Combat sounds'
+                        : 'Non-combat sounds'
+                    }
+                  >
+                    {placement === 'combat' && (
+                      <>
+                        <h3 className="combat-heading">
+                          <FontAwesomeIconView iconId="hand-fist" /> Combat
+                        </h3>
+                        <p className="combat-description">
+                          Sounds in this section replace the music and add to
+                          the ambiance during Combat.
+                        </p>
+                      </>
+                    )}
+                    {(['loop', 'one-shot'] as const).map((kind) => {
+                      const sounds = selectedEnvironment.sounds.filter(
+                        (sound) =>
+                          sound.placement === placement && sound.kind === kind,
+                      )
+                      return (
+                        <section
+                          className="sound-group"
+                          key={kind}
+                          aria-label={kind === 'loop' ? 'Music' : 'Ambiance'}
+                        >
+                          <h4>
+                            <FontAwesomeIconView
+                              iconId={
+                                kind === 'loop' ? 'music' : 'cloud-sun-rain'
+                              }
+                            />{' '}
+                            {kind === 'loop' ? 'Music' : 'Ambiance'}
+                          </h4>
+                          {sounds.length === 0 ? (
+                            <p className="sound-group-empty">None</p>
+                          ) : (
+                            sounds.map((sound) => (
+                              <Sound
+                                key={sound.id}
+                                sound={sound}
+                                oneShotState={
+                                  selectedEnvironment.playing &&
+                                  sound.kind === 'one-shot'
+                                    ? playback.oneShotState(sound.id)
+                                    : undefined
+                                }
+                                onVolumeChange={(volume) =>
+                                  updateSoundVolume(
+                                    selectedEnvironment,
+                                    sound,
+                                    volume,
+                                  )
+                                }
+                                onPlacementChange={(placement) =>
+                                  updateSelectedSounds(
+                                    placeSound(
+                                      selectedEnvironment.sounds,
+                                      sound.id,
+                                      placement,
+                                    ),
+                                  )
+                                }
+                                onRemove={() =>
+                                  updateSelectedSounds(
+                                    removeSound(
+                                      selectedEnvironment.sounds,
+                                      sound.id,
+                                    ),
+                                  )
+                                }
+                                onTimingChange={(field, value) =>
+                                  updateSoundTiming(
+                                    selectedEnvironment,
+                                    sound,
+                                    field,
+                                    value,
+                                  )
+                                }
+                                onPlayNow={() =>
+                                  workspace.playManualOneShot(
+                                    selectedEnvironment.id,
+                                    sound.id,
+                                  )
+                                }
+                              />
+                            ))
+                          )}
+                        </section>
+                      )
+                    })}
+                  </section>
+                ))}
+              </div>
+              <div className="add-sounds-footer">
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    setIsSearchOpen(true)
+                    requestAnimationFrame(() =>
+                      document.getElementById('catalog-search')?.focus(),
+                    )
+                  }}
+                >
+                  <FontAwesomeIconView iconId="plus" /> Add sounds to
+                  environment
+                </Button>
               </div>
             </section>
           )}
@@ -695,6 +741,9 @@ export default function App({
           onPlay={() => playEnvironment(mostRecentlyPlayedEnvironment)}
           onStop={() => stopEnvironment(mostRecentlyPlayedEnvironment)}
           onToggleCombat={() => toggleCombat(mostRecentlyPlayedEnvironment)}
+          onVolumeChange={(volume) =>
+            updateEnvironmentVolume(mostRecentlyPlayedEnvironment, volume)
+          }
         />
       )}
       {isAboutOpen && (
@@ -739,17 +788,27 @@ export default function App({
         <ModalShell
           title="Select an icon"
           titleId="icon-modal-title"
-          subtitle={editingEnvironment.name}
+          headerContent={
+            <div className="icon-search-field">
+              <FontAwesomeIconView iconId="magnifying-glass" />
+              <input
+                id="icon-search"
+                aria-label="Search icons"
+                value={iconQuery}
+                onChange={(event) => setIconQuery(event.target.value)}
+                placeholder="Search for icons"
+              />
+            </div>
+          }
+          subtitle={
+            <>
+              Select icon for <strong>{editingEnvironment.name}</strong>
+            </>
+          }
+          iconClose
           closeLabel="Close icon picker"
           onClose={() => setEditingIconEnvId(null)}
         >
-          <label htmlFor="icon-search">Search icons</label>
-          <input
-            id="icon-search"
-            value={iconQuery}
-            onChange={(event) => setIconQuery(event.target.value)}
-            placeholder="Search for icons"
-          />
           <AsyncSearchState
             loading={iconLoading}
             error={iconError}
@@ -781,7 +840,9 @@ export default function App({
                   (editingEnvironment.icon ?? DEFAULT_ENVIRONMENT_ICON) ===
                   iconId
                 return (
-                  <button
+                  <Button
+                    variant="ghost"
+                    iconOnly
                     key={iconId}
                     className={`icon-option-button${isSelected ? ' selected' : ''}`}
                     aria-label={iconId}
@@ -789,19 +850,16 @@ export default function App({
                     onClick={() =>
                       updateEnvironmentIcon(editingEnvironment, iconId)
                     }
-                    style={{
-                      color:
-                        editingEnvironment.iconColor ??
-                        DEFAULT_ENVIRONMENT_ICON_COLOR,
-                    }}
+                    style={
+                      {
+                        '--icon-option-color':
+                          editingEnvironment.iconColor ??
+                          DEFAULT_ENVIRONMENT_ICON_COLOR,
+                      } as CSSProperties
+                    }
                   >
                     <EnvironmentIcon iconId={iconId} />
-                    {isSelected && (
-                      <span className="icon-selected-badge" aria-hidden="true">
-                        ✓
-                      </span>
-                    )}
-                  </button>
+                  </Button>
                 )
               })}
             </div>
@@ -821,7 +879,9 @@ export default function App({
                     updateEnvironmentIconColor(editingEnvironment, color)
                   }
                   style={{ backgroundColor: color }}
-                />
+                >
+                  {isColorSelected && <FontAwesomeIconView iconId="check" />}
+                </button>
               )
             })}
           </div>

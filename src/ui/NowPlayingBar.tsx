@@ -1,9 +1,11 @@
 import type { Environment } from '../domain/playback'
+import { useEffect, useId, useRef, useState } from 'react'
+import { Button } from './Button'
 import {
   DEFAULT_ENVIRONMENT_ICON,
   DEFAULT_ENVIRONMENT_ICON_COLOR,
 } from '../domain/icons'
-import { Button } from './Button'
+import { PlaybackButton } from './PlaybackButton'
 import { FontAwesomeIconView } from './icons'
 import './NowPlayingBar.css'
 
@@ -12,12 +14,38 @@ export function NowPlayingBar({
   onPlay,
   onStop,
   onToggleCombat,
+  onVolumeChange,
 }: {
   environment: Environment
   onPlay: () => void
   onStop: () => void
   onToggleCombat: () => void
+  onVolumeChange: (volume: number) => void
 }) {
+  const [volumeOpen, setVolumeOpen] = useState(false)
+  const volumeRef = useRef<HTMLDivElement>(null)
+  const sliderId = useId()
+
+  useEffect(() => {
+    if (!volumeOpen) return
+    const dismiss = (event: PointerEvent) => {
+      if (!volumeRef.current?.contains(event.target as Node))
+        setVolumeOpen(false)
+    }
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setVolumeOpen(false)
+        volumeRef.current?.querySelector('button')?.focus()
+      }
+    }
+    document.addEventListener('pointerdown', dismiss)
+    document.addEventListener('keydown', escape)
+    return () => {
+      document.removeEventListener('pointerdown', dismiss)
+      document.removeEventListener('keydown', escape)
+    }
+  }, [volumeOpen])
+
   return (
     <section
       aria-label="Now playing"
@@ -37,6 +65,36 @@ export function NowPlayingBar({
         </span>
         <span>{environment.name}</span>
       </span>
+      <div className="now-playing-volume" ref={volumeRef}>
+        <span className="volume-inline-icon" aria-hidden="true">
+          <FontAwesomeIconView iconId="volume-high" />
+        </span>
+        <Button
+          variant="ghost"
+          iconOnly
+          className="volume-toggle"
+          aria-label="Environment volume"
+          aria-expanded={volumeOpen}
+          aria-controls={sliderId}
+          onClick={() => setVolumeOpen((open) => !open)}
+        >
+          <FontAwesomeIconView iconId="volume-high" />
+        </Button>
+        <div
+          id={sliderId}
+          className={`volume-slider${volumeOpen ? ' is-open' : ''}`}
+        >
+          <input
+            type="range"
+            aria-label={`Volume for ${environment.name}`}
+            min={0}
+            max={1}
+            step={0.01}
+            value={environment.volume}
+            onChange={(event) => onVolumeChange(Number(event.target.value))}
+          />
+        </div>
+      </div>
       <label
         className={`now-playing-combat${environment.playing ? '' : ' is-disabled'}`}
       >
@@ -53,27 +111,11 @@ export function NowPlayingBar({
         </span>
         <span>Combat</span>
       </label>
-      <Button
-        variant="ghost"
-        iconOnly
-        className="now-playing-play"
-        aria-label={
-          environment.playing ? 'Stop playback' : 'Play last environment'
-        }
+      <PlaybackButton
+        playing={environment.playing}
+        label={environment.playing ? 'Stop playback' : 'Play last environment'}
         onClick={environment.playing ? onStop : onPlay}
-      >
-        <svg
-          className="now-playing-hexagon"
-          viewBox="0 0 173.205 200"
-          aria-hidden="true"
-        >
-          <path
-            strokeWidth="5"
-            d="M86.6025 0L173.205 50L173.205 150L86.6025 200L0 150L0 50Z"
-          />
-        </svg>
-        <FontAwesomeIconView iconId={environment.playing ? 'pause' : 'play'} />
-      </Button>
+      />
     </section>
   )
 }
