@@ -1,0 +1,63 @@
+.playback-button.button {
+  --dark-blue: color-mix(in srgb, black, var(--deep-blue) 20%);
+  --dark-primary: color-mix(in srgb, black, var(--gradient-color-1) 20%);
+  --dark-accent: color-mix(in srgb, black, var(--gradient-color-2) 20%);
+  --dark-gold: color-mix(in srgb, black, var(--gradient-color-3) 20%);
+  position: relative;
+  width: 2.75rem;
+  height: 3rem;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.playback-button.button:not(:disabled):hover {
+  background: none;
+}
+
+.playback-button-hexagon {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.playback-button-hexagon path {
+  stroke: var(--grey-2);
+  fill: var(--grey-0);
+  transition: fill 0.3s ease;
+}
+
+.playback-button > :last-child {
+  position: relative;
+}
+
+.playback-button.is-playing .playback-button-hexagon path {
+  animation: playback-button-shimmer 5s linear infinite;
+}
+
+@keyframes playback-button-shimmer {
+  0%,
+  100% {
+    stroke: var(--gradient-color-1);
+    fill: var(--dark-blue);
+  }
+  25% {
+    fill: var(--dark-primary);
+  }
+  50% {
+    stroke: var(--gradient-color-2);
+    fill: var(--dark-accent);
+  }
+  75% {
+    fill: var(--dark-gold);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .playback-button * {
+    animation: none;
+    transition: none;
+  }
+}

@@ -17,16 +17,38 @@ for (const width of [375, 480, 900]) {
     await expect(bar).toBeVisible()
     const box = await bar.boundingBox()
     expect(box).not.toBeNull()
-    expect(box!.width).toBe(width < 480 ? width : Math.min(480, width - 24))
-    expect(box!.x).toBe(width < 480 ? 0 : (width - box!.width) / 2)
-    expect(box!.y + box!.height).toBe(700 - (width < 480 ? 0 : 12))
+    expect(box!.width).toBe(width)
+    expect(box!.x).toBe(0)
+    expect(box!.y + box!.height).toBe(700)
+
+    const volume = bar.getByRole('slider', {
+      name: 'Volume for New Environment',
+    })
+    if (width < 640) {
+      await expect(volume).toBeHidden()
+      const toggle = bar.getByRole('button', { name: 'Environment volume' })
+      await toggle.click()
+      await expect(volume).toBeVisible()
+      const sliderBox = await volume.boundingBox()
+      expect(sliderBox!.height).toBeGreaterThan(sliderBox!.width)
+      expect(sliderBox!.y + sliderBox!.height).toBeLessThan(box!.y)
+      await volume.focus()
+      await page.keyboard.press('ArrowDown')
+      await expect(volume).toHaveValue('0.99')
+      await page.getByRole('textbox', { name: 'Environment name' }).click()
+      await expect(volume).toBeHidden()
+    } else {
+      await expect(volume).toBeVisible()
+      const sliderBox = await volume.boundingBox()
+      expect(sliderBox!.width).toBeGreaterThan(sliderBox!.height)
+    }
 
     const editor = page.getByRole('region', { name: 'New Environment' })
     if (width < 900) {
       const editorBox = await editor.boundingBox()
       expect(editorBox!.y + editorBox!.height).toBeLessThanOrEqual(box!.y)
       await page
-        .getByRole('button', { name: 'Search Sounds', exact: true })
+        .getByRole('button', { name: 'Add sounds to environment', exact: true })
         .click()
       const searchBox = await page
         .getByRole('region', { name: 'Search' })
@@ -95,7 +117,9 @@ test('opens the mobile editor and search after scrolling a long Environment list
   await page.getByRole('button', { name: 'Play', exact: true }).click()
   const bar = page.getByRole('region', { name: 'Now playing' })
   await expect(bar).toBeInViewport()
-  await page.getByRole('button', { name: 'Search Sounds', exact: true }).click()
+  await page
+    .getByRole('button', { name: 'Add sounds to environment', exact: true })
+    .click()
   await expect(
     page.getByRole('textbox', { name: 'Search Sounds' }),
   ).toBeInViewport()

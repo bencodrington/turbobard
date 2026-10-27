@@ -1,9 +1,12 @@
 import { Button } from './Button'
+import { FontAwesomeIconView } from './icons'
 import { useEffect, type ReactNode } from 'react'
 
 export type ModalShellProps = {
   title: string
   titleId: string
+  headerContent?: ReactNode
+  iconClose?: boolean
   subtitle?: ReactNode
   className?: string
   closeLabel: string
@@ -14,6 +17,8 @@ export type ModalShellProps = {
 export function ModalShell({
   title,
   titleId,
+  headerContent,
+  iconClose = false,
   subtitle,
   className = '',
   closeLabel,
@@ -44,12 +49,20 @@ export function ModalShell({
         aria-labelledby={titleId}
       >
         <div className="modal-header">
-          <div>
-            <h2 id={titleId}>{title}</h2>
+          <div className="modal-header-content">
+            <h2 id={titleId} className={headerContent ? 'sr-only' : undefined}>
+              {title}
+            </h2>
+            {headerContent}
             {subtitle && <p className="modal-subtitle">{subtitle}</p>}
           </div>
-          <Button variant="text" aria-label={closeLabel} onClick={onClose}>
-            Close
+          <Button
+            variant={iconClose ? 'ghost' : 'text'}
+            iconOnly={iconClose}
+            aria-label={closeLabel}
+            onClick={onClose}
+          >
+            {iconClose ? <FontAwesomeIconView iconId="xmark" /> : 'Close'}
           </Button>
         </div>
         <div className="modal-body">{children}</div>

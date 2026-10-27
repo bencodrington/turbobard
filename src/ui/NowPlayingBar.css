@@ -15,7 +15,9 @@
   flex: 0 0 auto;
   align-items: center;
   gap: 1rem;
-  padding: 1rem 1rem 2rem;
+  padding: 1rem;
+  width: 100%;
+  z-index: 20;
   background: linear-gradient(to bottom, var(--grey-2) 0 1%, black 1% 100%);
 }
 
@@ -164,62 +166,6 @@
   outline-offset: 2px;
 }
 
-.now-playing-play.button {
-  width: 2.75rem;
-  height: 3rem;
-  padding: 0;
-  border: 0;
-  background: none;
-}
-
-.now-playing-play.button:not(:disabled):hover {
-  background: none;
-}
-
-.now-playing-hexagon {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-}
-
-.now-playing-hexagon path {
-  stroke: var(--grey-2);
-  fill: var(--grey-0);
-  transition: fill 0.3s ease;
-}
-
-.now-playing-play > :last-child {
-  position: relative;
-}
-
-.is-playing .now-playing-hexagon path {
-  animation: now-playing-shimmer 5s linear infinite;
-}
-
-/* Media-query rem uses the browser's initial font size. 480px is 40rem
-   at this app's 12px root size. Keep the bar within its outer margins. */
-@media (min-width: 480px) {
-  .now-playing-bar {
-    align-self: center;
-    width: min(40rem, calc(100% - 2rem));
-    margin: 1rem;
-    padding-bottom: 1rem;
-    border-radius: 4px;
-    background: black;
-  }
-
-  .now-playing-bar::before {
-    border-radius: 4px;
-  }
-
-  .now-playing-border {
-    inset: -2px;
-    border-radius: 6px;
-  }
-}
-
 @keyframes now-playing-spin {
   from {
     --now-playing-angle: 0deg;
@@ -229,29 +175,64 @@
   }
 }
 
-@keyframes now-playing-shimmer {
-  0%,
-  100% {
-    stroke: var(--gradient-color-1);
-    fill: var(--dark-blue);
-  }
-  25% {
-    fill: var(--dark-primary);
-  }
-  50% {
-    stroke: var(--gradient-color-2);
-    fill: var(--dark-accent);
-  }
-  75% {
-    fill: var(--dark-gold);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .now-playing-bar *,
   .now-playing-bar::before,
   .now-playing-bar::after {
     animation: none;
     transition: none;
+  }
+}
+
+.now-playing-volume {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--space-3);
+}
+.volume-inline-icon {
+  display: none;
+}
+.volume-slider {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + var(--space-4));
+  left: 50%;
+  transform: translateX(-50%);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow);
+}
+.volume-slider.is-open {
+  display: flex;
+}
+.volume-slider input {
+  writing-mode: vertical-lr;
+  direction: rtl;
+  width: 2rem;
+  height: 10rem;
+  padding: 0;
+}
+@media (min-width: 640px) {
+  .volume-toggle.button {
+    display: none;
+  }
+  .volume-inline-icon {
+    display: inline-flex;
+  }
+  .volume-slider {
+    display: flex;
+    position: static;
+    transform: none;
+    padding: 0;
+    background: none;
+    box-shadow: none;
+  }
+  .volume-slider input {
+    writing-mode: horizontal-tb;
+    direction: ltr;
+    width: 9rem;
+    height: auto;
   }
 }
