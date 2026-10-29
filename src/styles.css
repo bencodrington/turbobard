@@ -881,6 +881,11 @@ input::placeholder {
     border: 0;
     border-radius: 0;
     background: var(--surface);
+    padding-bottom: 0;
+  }
+  .environment-editor .add-sounds-footer {
+    bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom);
   }
   .workspace-body:not(.search-open) .catalog-panel {
     display: none;
