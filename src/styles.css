@@ -684,6 +684,28 @@ input::placeholder {
   padding: var(--space-5);
   overflow-y: auto;
 }
+.icon-picker-card {
+  height: 30rem;
+  max-height: 85dvh;
+}
+.icon-picker-card .modal-header,
+.icon-picker-card .color-options {
+  flex-shrink: 0;
+}
+.icon-picker-card .modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.icon-picker-results {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.icon-picker-results .icon-grid {
+  max-height: none;
+  overflow: visible;
+}
 .about-card .modal-body {
   padding: 1rem 2.5rem 2rem;
   background: var(--surface);

@@ -726,6 +726,7 @@ export default function App({
         <ModalShell
           title="Select an icon"
           titleId="icon-modal-title"
+          className="icon-picker-card"
           headerContent={
             <div className="icon-search-field">
               <FontAwesomeIconView iconId="magnifying-glass" />
@@ -747,61 +748,63 @@ export default function App({
           closeLabel="Close icon picker"
           onClose={() => setEditingIconEnvId(null)}
         >
-          <AsyncSearchState
-            loading={iconLoading}
-            error={iconError}
-            empty={displayedIcons.length === 0}
-            loadingMessage="Loading icons…"
-            errorMessage={
-              <>
-                Icon catalog unavailable. Check your local API configuration and
-                network access.
-              </>
-            }
-            errorClassName="icon-error"
-            emptyMessage={
-              <p className="empty-state">
-                {iconQuery.trim()
-                  ? `No icons found for "${iconQuery}".`
-                  : 'No icons found.'}
-              </p>
-            }
-            onRetry={() => setIconAttempt((attempt) => attempt + 1)}
-          >
-            <div
-              className="icon-grid"
-              role="group"
-              aria-label="Available icons"
+          <div className="icon-picker-results">
+            <AsyncSearchState
+              loading={iconLoading}
+              error={iconError}
+              empty={displayedIcons.length === 0}
+              loadingMessage="Loading icons…"
+              errorMessage={
+                <>
+                  Icon catalog unavailable. Check your local API configuration
+                  and network access.
+                </>
+              }
+              errorClassName="icon-error"
+              emptyMessage={
+                <p className="empty-state">
+                  {iconQuery.trim()
+                    ? `No icons found for "${iconQuery}".`
+                    : 'No icons found.'}
+                </p>
+              }
+              onRetry={() => setIconAttempt((attempt) => attempt + 1)}
             >
-              {displayedIcons.map((iconId) => {
-                const isSelected =
-                  (editingEnvironment.icon ?? DEFAULT_ENVIRONMENT_ICON) ===
-                  iconId
-                return (
-                  <Button
-                    variant="ghost"
-                    iconOnly
-                    key={iconId}
-                    className={`icon-option-button${isSelected ? ' selected' : ''}`}
-                    aria-label={iconId}
-                    aria-pressed={isSelected}
-                    onClick={() =>
-                      updateEnvironmentIcon(editingEnvironment, iconId)
-                    }
-                    style={
-                      {
-                        '--icon-option-color':
-                          editingEnvironment.iconColor ??
-                          DEFAULT_ENVIRONMENT_ICON_COLOR,
-                      } as CSSProperties
-                    }
-                  >
-                    <EnvironmentIcon iconId={iconId} />
-                  </Button>
-                )
-              })}
-            </div>
-          </AsyncSearchState>
+              <div
+                className="icon-grid"
+                role="group"
+                aria-label="Available icons"
+              >
+                {displayedIcons.map((iconId) => {
+                  const isSelected =
+                    (editingEnvironment.icon ?? DEFAULT_ENVIRONMENT_ICON) ===
+                    iconId
+                  return (
+                    <Button
+                      variant="ghost"
+                      iconOnly
+                      key={iconId}
+                      className={`icon-option-button${isSelected ? ' selected' : ''}`}
+                      aria-label={iconId}
+                      aria-pressed={isSelected}
+                      onClick={() =>
+                        updateEnvironmentIcon(editingEnvironment, iconId)
+                      }
+                      style={
+                        {
+                          '--icon-option-color':
+                            editingEnvironment.iconColor ??
+                            DEFAULT_ENVIRONMENT_ICON_COLOR,
+                        } as CSSProperties
+                      }
+                    >
+                      <EnvironmentIcon iconId={iconId} />
+                    </Button>
+                  )
+                })}
+              </div>
+            </AsyncSearchState>
+          </div>
           <div className="color-options" role="group" aria-label="Icon colors">
             {ICON_COLOR_OPTIONS.map((color) => {
               const isColorSelected =
