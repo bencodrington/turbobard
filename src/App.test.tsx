@@ -155,6 +155,11 @@ describe('Environment workspace', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'About' }))
     expect(screen.getByRole('dialog', { name: 'About' })).toBeVisible()
+    expect(screen.getByRole('link', { name: 'Support me' })).toHaveAttribute(
+      'href',
+      'https://ko-fi.com/projectbench',
+    )
+    expect(screen.getByText(/If TurboBard features your sound/)).toBeVisible()
 
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(
