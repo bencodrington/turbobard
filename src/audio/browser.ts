@@ -30,14 +30,71 @@ function clampVolume(volume: number): number {
 export function createBrowserAudioPort(
   createAudio: (source?: string) => HTMLAudioElement = (source) =>
     new Audio(source),
+  createAudioContext: () => AudioContext | undefined = () => {
+    const AudioContextConstructor =
+      window.AudioContext ??
+      (window as typeof window & { webkitAudioContext?: typeof AudioContext })
+        .webkitAudioContext
+    return AudioContextConstructor ? new AudioContextConstructor() : undefined
+  },
 ): AudioPort {
   const elements = new Map<string, AudioElement>()
+  const gainNodes = new WeakMap<HTMLAudioElement, GainNode>()
   const listeners = new Set<(soundId: string, error: unknown) => void>()
   const probe =
     typeof document === 'undefined'
       ? undefined
       : document.createElement('audio')
   const canPlayType = probe?.canPlayType.bind(probe)
+  const canSetElementVolume = (() => {
+    if (!probe) return true
+    const original = probe.volume
+    const check = original === 0 ? 1 : 0
+    try {
+      probe.volume = check
+      return probe.volume === check
+    } catch {
+      return false
+    } finally {
+      try {
+        probe.volume = original
+      } catch {
+        // Some browsers expose the property as read-only.
+      }
+    }
+  })()
+  let audioContext: AudioContext | undefined
+  const gainFor = (element: AudioElement) => {
+    if (canSetElementVolume) return undefined
+    const existing = gainNodes.get(element)
+    if (existing) return existing
+    try {
+      audioContext ??= createAudioContext()
+      if (!audioContext) return undefined
+      const source = audioContext.createMediaElementSource(element)
+      const gain = audioContext.createGain()
+      source.connect(gain)
+      gain.connect(audioContext.destination)
+      gainNodes.set(element, gain)
+      return gain
+    } catch {
+      return undefined
+    }
+  }
+  const resumeAudioContext = (soundId: string) => {
+    if (audioContext?.state !== 'suspended') return
+    void audioContext
+      .resume()
+      .catch((error) =>
+        listeners.forEach((listener) => listener(soundId, error)),
+      )
+  }
+  const setLevel = (element: AudioElement, volume: number) => {
+    const safeVolume = clampVolume(volume)
+    const gain = gainFor(element)
+    if (gain) gain.gain.value = safeVolume
+    else element.volume = safeVolume
+  }
   const listenForErrors = (sound: Sound, element: HTMLAudioElement) => {
     element.addEventListener('error', () =>
       listeners.forEach((listener) => listener(sound.id, element.error)),
@@ -54,9 +111,16 @@ export function createBrowserAudioPort(
         : sound.id
     let element = elements.get(key)
     if (!element) {
-      element = createAudio(
-        sourceFor(sound, variation, canPlayType),
+      const source = sourceFor(sound, variation, canPlayType)
+      element = (
+        canSetElementVolume ? createAudio(source) : createAudio()
       ) as AudioElement
+      if (!canSetElementVolume) {
+        // MediaElementSource needs a CORS-enabled request. Set this before src
+        // so the request can be routed through Web Audio on iOS.
+        element.crossOrigin = 'anonymous'
+        if (source) element.src = source
+      }
       element.preload = 'auto'
       listenForErrors(sound, element)
       elements.set(key, element)
@@ -71,14 +135,15 @@ export function createBrowserAudioPort(
     if (element.__fadeTimer) cancelAnimationFrame(element.__fadeTimer)
     const safeTarget = clampVolume(target)
     if (fadeMs === 0) {
-      element.volume = safeTarget
+      setLevel(element, safeTarget)
       return
     }
-    const start = clampVolume(element.volume)
+    const gain = gainFor(element)
+    const start = clampVolume(gain?.gain.value ?? element.volume)
     const started = performance.now()
     const tick = (now: number) => {
       const progress = Math.max(0, Math.min(1, (now - started) / fadeMs))
-      element.volume = clampVolume(start + (safeTarget - start) * progress)
+      setLevel(element, start + (safeTarget - start) * progress)
       if (progress < 1) element.__fadeTimer = requestAnimationFrame(tick)
     }
     element.__fadeTimer = requestAnimationFrame(tick)
@@ -93,7 +158,8 @@ export function createBrowserAudioPort(
       const element = elementFor(sound)
       cancelStop(element)
       element.loop = true
-      element.volume = 0
+      setLevel(element, 0)
+      resumeAudioContext(sound.id)
       void element
         .play()
         .catch((error) =>
@@ -105,7 +171,8 @@ export function createBrowserAudioPort(
       const element = elementFor(sound, variation)
       cancelStop(element)
       element.loop = false
-      element.volume = clampVolume(volume)
+      setLevel(element, volume)
+      resumeAudioContext(sound.id)
       element.currentTime = 0
       void element
         .play()
@@ -116,9 +183,17 @@ export function createBrowserAudioPort(
     playManualOneShot(sound, variation, volume = sound.volume) {
       const element = listenForErrors(
         sound,
-        createAudio(sourceFor(sound, variation, canPlayType)),
+        (() => {
+          const source = sourceFor(sound, variation, canPlayType)
+          if (canSetElementVolume) return createAudio(source)
+          const audio = createAudio() as AudioElement
+          audio.crossOrigin = 'anonymous'
+          if (source) audio.src = source
+          return audio
+        })(),
       )
-      element.volume = clampVolume(volume)
+      setLevel(element as AudioElement, volume)
+      resumeAudioContext(sound.id)
       void element
         .play()
         .catch((error) =>
@@ -127,7 +202,7 @@ export function createBrowserAudioPort(
     },
     setVolume(soundId, volume) {
       const element = elements.get(soundId)
-      if (element) element.volume = clampVolume(volume)
+      if (element) setLevel(element, volume)
     },
     stop(soundId, fadeMs) {
       for (const [, element] of elementsForSound(soundId)) {

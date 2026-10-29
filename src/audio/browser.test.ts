@@ -138,6 +138,80 @@ describe('browser audio port', () => {
     }
   })
 
+  it('fades out when the browser ignores HTMLMediaElement volume writes', () => {
+    const callbacks: FrameRequestCallback[] = []
+    const originalCreateElement = document.createElement.bind(document)
+    const createProbe = vi
+      .spyOn(document, 'createElement')
+      .mockImplementation((tagName) => {
+        if (tagName !== 'audio') return originalCreateElement(tagName)
+        const probe = {
+          canPlayType: () => '',
+          volume: 1,
+        } as unknown as HTMLAudioElement
+        Object.defineProperty(probe, 'volume', {
+          get: () => 1,
+          set: () => undefined,
+        })
+        return probe
+      })
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      callbacks.push(callback)
+      return callbacks.length
+    })
+    vi.stubGlobal('cancelAnimationFrame', vi.fn())
+    try {
+      const mobileElement = element()
+      const assignments: string[] = []
+      Object.defineProperty(mobileElement, 'volume', {
+        configurable: true,
+        get: () => 1,
+        set: () => undefined,
+      })
+      Object.defineProperty(mobileElement, 'crossOrigin', {
+        configurable: true,
+        get: () => undefined,
+        set: () => assignments.push('crossOrigin'),
+      })
+      Object.defineProperty(mobileElement, 'src', {
+        configurable: true,
+        get: () => 'rain.mp3',
+        set: () => assignments.push('src'),
+      })
+      const gain = { gain: { value: 1 }, connect: vi.fn() }
+      const audioContext = {
+        state: 'suspended',
+        destination: {},
+        createMediaElementSource: vi.fn(() => ({ connect: vi.fn() })),
+        createGain: vi.fn(() => gain),
+        resume: vi.fn(() => Promise.resolve()),
+      }
+      const createAudio = vi.fn(() => mobileElement)
+      const port = createBrowserAudioPort(
+        createAudio,
+        () => audioContext as unknown as AudioContext,
+      )
+
+      const loopSound = { ...sound, kind: 'loop' as const }
+      port.playLoop(loopSound, 0.8, 2000)
+      callbacks[0]?.(performance.now() + 1000)
+      expect(gain.gain.value).toBeCloseTo(0.4)
+      port.setVolume(sound.id, 0.6)
+      expect(gain.gain.value).toBe(0.6)
+      port.stop(sound.id, 2000)
+      callbacks[2]?.(performance.now() + 2000)
+
+      expect(gain.gain.value).toBe(0)
+      expect(createAudio).toHaveBeenCalledWith()
+      expect(assignments).toEqual(['crossOrigin', 'src'])
+      expect(audioContext.resume).toHaveBeenCalledOnce()
+      expect(mobileElement.volume).toBe(1)
+    } finally {
+      vi.unstubAllGlobals()
+      createProbe.mockRestore()
+    }
+  })
+
   it('reports manual playback errors through the audio port listener', () => {
     const createAudio = vi.fn(element)
     const port = createBrowserAudioPort(createAudio)
