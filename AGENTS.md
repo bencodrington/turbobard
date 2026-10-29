@@ -19,3 +19,7 @@ When using the `implement` skill with a ticket, start from `main` on a new branc
 ### Node tooling
 
 When running Node or npm commands, read `docs/agents/node-tooling.md` first and use the Node version declared in `.nvmrc`.
+
+### PR evidence
+
+Save generated screenshots and recordings under ignored `docs/evidence/` or an external temporary directory. Keep generated review evidence out of commits; preserve application assets in their normal source locations.
