@@ -12,6 +12,7 @@ import {
 import { AsyncSearchState } from './AsyncSearchState'
 import { Button } from './Button'
 import { FontAwesomeIconView } from './icons'
+import { selectAllTextOnFocus } from './selectAllTextOnFocus'
 
 const filters = [
   { value: 'everything', label: 'Everything', icon: 'magnifying-glass' },
@@ -140,6 +141,7 @@ export function CatalogPanel({
           id="catalog-search"
           aria-label="Search Sounds"
           value={query}
+          onFocus={selectAllTextOnFocus}
           onChange={(event) => onQueryChange(event.target.value)}
           placeholder="Search"
         />
