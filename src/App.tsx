@@ -3,6 +3,7 @@ import { PlaybackButton } from './ui/PlaybackButton'
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
   type CSSProperties,
@@ -126,6 +127,13 @@ export default function App({
       workspace.getSnapshot().environments.length > 0 &&
       (window.matchMedia?.('(min-width: 900px)').matches ?? true),
   )
+  const editorRef = useRef<HTMLElement>(null)
+  const selectedTileRef = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    if (!isEditorOpen && editorRef.current?.contains(document.activeElement)) {
+      selectedTileRef.current?.focus()
+    }
+  }, [isEditorOpen])
   const selectedEnvironment = environments.find(
     (item) => item.id === selectedId,
   )
@@ -345,7 +353,9 @@ export default function App({
             </Button>
           </div>
         )}
-        <div className={`workspace-body${isSearchOpen ? ' search-open' : ''}`}>
+        <div
+          className={`workspace-body${isEditorOpen && selectedEnvironment ? ' editor-open' : ''}${isSearchOpen ? ' search-open' : ''}`}
+        >
           <section
             aria-labelledby="environments-heading"
             className="environment-panel"
@@ -383,6 +393,11 @@ export default function App({
                       role="listitem"
                     >
                       <button
+                        ref={
+                          selectedId === environment.id
+                            ? selectedTileRef
+                            : undefined
+                        }
                         className={`environment-tile${selected ? ' selected' : ''}${environment.playing ? ' playing' : ''}`}
                         aria-label={`${isEditMode ? 'Open' : environment.playing ? 'Stop' : 'Play'} ${environment.name}`}
                         style={
@@ -439,10 +454,13 @@ export default function App({
             </div>
           </section>
 
-          {selectedEnvironment && isEditorOpen && (
+          {selectedEnvironment && (
             <section
+              ref={editorRef}
               className="environment-editor"
               aria-labelledby="editor-heading"
+              aria-hidden={!isEditorOpen}
+              inert={!isEditorOpen}
             >
               <h2 id="editor-heading" className="sr-only">
                 {selectedEnvironment.name}
