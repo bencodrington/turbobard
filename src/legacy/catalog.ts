@@ -1,4 +1,8 @@
-import type { CatalogItem, SoundCatalog } from '../domain/catalog'
+import type {
+  CatalogItem,
+  CatalogResult,
+  SoundCatalog,
+} from '../domain/catalog'
 
 const DEFAULT_API_BASE_URL = 'https://us-central1-turbo-bard.cloudfunctions.net'
 const DEFAULT_STORAGE_BASE_URL =
@@ -9,6 +13,26 @@ type LegacySearchResult = {
   name?: unknown
   tags?: unknown
   type?: unknown
+  tracks?: unknown
+}
+
+type LegacyPackMember = {
+  id: string
+  volume?: number
+  oneShotConfig?: {
+    minSecondsBetween?: number
+    maxSecondsBetween?: number
+  }
+}
+
+function packMembers(value: unknown): LegacyPackMember[] {
+  if (
+    !Array.isArray(value) ||
+    value.some((member) => !member || typeof member.id !== 'string')
+  ) {
+    throw new Error('Legacy API returned an invalid pack')
+  }
+  return value as LegacyPackMember[]
 }
 
 type LegacyTrack = LegacySearchResult & {
@@ -109,19 +133,63 @@ export function createLegacySoundCatalog(): SoundCatalog {
           searchResultType,
         }),
       )
-      const tracks = results.filter(isTrackResult)
-      const metadata = await Promise.all(
-        tracks.map((result) =>
-          json<LegacyTrack>(
+      const tracks = new Map<string, Promise<CatalogItem>>()
+      const fetchTrack = (id: string) => {
+        let track = tracks.get(id)
+        if (!track) {
+          track = json<LegacyTrack>(
             apiUrl(
               envValue('VITE_LEGACY_TRACK_ENDPOINT') ??
                 '/fetchTrackDataById_v2',
-              { trackId: String(result.id) },
+              { trackId: id },
             ),
-          ),
-        ),
+          ).then(mapTrack)
+          tracks.set(id, track)
+        }
+        return track
+      }
+      return Promise.all(
+        results
+          .filter(
+            (result) =>
+              isTrackResult(result) ||
+              (result.type === 'PACK' && filter === 'everything'),
+          )
+          .map(async (result): Promise<CatalogResult> => {
+            if (
+              typeof result.id !== 'string' ||
+              typeof result.name !== 'string'
+            ) {
+              throw new Error('Legacy API returned an invalid search result')
+            }
+            if (result.type !== 'PACK') return fetchTrack(result.id)
+            const members = packMembers(result.tracks)
+            return {
+              id: result.id,
+              name: result.name,
+              kind: 'pack',
+              tags: stringArray(result.tags),
+              items: await Promise.all(
+                members.map(async (member) => {
+                  const item = await fetchTrack(member.id)
+                  return {
+                    ...item,
+                    volume:
+                      typeof member.volume === 'number'
+                        ? member.volume
+                        : undefined,
+                    minIntervalSeconds:
+                      member.oneShotConfig?.minSecondsBetween ??
+                      item.minIntervalSeconds,
+                    maxIntervalSeconds:
+                      member.oneShotConfig?.maxSecondsBetween ??
+                      item.maxIntervalSeconds,
+                  }
+                }),
+              ),
+            }
+          }),
       )
-      return metadata.map(mapTrack)
     },
   }
 }

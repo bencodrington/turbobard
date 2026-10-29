@@ -497,9 +497,13 @@ describe('Environment workspace', () => {
       target: { value: 'rain' },
     })
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Add' })).toBeEnabled(),
+      expect(
+        screen.getByRole('button', { name: 'Add Rainfall to environment' }),
+      ).toBeEnabled(),
     )
-    fireEvent.click(screen.getByRole('button', { name: 'Add' }))
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Add Rainfall to environment' }),
+    )
 
     expect(screen.getAllByText('Rainfall')[1]).toBeVisible()
   })

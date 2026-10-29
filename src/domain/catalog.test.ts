@@ -6,6 +6,8 @@ import {
   placeSound,
   removeSound,
   setSoundTiming,
+  toggleCatalogResult,
+  isCatalogResultAdded,
 } from './catalog'
 import type { CatalogItem } from './catalog'
 
@@ -13,7 +15,7 @@ const music: CatalogItem = {
   id: 'rain',
   name: 'Rain Music',
   kind: 'loop',
-  tags: ['weather'],
+  tags: ['weather', 'music'],
 }
 const thunder: CatalogItem = {
   id: 'thunder',
@@ -64,5 +66,56 @@ describe('Sound catalog composition', () => {
         maxIntervalSeconds: 5,
       }),
     ])
+  })
+
+  it('adds only missing pack members to Combat, preserving presets and existing settings, then removes every member', () => {
+    const existing = addCatalogItem([], { ...music, volume: 0.2 })
+    const pack = {
+      id: 'storm-pack',
+      name: 'Storm',
+      kind: 'pack' as const,
+      items: [
+        { ...music, volume: 0.8 },
+        {
+          ...thunder,
+          volume: 0.4,
+          minIntervalSeconds: 3,
+          maxIntervalSeconds: 9,
+        },
+      ],
+    }
+    expect(isCatalogResultAdded(existing, pack)).toBe(false)
+    const added = toggleCatalogResult(existing, pack, 'combat')
+    expect(added).toEqual([
+      expect.objectContaining({
+        id: music.id,
+        volume: 0.2,
+        placement: 'ambiance',
+      }),
+      expect.objectContaining({
+        id: thunder.id,
+        volume: 0.4,
+        placement: 'combat',
+        minIntervalSeconds: 3,
+        maxIntervalSeconds: 9,
+      }),
+    ])
+    expect(isCatalogResultAdded(added, pack)).toBe(true)
+    expect(toggleCatalogResult(added, pack)).toEqual([])
+  })
+
+  it('distinguishes ambient loops from music and excludes packs from sound filters', () => {
+    const ambientLoop = { ...music, tags: ['weather'] }
+    const pack = {
+      id: 'pack',
+      name: 'Rain',
+      kind: 'pack' as const,
+      items: [music],
+    }
+    expect(catalogMatches(ambientLoop, 'rain', 'ambiance')).toBe(true)
+    expect(catalogMatches(ambientLoop, 'rain', 'music')).toBe(false)
+    expect(catalogMatches(pack, 'rain', 'music')).toBe(false)
+    expect(catalogMatches(pack, 'rain', 'everything')).toBe(true)
+    expect(isCatalogResultAdded([], { ...pack, items: [] })).toBe(false)
   })
 })
