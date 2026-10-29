@@ -1,5 +1,21 @@
 import { expect, test, type Page } from '@playwright/test'
 
+test('About identifies the running production build', async ({ page }) => {
+  await page.goto('/')
+  const response = await page.request.get('/build-info.json')
+  expect(response.ok()).toBeTruthy()
+  const info = await response.json()
+  expect(info.commit).toMatch(/^[a-f0-9]{40}$/)
+  expect(info.buildId).toMatch(/^(local|[1-9]\d*\.[1-9]\d*)$/)
+  expect(new Date(info.builtAt).toISOString()).toBe(info.builtAt)
+  await page.getByRole('button', { name: 'About' }).click()
+  await expect(page.getByTestId('build-commit')).toHaveText(
+    info.commit.slice(0, 7),
+  )
+  await expect(page.getByTestId('build-id')).toHaveText(info.buildId)
+  await expect(page.getByTestId('build-time')).toHaveText(info.builtAt)
+})
+
 test('loads the Turbobard workspace', async ({ page }) => {
   await page.goto('/')
 

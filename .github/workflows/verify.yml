@@ -2,13 +2,14 @@ name: Verify
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Full main commit SHA to restage (creates a new build to check)
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -17,8 +18,34 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    concurrency:
+      group: verify-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
+    outputs:
+      source-sha: ${{ steps.source.outputs.sha }}
+      build-id: ${{ steps.source.outputs.build-id }}
+      artifact-id: ${{ steps.artifact.outputs.artifact-id }}
+      artifact-digest: ${{ steps.artifact.outputs.artifact-digest }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Select and validate source
+        id: source
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          DISPATCH_REF: ${{ github.ref }}
+          SOURCE_SHA: ${{ inputs.source_sha }}
+        run: |
+          if [ "$EVENT_NAME" = workflow_dispatch ]; then
+            test "$DISPATCH_REF" = refs/heads/main || { echo 'Restaging must run from main'; exit 1; }
+            [[ "$SOURCE_SHA" =~ ^[a-f0-9]{40}$ ]] || { echo 'Supply a full source SHA'; exit 1; }
+            git fetch origin main
+            git merge-base --is-ancestor "$SOURCE_SHA" origin/main || { echo 'Source must be on main'; exit 1; }
+            git checkout --detach "$SOURCE_SHA"
+          fi
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "build-id=$GITHUB_RUN_ID.$GITHUB_RUN_ATTEMPT" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-node@v5
         with:
           node-version-file: '.nvmrc'
@@ -26,15 +53,104 @@ jobs:
       - run: npm ci
       - name: Install supported Playwright browsers
         run: npx playwright install --with-deps
-      - run: npm run verify:static
-      - name: Run full browser E2E matrix
+      - name: Verify and build once
+        run: npm run verify:static
+        env:
+          TURBOBARD_BUILD_COMMIT: ${{ steps.source.outputs.sha }}
+          TURBOBARD_BUILD_ID: ${{ steps.source.outputs.build-id }}
+      - name: Run full browser E2E matrix against that output
         run: npm run test:e2e
+        env:
+          TURBOBARD_BUILD_COMMIT: ${{ steps.source.outputs.sha }}
+          TURBOBARD_BUILD_ID: ${{ steps.source.outputs.build-id }}
+      - name: Retain eligible main build
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        id: artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ steps.source.outputs.build-id }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Record build identity
+        if: steps.artifact.outcome == 'success'
+        env:
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+          BUILD_ID: ${{ steps.source.outputs.build-id }}
+          ARTIFACT_ID: ${{ steps.artifact.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.artifact.outputs.artifact-digest }}
+        run: |
+          {
+            echo "### Verified build $BUILD_ID"
+            echo "Source: $SOURCE_SHA"
+            echo "Artifact ID: $ARTIFACT_ID"
+            echo "Artifact SHA-256: $ARTIFACT_DIGEST"
+            echo 'Retained for 30 days. Release eligibility also requires successful staging and personal checking.'
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Upload Playwright artifacts
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
+          name: playwright-report-${{ github.run_id }}.${{ github.run_attempt }}
           path: |
             playwright-report/
             test-results/
           if-no-files-found: ignore
+          retention-days: 14
+
+  staging:
+    needs: verify
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.STAGING_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: staging
+    concurrency:
+      group: cloudflare-staging
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      # Tooling uses the trusted workflow ref, even for older restaged source.
+      # Download the tested output; never rebuild in this job.
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+      - run: npm ci
+      - name: Download exact artifact and fail on digest mismatch
+        run: node scripts/download-build.ts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARTIFACT_ID: ${{ needs.verify.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ needs.verify.outputs.artifact-digest }}
+          BUILD_ID: ${{ needs.verify.outputs.build-id }}
+      - name: Extract and check source/build association
+        env:
+          SOURCE_SHA: ${{ needs.verify.outputs.source-sha }}
+          BUILD_ID: ${{ needs.verify.outputs.build-id }}
+        run: |
+          mkdir dist
+          unzip -q "$RUNNER_TEMP/build.zip" -d dist
+          node scripts/check-build.ts
+      - name: Deploy retained files to existing private staging Worker
+        run: npx --no-install wrangler deploy --config wrangler.staging.jsonc
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Record successful staging
+        env:
+          SOURCE_SHA: ${{ needs.verify.outputs.source-sha }}
+          BUILD_ID: ${{ needs.verify.outputs.build-id }}
+          ARTIFACT_ID: ${{ needs.verify.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ needs.verify.outputs.artifact-digest }}
+        run: |
+          {
+            echo "### Staged build $BUILD_ID"
+            echo "Source: $SOURCE_SHA"
+            echo "Artifact ID: $ARTIFACT_ID"
+            echo "Artifact SHA-256: $ARTIFACT_DIGEST"
+            echo 'Manually check sign-in, About identity, catalog search, and audible playback.'
+            echo 'Production publishing is not implemented yet.'
+          } >> "$GITHUB_STEP_SUMMARY"

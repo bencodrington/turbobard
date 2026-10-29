@@ -707,6 +707,17 @@ input::placeholder {
 .about-body p {
   margin-top: 0.75rem;
 }
+.build-info {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem 1rem;
+  margin-top: 0.75rem;
+}
+.build-info dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
 .about-body strong,
 .about-body p a {
   color: var(--gradient-color-3);
