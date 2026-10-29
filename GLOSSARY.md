@@ -31,6 +31,9 @@ The sound placement used for sounds that participate in Combat mode.
 **Sound catalog**:
 The external searchable source of available sounds and their metadata.
 
+**Pack**:
+A curated collection of sounds with preset volumes and, where applicable, One-shot timing, which can be added to an Environment together.
+
 **Icon catalog**:
 The external searchable source of icons that can represent an Environment.
 

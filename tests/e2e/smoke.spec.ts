@@ -102,7 +102,10 @@ async function addAndPlayHeavyRain(page: Page) {
   await page.getByRole('button', { name: 'Create Environment' }).click()
   const environment = page.getByRole('region', { name: 'New Environment' })
   await page.getByRole('textbox', { name: 'Search Sounds' }).fill('rain')
-  await page.getByRole('button', { name: 'Add', exact: true }).click()
+  await page
+    .getByRole('region', { name: 'Search', exact: true })
+    .getByRole('button', { name: /^Add .+ to environment$/ })
+    .click()
   await expect(page.getByText('Heavy Rain').last()).toBeVisible()
   await environment.getByRole('button', { name: 'Play' }).click()
 
@@ -127,7 +130,7 @@ test('fades Heavy Rain out when it is removed from a playing Environment', async
 }) => {
   await stubCatalogAndAudio(page)
   await addAndPlayHeavyRain(page)
-  await page.getByRole('button', { name: 'Remove' }).click()
+  await page.getByRole('button', { name: 'Remove', exact: true }).click()
 
   await expect
     .poll(
@@ -211,7 +214,10 @@ test('plays a sound added to an already-playing Environment', async ({
   const environment = page.getByRole('region', { name: 'New Environment' })
   await environment.getByRole('button', { name: 'Play' }).click()
   await page.getByRole('textbox', { name: 'Search Sounds' }).fill('rain')
-  await page.getByRole('button', { name: 'Add', exact: true }).click()
+  await page
+    .getByRole('region', { name: 'Search', exact: true })
+    .getByRole('button', { name: /^Add .+ to environment$/ })
+    .click()
 
   await expect(page.getByText('Heavy Rain').last()).toBeVisible()
   await expect
@@ -319,9 +325,16 @@ test('toggling Combat mode fades ordinary music and starts combat music', async 
   // Add Heavy Rain as ambiance (search by exact name so only one result shows)
   await page.getByRole('textbox', { name: 'Search Sounds' }).fill('heavy rain')
   await expect(
-    page.getByRole('button', { name: 'Add', exact: true }).first(),
+    page
+      .getByRole('region', { name: 'Search', exact: true })
+      .getByRole('button', { name: /^Add .+ to environment$/ })
+      .first(),
   ).toBeEnabled()
-  await page.getByRole('button', { name: 'Add', exact: true }).first().click()
+  await page
+    .getByRole('region', { name: 'Search', exact: true })
+    .getByRole('button', { name: /^Add .+ to environment$/ })
+    .first()
+    .click()
   await expect(page.getByText('Heavy Rain').last()).toBeVisible()
 
   // Add Battle Drums and set it to combat placement
@@ -329,9 +342,16 @@ test('toggling Combat mode fades ordinary music and starts combat music', async 
     .getByRole('textbox', { name: 'Search Sounds' })
     .fill('battle drums')
   await expect(
-    page.getByRole('button', { name: 'Add', exact: true }).first(),
+    page
+      .getByRole('region', { name: 'Search', exact: true })
+      .getByRole('button', { name: /^Add .+ to environment$/ })
+      .first(),
   ).toBeEnabled()
-  await page.getByRole('button', { name: 'Add', exact: true }).first().click()
+  await page
+    .getByRole('region', { name: 'Search', exact: true })
+    .getByRole('button', { name: /^Add .+ to environment$/ })
+    .first()
+    .click()
   await expect(page.getByText('Battle Drums').last()).toBeVisible()
   await page
     .getByRole('combobox', { name: /placement for battle drums/i })
@@ -354,7 +374,7 @@ test('toggling Combat mode fades ordinary music and starts combat music', async 
     .toBe(true)
 
   // Toggle Combat mode on
-  await page.getByRole('checkbox', { name: 'Combat' }).focus()
+  await page.getByRole('checkbox', { name: 'Combat', exact: true }).focus()
   await page.keyboard.press('Space')
 
   // Heavy Rain should be paused (faded out)

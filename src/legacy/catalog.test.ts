@@ -11,7 +11,6 @@ describe('legacy sound catalog', () => {
         new Response(
           JSON.stringify([
             { id: 'loop-1', name: 'Cave', tags: ['dark'], type: 'LOOP' },
-            { id: 'pack-1', name: 'Pack', tags: [], type: 'PACK' },
           ]),
         ),
       )
@@ -97,5 +96,84 @@ describe('legacy sound catalog', () => {
       createLegacySoundCatalog().search('  ', 'everything'),
     ).resolves.toEqual([])
     expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('returns ordered pack results with member presets and reuses overlapping metadata requests', async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockImplementation(async (url) => {
+        const parsed = new URL(String(url))
+        if (parsed.pathname.endsWith('/search_v3'))
+          return new Response(
+            JSON.stringify([
+              {
+                id: 'pack',
+                name: 'Swamp Travel',
+                type: 'PACK',
+                tags: ['pack', 'swamp'],
+                tracks: [
+                  { id: 'music', volume: 0.3 },
+                  {
+                    id: 'frogs',
+                    volume: 0.6,
+                    oneShotConfig: {
+                      minSecondsBetween: 5,
+                      maxSecondsBetween: 12,
+                    },
+                  },
+                ],
+              },
+              { id: 'music', name: 'Swamp Music', type: 'LOOP' },
+            ]),
+          )
+        const id = parsed.searchParams.get('trackId')
+        return new Response(
+          JSON.stringify(
+            id === 'music'
+              ? {
+                  id,
+                  name: 'Swamp Music',
+                  type: 'LOOP',
+                  tags: ['music'],
+                  fileName: 'swamp-music',
+                }
+              : {
+                  id,
+                  name: 'Frogs',
+                  type: 'ONESHOT',
+                  tags: ['swamp'],
+                  samples: ['frog'],
+                  minSecondsBetween: 1,
+                  maxSecondsBetween: 2,
+                },
+          ),
+        )
+      })
+    const catalog = createLegacySoundCatalog()
+    const results = await catalog.search('swamp', 'everything')
+    expect(results).toMatchObject([
+      {
+        id: 'pack',
+        kind: 'pack',
+        tags: ['pack', 'swamp'],
+        items: [
+          { id: 'music', volume: 0.3, tags: ['music'] },
+          {
+            id: 'frogs',
+            volume: 0.6,
+            minIntervalSeconds: 5,
+            maxIntervalSeconds: 12,
+          },
+        ],
+      },
+      { id: 'music', kind: 'loop' },
+    ])
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+    expect(await catalog.search('swamp', 'music')).toMatchObject([
+      { id: 'music', kind: 'loop' },
+    ])
+    expect(await catalog.search('swamp', 'ambiance')).not.toContainEqual(
+      expect.objectContaining({ kind: 'pack' }),
+    )
   })
 })

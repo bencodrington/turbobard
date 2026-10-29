@@ -11,12 +11,10 @@ import logo from './assets/logo.svg'
 import type { Environment } from './domain/playback'
 import { createEnvironmentPersistence } from './persistence/environments'
 import {
-  addCatalogItem,
-  addCatalogPack,
   placeSound,
   removeSound,
   type CatalogFilter,
-  type CatalogItem,
+  type CatalogResult,
   type SoundCatalog,
 } from './domain/catalog'
 import {
@@ -34,6 +32,7 @@ import type { EnvironmentPersistence } from './domain/ports'
 import { FontAwesomeIconView } from './ui/icons'
 import { AsyncSearchState } from './ui/AsyncSearchState'
 import { Sound } from './ui/Sound'
+import { CatalogPanel } from './ui/CatalogPanel'
 import { ModalShell } from './ui/ModalShell'
 import { NowPlayingBar } from './ui/NowPlayingBar'
 import { createEnvironmentWorkspace } from './workspace/environmentWorkspace'
@@ -71,7 +70,7 @@ export default function App({
   const [filter, setFilter] = useState<CatalogFilter>('everything')
   const [catalogError, setCatalogError] = useState(false)
   const [catalogLoading, setCatalogLoading] = useState(false)
-  const [results, setResults] = useState<CatalogItem[]>([])
+  const [results, setResults] = useState<CatalogResult[]>([])
   const [catalogAttempt, setCatalogAttempt] = useState(0)
   const [audioError, setAudioError] = useState<string | undefined>()
   const catalog = useMemo(
@@ -631,108 +630,20 @@ export default function App({
             </section>
           )}
 
-          <section
-            className={`catalog-panel${isSearchOpen ? ' mobile-search-open' : ''}`}
-            aria-labelledby="catalog-heading"
-          >
-            <div className="section-heading">
-              <Button
-                variant="text"
-                className="mobile-search-close"
-                aria-label="Close search"
-                onClick={() => setIsSearchOpen(false)}
-              >
-                <FontAwesomeIconView iconId="arrow-left" /> Back
-              </Button>
-              <h2 id="catalog-heading">Search</h2>
-            </div>
-            <label className="sr-only" htmlFor="catalog-search">
-              Search
-            </label>
-            <input
-              id="catalog-search"
-              aria-label="Search Sounds"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search"
-            />
-            <div
-              className="catalog-filters"
-              role="group"
-              aria-label="Catalog filters"
-            >
-              {(['everything', 'music', 'ambiance'] as CatalogFilter[]).map(
-                (value) => (
-                  <Button
-                    key={value}
-                    variant="secondary"
-                    aria-pressed={filter === value}
-                    onClick={() => setFilter(value)}
-                  >
-                    {value[0].toUpperCase() + value.slice(1)}
-                  </Button>
-                ),
-              )}
-            </div>
-            <AsyncSearchState
-              loading={catalogLoading}
-              error={catalogError}
-              empty={results.length === 0}
-              loadingMessage="Loading Sounds…"
-              errorMessage={
-                <>
-                  Legacy sound catalog unavailable. Check your local API
-                  configuration and network access.
-                </>
-              }
-              emptyMessage={<p className="empty-state">No Sounds found.</p>}
-              onRetry={() => setCatalogAttempt((attempt) => attempt + 1)}
-            >
-              <div className="catalog-results">
-                {results.map((item) => (
-                  <article className="catalog-item" key={item.id}>
-                    <div>
-                      <strong>{item.name}</strong>
-                      <small>
-                        {item.kind === 'loop' ? 'Music' : 'Ambiance'} ·{' '}
-                        {item.source?.author ?? 'Unknown source'}
-                      </small>
-                    </div>
-                    <Button
-                      variant="secondary"
-                      disabled={!selectedEnvironment}
-                      onClick={() =>
-                        updateSelectedSounds(
-                          addCatalogItem(
-                            selectedEnvironment?.sounds ?? [],
-                            item,
-                          ),
-                        )
-                      }
-                    >
-                      Add
-                    </Button>
-                    <details>
-                      <summary>Source details</summary>
-                      <p>{item.source?.author ?? 'Unknown source'}</p>
-                    </details>
-                  </article>
-                ))}
-              </div>
-            </AsyncSearchState>
-            {selectedEnvironment && results.length > 1 && (
-              <Button
-                variant="primary"
-                onClick={() =>
-                  updateSelectedSounds(
-                    addCatalogPack(selectedEnvironment.sounds, results),
-                  )
-                }
-              >
-                Add results as pack
-              </Button>
-            )}
-          </section>
+          <CatalogPanel
+            environment={selectedEnvironment}
+            open={isSearchOpen}
+            onClose={() => setIsSearchOpen(false)}
+            query={query}
+            onQueryChange={setQuery}
+            filter={filter}
+            onFilterChange={setFilter}
+            results={results}
+            loading={catalogLoading}
+            error={catalogError}
+            onRetry={() => setCatalogAttempt((attempt) => attempt + 1)}
+            onSoundsChange={updateSelectedSounds}
+          />
         </div>
       </section>
       {mostRecentlyPlayedEnvironment && (

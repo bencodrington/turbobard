@@ -6,6 +6,7 @@ export type CatalogItem = {
   id: string
   name: string
   kind: SoundKind
+  volume?: number
   source?: { author?: string; urls: string[] }
   tags?: string[]
   variations?: string[]
@@ -15,12 +16,26 @@ export type CatalogItem = {
   packName?: string
 }
 
+export type CatalogPack = {
+  id: string
+  name: string
+  kind: 'pack'
+  tags?: string[]
+  items: CatalogItem[]
+}
+
+export type CatalogResult = CatalogItem | CatalogPack
+
 export type SoundCatalog = {
-  search: (query: string, filter: CatalogFilter) => Promise<CatalogItem[]>
+  search: (query: string, filter: CatalogFilter) => Promise<CatalogResult[]>
+}
+
+export function isCatalogMusic(item: CatalogItem): boolean {
+  return item.tags?.includes('music') ?? false
 }
 
 export function catalogMatches(
-  item: CatalogItem,
+  item: CatalogResult,
   query: string,
   filter: CatalogFilter,
 ): boolean {
@@ -28,8 +43,8 @@ export function catalogMatches(
   const matchesQuery = haystack.includes(query.trim().toLowerCase())
   const matchesFilter =
     filter === 'everything' ||
-    (filter === 'music' && item.kind === 'loop') ||
-    (filter === 'ambiance' && item.kind === 'one-shot')
+    (item.kind !== 'pack' &&
+      (filter === 'music' ? isCatalogMusic(item) : !isCatalogMusic(item)))
   return matchesQuery && matchesFilter
 }
 
@@ -46,7 +61,7 @@ export function addCatalogItem(
       name: item.name,
       kind: item.kind,
       placement,
-      volume: 1,
+      volume: item.volume ?? 1,
       source: item.source,
       tags: item.tags,
       variations: item.variations,
@@ -55,6 +70,30 @@ export function addCatalogItem(
       loaded: false,
     },
   ]
+}
+
+export function isCatalogResultAdded(
+  sounds: Sound[],
+  result: CatalogResult,
+): boolean {
+  const items = result.kind === 'pack' ? result.items : [result]
+  return (
+    items.length > 0 &&
+    items.every((item) => sounds.some((sound) => sound.id === item.id))
+  )
+}
+
+export function toggleCatalogResult(
+  sounds: Sound[],
+  result: CatalogResult,
+  placement: Placement = 'ambiance',
+): Sound[] {
+  const items = result.kind === 'pack' ? result.items : [result]
+  if (isCatalogResultAdded(sounds, result)) {
+    const ids = new Set(items.map((item) => item.id))
+    return sounds.filter((sound) => !ids.has(sound.id))
+  }
+  return addCatalogPack(sounds, items, placement)
 }
 
 export function addCatalogPack(
