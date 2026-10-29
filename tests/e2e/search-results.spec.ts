@@ -94,6 +94,59 @@ for (const mobile of [false, true]) {
     await expect(
       search.getByRole('button', { name: 'Preview Swamp Travel' }),
     ).toHaveCount(0)
+    // Use real pointer hit testing: the title, tags, icon and row padding must
+    // activate the same native button as the plus/minus affordance.
+    const clickCenter = async (target: ReturnType<typeof search.locator>) => {
+      const box = await target.boundingBox()
+      expect(box).not.toBeNull()
+      await page.mouse.click(box!.x + box!.width / 2, box!.y + box!.height / 2)
+    }
+    const frogsRow = search.locator('article').filter({ hasText: 'Mangrove' })
+    await clickCenter(frogsRow.locator('strong'))
+    await page.screenshot({ path: testInfo.outputPath('row-title-click.png') })
+    await expect(
+      search.getByRole('button', { name: 'Remove Mangrove from environment' }),
+    ).toBeVisible()
+    await clickCenter(frogsRow.getByText('tropical', { exact: true }))
+    await expect(
+      search.getByRole('button', { name: 'Add Mangrove to environment' }),
+    ).toBeVisible()
+    await clickCenter(frogsRow.getByRole('img', { name: 'Ambiance' }))
+    await expect(
+      search.getByRole('button', { name: 'Remove Mangrove from environment' }),
+    ).toBeVisible()
+    const rowBox = await frogsRow.boundingBox()
+    await page.mouse.click(rowBox!.x + 3, rowBox!.y + rowBox!.height - 3)
+    await expect(
+      search.getByRole('button', { name: 'Add Mangrove to environment' }),
+    ).toBeVisible()
+    const packRow = search
+      .locator('article')
+      .filter({ hasText: 'Swamp Travel' })
+    await clickCenter(packRow.getByText('Contains 2 sounds, including music.'))
+    await expect(
+      search.getByRole('button', {
+        name: 'Remove Swamp Travel from environment',
+      }),
+    ).toBeVisible()
+    const packToggle = search.getByRole('button', {
+      name: 'Remove Swamp Travel from environment',
+    })
+    await packToggle.focus()
+    await page.keyboard.press('Space')
+    await expect(
+      search.getByRole('button', { name: 'Add Swamp Travel to environment' }),
+    ).toBeVisible()
+    await page.keyboard.press('Enter')
+    await expect(
+      search.getByRole('button', {
+        name: 'Remove Swamp Travel from environment',
+      }),
+    ).toBeVisible()
+    await clickCenter(packRow.locator('strong'))
+    await expect(
+      search.getByRole('button', { name: 'Add Swamp Travel to environment' }),
+    ).toBeVisible()
     const combat = search.getByRole('checkbox', { name: 'Add to combat' })
     await combat.check()
     await search
@@ -130,6 +183,11 @@ for (const mobile of [false, true]) {
       .click()
     await search.getByRole('button', { name: 'Preview Mangrove' }).click()
     await search.getByRole('button', { name: 'Preview Swamp Music' }).click()
+    await expect(
+      search.getByRole('button', {
+        name: 'Remove Swamp Travel from environment',
+      }),
+    ).toBeVisible()
     const events = await page.evaluate(
       () =>
         (window as typeof window & { __previewEvents: string[] })
