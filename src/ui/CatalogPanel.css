@@ -126,6 +126,7 @@
   border-top: 1px solid var(--border);
 }
 .catalog-panel .catalog-item {
+  position: relative;
   display: grid;
   grid-template-columns: 1.5rem minmax(0, 1fr) 2.75rem 2.75rem;
   align-items: center;
@@ -197,10 +198,25 @@
   font-size: 1.4rem;
 }
 .catalog-item .catalog-preview {
+  position: relative;
+  z-index: 1;
   grid-column: 3;
 }
 .catalog-item .catalog-add {
   grid-column: 4;
+}
+/* Stretch the native add/remove button over the row, keeping Preview separate. */
+.catalog-item .catalog-add::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.catalog-item .catalog-add:disabled::after {
+  pointer-events: none;
+}
+.catalog-item:has(.catalog-add:focus-visible) {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
 }
 .catalog-preview-error {
   color: var(--danger);
