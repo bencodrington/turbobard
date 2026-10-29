@@ -9,6 +9,8 @@
   padding: 0;
   border: 0;
   background: none;
+  color: var(--grey-5);
+  transition: none;
 }
 
 .playback-button.button:not(:disabled):hover {
@@ -56,7 +58,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .playback-button * {
+  .playback-button-hexagon path,
+  .playback-button.is-playing .playback-button-hexagon path {
     animation: none;
     transition: none;
   }
