@@ -758,10 +758,18 @@ export default function App({
             <section>
               <h3>TurboBard is a passion project.</h3>
               <p>
-                If you'd like, you can donate to help cover the costs of running
-                it.
+                If you'd like, you can <strong>donate</strong> to help cover the
+                costs of running it.
               </p>
-              <a href="https://ko-fi.com/projectbench">Support me</a>
+              <a
+                className="button button--primary about-support"
+                href="https://ko-fi.com/projectbench"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <FontAwesomeIconView iconId="hand-holding-dollar" />
+                Support me
+              </a>
             </section>
             <section>
               <h3>Data policy.</h3>
@@ -772,6 +780,11 @@ export default function App({
               <p>
                 I've collected sounds with permissive licenses, and linked the
                 source wherever possible.
+              </p>
+              <p>
+                If TurboBard features your sound and you'd like it to be removed
+                or modified for any reason, please contact me at{' '}
+                <a href="mailto:phanarydev@gmail.com">phanarydev@gmail.com</a>
               </p>
             </section>
             <section>

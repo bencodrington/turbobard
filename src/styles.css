@@ -684,6 +684,56 @@ input::placeholder {
   padding: var(--space-5);
   overflow-y: auto;
 }
+.about-card .modal-body {
+  padding: 1rem 2.5rem 2rem;
+  background: var(--surface);
+}
+.about-body {
+  line-height: 1.5;
+}
+.about-body section + section {
+  margin-top: 2.5rem;
+}
+.about-body h3 {
+  display: inline-block;
+  background: linear-gradient(4deg, #1f53da, #03a2c4);
+  background-clip: text;
+  color: transparent;
+  font-family: var(--font-display);
+  font-size: 1.285714rem;
+  font-weight: normal;
+  line-height: 1.2;
+}
+.about-body p {
+  margin-top: 0.75rem;
+}
+.about-body strong,
+.about-body p a {
+  color: var(--gradient-color-3);
+}
+.about-body p a {
+  display: block;
+  width: fit-content;
+  margin-top: 0.5rem;
+  overflow-wrap: anywhere;
+}
+.about-body p a:hover {
+  color: var(--text);
+}
+.about-support.button {
+  width: 100%;
+  min-height: 2.571429rem;
+  margin-top: 0.5rem;
+  padding-top: 0;
+  padding-bottom: 0;
+  background: var(--secondary);
+  color: var(--text);
+  font-size: var(--font-size-body);
+  font-weight: normal;
+}
+.about-support.button:hover {
+  background: var(--primary);
+}
 .icon-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(3.2rem, 1fr));
