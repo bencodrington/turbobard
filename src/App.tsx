@@ -35,6 +35,7 @@ import { Sound } from './ui/Sound'
 import { CatalogPanel } from './ui/CatalogPanel'
 import { ModalShell } from './ui/ModalShell'
 import { NowPlayingBar } from './ui/NowPlayingBar'
+import { buildInfo } from './buildInfo'
 import { createEnvironmentWorkspace } from './workspace/environmentWorkspace'
 
 function newEnvironmentId(): string {
@@ -704,6 +705,19 @@ export default function App({
                 Please send any feedback, bugs, or ideas to{' '}
                 <a href="mailto:phanarydev@gmail.com">phanarydev@gmail.com</a>
               </p>
+            </section>
+            <section>
+              <h3>Build information.</h3>
+              <dl className="build-info">
+                <dt>Source commit</dt>
+                <dd data-testid="build-commit">
+                  {buildInfo.commit.slice(0, 7)}
+                </dd>
+                <dt>CI build ID</dt>
+                <dd data-testid="build-id">{buildInfo.buildId}</dd>
+                <dt>Built at (UTC)</dt>
+                <dd data-testid="build-time">{buildInfo.builtAt}</dd>
+              </dl>
             </section>
           </div>
         </ModalShell>
