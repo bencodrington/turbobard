@@ -39,5 +39,6 @@ For a first local browser run, install Chromium once with `npm run test:e2e:inst
 ## Deployment
 
 See [deployment operations](docs/deployment-operations.md) for private staging
-setup, build identities, retained artifacts, and explicit restaging. Production
-publishing and the domain cutover remain subsequent implementation work.
+setup, build identities, retained artifacts, explicit restaging, and the manual
+Publish and deploy workflow. Private production requires its own bootstrap setup;
+the domain cutover remains a separate launch.

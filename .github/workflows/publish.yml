@@ -1,0 +1,62 @@
+name: Publish and deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_id:
+        description: Exact personally checked staging build ID (runId.attempt)
+        required: true
+        type: string
+      version:
+        description: Optional vMAJOR.MINOR.PATCH override (empty selects next patch)
+        type: string
+      notes:
+        description: Optional release notes override (empty generates notes)
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main' && vars.PRODUCTION_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    concurrency:
+      group: cloudflare-production
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      actions: read
+      deployments: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+      - run: npm ci
+      - name: Validate, pin publication intent, publish immutable release
+        id: publication
+        run: node scripts/publish.ts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUILD_ID: ${{ inputs.build_id }}
+          RELEASE_VERSION: ${{ inputs.version }}
+          RELEASE_NOTES: ${{ inputs.notes }}
+      - name: Deploy the exact retained files to private production
+        id: deploy
+        run: npx --no-install wrangler deploy --config wrangler.production.jsonc
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Record deployment result
+        if: always() && steps.publication.outputs.deployment-id != ''
+        run: node scripts/record-production.ts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEPLOYMENT_ID: ${{ steps.publication.outputs.deployment-id }}
+          DEPLOY_OUTCOME: ${{ steps.deploy.outcome }}

@@ -110,6 +110,7 @@ jobs:
     permissions:
       contents: read
       actions: read
+      deployments: write
     steps:
       # Tooling uses the trusted workflow ref, even for older restaged source.
       # Download the tested output; never rebuild in this job.
@@ -146,11 +147,12 @@ jobs:
           ARTIFACT_ID: ${{ needs.verify.outputs.artifact-id }}
           ARTIFACT_DIGEST: ${{ needs.verify.outputs.artifact-digest }}
         run: |
+          node scripts/record-staging.ts
           {
             echo "### Staged build $BUILD_ID"
             echo "Source: $SOURCE_SHA"
             echo "Artifact ID: $ARTIFACT_ID"
             echo "Artifact SHA-256: $ARTIFACT_DIGEST"
             echo 'Manually check sign-in, About identity, catalog search, and audible playback.'
-            echo 'Production publishing is not implemented yet.'
+            echo 'Publish and deploy accepts this exact build ID after you personally check it.'
           } >> "$GITHUB_STEP_SUMMARY"
