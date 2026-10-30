@@ -364,20 +364,28 @@ export default function App({
             <div className="section-heading">
               <h2 id="environments-heading">Environments</h2>
               <div className="edit-mode-controls">
-                {isEditMode && <span className="edit-mode-label">editing</span>}
+                {isEditMode && <span className="edit-mode-label">Editing</span>}
                 <Button
-                  variant="ghost"
+                  variant={isEditMode ? 'primary' : 'ghost'}
                   iconOnly={!isEditMode}
                   aria-label={isEditMode ? undefined : 'Edit environments'}
                   aria-pressed={isEditMode}
                   onClick={() => setIsEditMode((value) => !value)}
                 >
                   <FontAwesomeIconView
-                    iconId={isEditMode ? 'check' : 'pencil'}
+                    iconId={isEditMode ? 'check' : 'wrench'}
                   />
                   {isEditMode && 'Done'}
                 </Button>
               </div>
+            </div>
+            <div
+              className={`edit-mode-hint${isEditMode ? ' is-visible' : ''}`}
+              aria-hidden={!isEditMode}
+            >
+              <p className="edit-mode-label">
+                Tap or click an environment to modify it
+              </p>
             </div>
             {environments.length === 0 ? (
               <p className="empty-state">
@@ -389,9 +397,16 @@ export default function App({
                   const selected = selectedId === environment.id && isEditorOpen
                   return (
                     <div
-                      className={`environment-tile-container${isEditMode ? ' is-editing' : ''}`}
+                      className={`environment-tile-container${isEditMode ? ' is-editing' : ''}${selected ? ' selected' : ''}${environment.playing ? ' playing' : ''}`}
                       key={environment.id}
                       role="listitem"
+                      style={
+                        {
+                          '--environment-color':
+                            environment.iconColor ??
+                            DEFAULT_ENVIRONMENT_ICON_COLOR,
+                        } as CSSProperties
+                      }
                     >
                       <button
                         ref={
@@ -401,13 +416,6 @@ export default function App({
                         }
                         className={`environment-tile${selected ? ' selected' : ''}${environment.playing ? ' playing' : ''}`}
                         aria-label={`${isEditMode ? 'Open' : environment.playing ? 'Stop' : 'Play'} ${environment.name}`}
-                        style={
-                          {
-                            '--environment-color':
-                              environment.iconColor ??
-                              DEFAULT_ENVIRONMENT_ICON_COLOR,
-                          } as CSSProperties
-                        }
                         onClick={() => openEnvironment(environment)}
                       >
                         <span
@@ -424,25 +432,41 @@ export default function App({
                             }
                           />
                         </span>
-                        <span>{environment.name}</span>
+                        <span className="environment-tile-name">
+                          {environment.name}
+                        </span>
                         {environment.playing && (
-                          <span className="tile-playing" aria-label="Playing">
-                            <FontAwesomeIconView iconId="volume-high" />
-                          </span>
+                          <>
+                            <span className="sr-only" aria-label="Playing">
+                              Playing
+                            </span>
+                            <span className="tile-equalizer" aria-hidden="true">
+                              {Array.from({ length: 14 }, (_, index) => (
+                                <i
+                                  key={index}
+                                  style={
+                                    {
+                                      '--bar-duration': `${2000 + ((index * 397) % 1100) * 2}ms`,
+                                      '--bar-delay': `${-((index * 613) % 2100) * 2}ms`,
+                                      height: `${45 + ((index * 37) % 55)}%`,
+                                    } as CSSProperties
+                                  }
+                                />
+                              ))}
+                            </span>
+                          </>
                         )}
                       </button>
-                      {isEditMode && (
-                        <Button
-                          variant="ghost"
-                          iconOnly
-                          danger
-                          className="environment-tile-delete"
-                          aria-label={`Delete ${environment.name}`}
-                          onClick={() => removeEnvironment(environment.id)}
-                        >
-                          <FontAwesomeIconView iconId="trash-can" />
-                        </Button>
-                      )}
+                      <button
+                        type="button"
+                        className="environment-tile-delete"
+                        disabled={!isEditMode}
+                        aria-hidden={!isEditMode}
+                        aria-label={`Delete ${environment.name}`}
+                        onClick={() => removeEnvironment(environment.id)}
+                      >
+                        <FontAwesomeIconView iconId="trash-can" />
+                      </button>
                     </div>
                   )
                 })}
@@ -473,13 +497,17 @@ export default function App({
                     iconOnly
                     className="editor-back-button"
                     aria-label="Close Environment"
-                    onClick={() => setIsEditorOpen(false)}
+                    onClick={() => {
+                      setIsEditorOpen(false)
+                      selectedTileRef.current?.focus({ preventScroll: true })
+                    }}
                   >
                     <FontAwesomeIconView iconId="arrow-left" />
                   </Button>
                   <Button
                     variant="secondary"
                     iconOnly
+                    className="environment-icon-edit"
                     aria-label={`Select icon for ${selectedEnvironment.name}`}
                     data-icon={
                       selectedEnvironment.icon ?? DEFAULT_ENVIRONMENT_ICON
@@ -504,6 +532,12 @@ export default function App({
                         selectedEnvironment.icon ?? DEFAULT_ENVIRONMENT_ICON
                       }
                     />
+                    <span
+                      className="environment-icon-edit-badge"
+                      aria-hidden="true"
+                    >
+                      <FontAwesomeIconView iconId="pencil" />
+                    </span>
                   </Button>
                   <label
                     className="sr-only"
@@ -640,7 +674,9 @@ export default function App({
                   onClick={() => {
                     setIsSearchOpen(true)
                     requestAnimationFrame(() =>
-                      document.getElementById('catalog-search')?.focus(),
+                      document
+                        .getElementById('catalog-search')
+                        ?.focus({ preventScroll: true }),
                     )
                   }}
                 >
@@ -690,8 +726,16 @@ export default function App({
             <section>
               <h3>TurboBard is a passion project.</h3>
               <p>
-                If you'd like, you can <strong>donate</strong> to help cover the
-                costs of running it.
+                If you'd like, you can{' '}
+                <a
+                  className="about-donate"
+                  href="https://ko-fi.com/projectbench"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  donate
+                </a>{' '}
+                to help cover the costs of running it.
               </p>
               <a
                 className="button button--primary about-support"
@@ -726,8 +770,8 @@ export default function App({
                 <a href="mailto:phanarydev@gmail.com">phanarydev@gmail.com</a>
               </p>
             </section>
-            <section>
-              <h3>Build information.</h3>
+            <details className="about-build-info">
+              <summary>Build information</summary>
               <dl className="build-info">
                 <dt>Source commit</dt>
                 <dd data-testid="build-commit">
@@ -738,7 +782,7 @@ export default function App({
                 <dt>Built at (UTC)</dt>
                 <dd data-testid="build-time">{buildInfo.builtAt}</dd>
               </dl>
-            </section>
+            </details>
           </div>
         </ModalShell>
       )}
@@ -765,7 +809,6 @@ export default function App({
               Select icon for <strong>{editingEnvironment.name}</strong>
             </>
           }
-          iconClose
           closeLabel="Close icon picker"
           onClose={() => setEditingIconEnvId(null)}
         >
@@ -775,6 +818,16 @@ export default function App({
               error={iconError}
               empty={displayedIcons.length === 0}
               loadingMessage="Loading icons…"
+              loadingContent={
+                <div
+                  className="icon-grid icon-skeleton-grid"
+                  aria-hidden="true"
+                >
+                  {Array.from({ length: 36 }, (_, index) => (
+                    <span className="icon-skeleton" key={index} />
+                  ))}
+                </div>
+              }
               errorMessage={
                 <>
                   Icon catalog unavailable. Check your local API configuration
@@ -840,9 +893,13 @@ export default function App({
                   onClick={() =>
                     updateEnvironmentIconColor(editingEnvironment, color)
                   }
-                  style={{ backgroundColor: color }}
                 >
-                  {isColorSelected && <FontAwesomeIconView iconId="check" />}
+                  <span
+                    className="color-option-swatch"
+                    style={{ backgroundColor: color }}
+                  >
+                    {isColorSelected && <FontAwesomeIconView iconId="check" />}
+                  </span>
                 </button>
               )
             })}

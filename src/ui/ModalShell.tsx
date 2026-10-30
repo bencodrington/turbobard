@@ -6,7 +6,6 @@ export type ModalShellProps = {
   title: string
   titleId: string
   headerContent?: ReactNode
-  iconClose?: boolean
   subtitle?: ReactNode
   className?: string
   closeLabel: string
@@ -18,7 +17,6 @@ export function ModalShell({
   title,
   titleId,
   headerContent,
-  iconClose = false,
   subtitle,
   className = '',
   closeLabel,
@@ -57,12 +55,12 @@ export function ModalShell({
             {subtitle && <p className="modal-subtitle">{subtitle}</p>}
           </div>
           <Button
-            variant={iconClose ? 'ghost' : 'text'}
-            iconOnly={iconClose}
+            variant="ghost"
+            iconOnly
             aria-label={closeLabel}
             onClick={onClose}
           >
-            {iconClose ? <FontAwesomeIconView iconId="xmark" /> : 'Close'}
+            <FontAwesomeIconView iconId="xmark" />
           </Button>
         </div>
         <div className="modal-body">{children}</div>

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 for (const width of [375, 480, 768]) {
-  test(`mobile Add sounds footer meets the now-playing bar at ${width}px @mobile`, async ({
+  test(`mobile Add sounds footer has a gap above the now-playing bar at ${width}px @mobile`, async ({
     page,
   }, testInfo) => {
     await page.setViewportSize({ width, height: 700 })
@@ -30,6 +30,6 @@ for (const width of [375, 480, 768]) {
     const barBox = await bar.boundingBox()
     expect(
       barBox!.y - (addSoundsBox!.y + addSoundsBox!.height),
-    ).toBeLessThanOrEqual(1)
+    ).toBeGreaterThanOrEqual(9)
   })
 }

@@ -17,7 +17,8 @@
   gap: 1rem;
   padding: 1rem;
   width: 100%;
-  z-index: 20;
+  /* Keep the persistent player and its glow above modal backdrops too. */
+  z-index: 1100;
   background: linear-gradient(to bottom, var(--grey-2) 0 1%, black 1% 100%);
 }
 
@@ -92,78 +93,6 @@
   justify-content: center;
   width: 2.25rem;
   flex-shrink: 0;
-}
-
-.now-playing-combat {
-  display: flex;
-  flex-shrink: 0;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  padding-top: 0.25rem;
-  font-size: 0.875rem;
-  line-height: 1rem;
-  cursor: pointer;
-}
-
-.now-playing-combat.is-disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-
-.now-playing-combat input {
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-  min-height: 0;
-  padding: 0;
-}
-
-.now-playing-switch {
-  position: relative;
-  width: 2.5rem;
-  height: 1.25rem;
-  border: 1px solid var(--grey-3);
-  border-radius: 1.25rem;
-  background: var(--grey-0);
-  transition: background-color 0.1s;
-}
-
-.now-playing-thumb {
-  position: absolute;
-  inset: 0 auto auto 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: calc(1.25rem - 2px);
-  height: calc(1.25rem - 2px);
-  border-radius: 50%;
-  background: white;
-  color: var(--grey-0);
-  transition: transform 0.1s;
-}
-
-.now-playing-thumb svg {
-  opacity: 0;
-  transition: opacity 0.1s;
-}
-
-.now-playing-combat input:checked + .now-playing-switch {
-  background: var(--secondary);
-}
-
-.now-playing-combat input:checked + .now-playing-switch .now-playing-thumb {
-  transform: translateX(1.25rem);
-}
-
-.now-playing-combat input:checked + .now-playing-switch svg {
-  opacity: 1;
-}
-
-.now-playing-combat input:focus-visible + .now-playing-switch {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
 }
 
 @keyframes now-playing-spin {
