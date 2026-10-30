@@ -146,9 +146,6 @@
   color: var(--text-muted);
   font-size: 1.2rem;
 }
-.catalog-pack .catalog-result-icon {
-  color: #9ac56d;
-}
 .catalog-item .catalog-item-info {
   display: contents;
 }
