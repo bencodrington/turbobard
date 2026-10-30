@@ -15,6 +15,13 @@ This is the starting contract for characterization tests. It records behavior to
 
 The rebuild will model sound-catalog and icon-catalog access as replaceable external dependencies. Firebase and the icon API are intentionally not ported into this repository in the first parity release.
 
+## App installation and browser identity
+
+- The rebuild reuses the legacy app icons, favicons, Apple touch icon, Safari pinned-tab artwork, and Windows tile assets from `public/`.
+- The manifest uses the TurboBard name, standalone display, blue `#0078ce` theme, and dark `#121212` background. The document's browser theme stays `#121212`, matching legacy behavior.
+- The rebuild explicitly sets the manifest identity, launch URL, and scope to `/` so installation always opens the workspace root.
+- The legacy entry point disables its service worker. This port adds no offline cache or service worker.
+
 ## Environment and editing
 
 - Users can create, rename, delete, expand, and collapse environments.
