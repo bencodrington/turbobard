@@ -1,8 +1,11 @@
 export class GitHub {
-  constructor(
-    readonly repository: string,
-    private readonly token: string,
-  ) {}
+  readonly repository: string
+  private readonly token: string
+
+  constructor(repository: string, token: string) {
+    this.repository = repository
+    this.token = token
+  }
 
   async request<T = unknown>(
     path: string,
