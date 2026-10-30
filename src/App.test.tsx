@@ -189,7 +189,12 @@ describe('Environment workspace', () => {
     render(<App />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
-    const name = screen.getByRole('textbox', { name: 'Environment name' })
+    const name = screen.getByRole('textbox', {
+      name: 'Environment name',
+    }) as HTMLInputElement
+    fireEvent.focus(name)
+    expect(name.selectionStart).toBe(0)
+    expect(name.selectionEnd).toBe('New Environment'.length)
     fireEvent.change(name, { target: { value: 'Ruined Keep' } })
 
     expect(screen.getByDisplayValue('Ruined Keep')).toBeVisible()
@@ -529,6 +534,12 @@ describe('Environment workspace', () => {
     )
 
     expect(screen.getByRole('dialog', { name: 'Select an icon' })).toBeVisible()
+    const search = screen.getByRole('textbox', {
+      name: 'Search icons',
+    }) as HTMLInputElement
+    fireEvent.focus(search)
+    expect(search.selectionStart).toBe(0)
+    expect(search.selectionEnd).toBe(0)
 
     await waitFor(() =>
       expect(
@@ -541,9 +552,7 @@ describe('Environment workspace', () => {
         .querySelector('.environment-icon'),
     ).toBeVisible()
 
-    fireEvent.change(screen.getByRole('textbox', { name: 'Search icons' }), {
-      target: { value: 'flame' },
-    })
+    fireEvent.change(search, { target: { value: 'flame' } })
 
     await waitFor(() =>
       expect(screen.getByRole('button', { name: 'fire' })).toBeVisible(),

@@ -36,6 +36,7 @@ import { Sound } from './ui/Sound'
 import { CatalogPanel } from './ui/CatalogPanel'
 import { ModalShell } from './ui/ModalShell'
 import { NowPlayingBar } from './ui/NowPlayingBar'
+import { selectAllTextOnFocus } from './ui/selectAllTextOnFocus'
 import { buildInfo } from './buildInfo'
 import { createEnvironmentWorkspace } from './workspace/environmentWorkspace'
 
@@ -513,6 +514,7 @@ export default function App({
                   <input
                     id={`name-${selectedEnvironment.id}`}
                     value={selectedEnvironment.name}
+                    onFocus={selectAllTextOnFocus}
                     onChange={(event) =>
                       renameEnvironmentInState(
                         selectedEnvironment,
@@ -752,6 +754,7 @@ export default function App({
                 id="icon-search"
                 aria-label="Search icons"
                 value={iconQuery}
+                onFocus={selectAllTextOnFocus}
                 onChange={(event) => setIconQuery(event.target.value)}
                 placeholder="Search for icons"
               />

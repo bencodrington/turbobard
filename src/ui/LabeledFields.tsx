@@ -1,4 +1,5 @@
 import type { ChangeEvent, InputHTMLAttributes, ReactNode } from 'react'
+import { selectAllTextOnFocus } from './selectAllTextOnFocus'
 
 type CommonFieldProps = {
   label: ReactNode
@@ -43,7 +44,13 @@ export function LabeledNumberField({
   className,
 }: LabeledNumberFieldProps) {
   const input = (
-    <input {...inputProps} type="number" value={value} onChange={onChange} />
+    <input
+      {...inputProps}
+      type="number"
+      value={value}
+      onFocus={selectAllTextOnFocus}
+      onChange={onChange}
+    />
   )
 
   return (

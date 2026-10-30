@@ -131,6 +131,18 @@ describe('Catalog results', () => {
     expect(toggle).not.toBeChecked()
   })
 
+  it('selects the current sound search text on focus', () => {
+    render(<Harness />)
+    const search = screen.getByRole('textbox', {
+      name: 'Search Sounds',
+    }) as HTMLInputElement
+
+    fireEvent.focus(search)
+
+    expect(search.selectionStart).toBe(0)
+    expect(search.selectionEnd).toBe('swamp'.length)
+  })
+
   it('previews independently, stops on switching/closing/unmount and recovers from playback failure', async () => {
     const audios: Array<{
       play: ReturnType<typeof vi.fn>
