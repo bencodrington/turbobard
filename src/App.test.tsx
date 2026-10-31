@@ -20,7 +20,11 @@ describe('Environment workspace', () => {
     expect(
       screen.queryByRole('region', { name: 'Now playing' }),
     ).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /^(Create Environment|Add environment)$/,
+      }),
+    )
     fireEvent.click(screen.getByRole('button', { name: 'Play' }))
 
     const bar = screen.getByRole('region', { name: 'Now playing' })
@@ -42,7 +46,11 @@ describe('Environment workspace', () => {
 
   it('preserves Combat through bar restart', () => {
     render(<App />)
-    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /^(Create Environment|Add environment)$/,
+      }),
+    )
     fireEvent.click(screen.getByRole('button', { name: 'Play' }))
     const bar = screen.getByRole('region', { name: 'Now playing' })
     const combat = within(bar).getByRole('checkbox', { name: 'Combat' })
@@ -63,7 +71,11 @@ describe('Environment workspace', () => {
 
   it('follows tile playback, live edits and switching, then hides on deletion without falling back', () => {
     render(<App />)
-    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /^(Create Environment|Add environment)$/,
+      }),
+    )
     fireEvent.change(
       screen.getByRole('textbox', { name: 'Environment name' }),
       { target: { value: 'Forest' } },
@@ -72,7 +84,11 @@ describe('Environment workspace', () => {
     const bar = screen.getByRole('region', { name: 'Now playing' })
     expect(within(bar).getByText('Forest')).toBeVisible()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /^(Create Environment|Add environment)$/,
+      }),
+    )
     fireEvent.change(
       screen.getByRole('textbox', { name: 'Environment name' }),
       { target: { value: 'Keep' } },
@@ -101,7 +117,11 @@ describe('Environment workspace', () => {
   it('uses tiles for normal playback and edit mode opens the Environment editor', () => {
     render(<App />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /^(Create Environment|Add environment)$/,
+      }),
+    )
     fireEvent.change(
       screen.getByRole('textbox', { name: 'Environment name' }),
       { target: { value: 'Misty Moor' } },
@@ -126,7 +146,11 @@ describe('Environment workspace', () => {
   it('keeps the Environment sounds in the editor column', () => {
     render(<App />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /^(Create Environment|Add environment)$/,
+      }),
+    )
 
     const editor = screen.getByRole('region', { name: 'New Environment' })
     for (const name of ['Non-combat sounds', 'Combat sounds']) {
@@ -188,7 +212,11 @@ describe('Environment workspace', () => {
   it('lets a user create, rename, select, and delete an Environment', () => {
     render(<App />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /^(Create Environment|Add environment)$/,
+      }),
+    )
     const name = screen.getByRole('textbox', {
       name: 'Environment name',
     }) as HTMLInputElement
@@ -207,7 +235,9 @@ describe('Environment workspace', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Edit environments' }))
     fireEvent.click(screen.getByRole('button', { name: 'Delete Ruined Keep' }))
 
-    expect(screen.getByText(/no environments yet/i)).toBeVisible()
+    expect(
+      screen.getByRole('button', { name: 'Add environment' }),
+    ).toBeVisible()
   })
 
   it('restores previously collapsed Environments without starting playback', async () => {
@@ -258,7 +288,11 @@ describe('Environment workspace', () => {
   it('persists Environment edits through the versioned boundary', () => {
     const { unmount } = render(<App />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /^(Create Environment|Add environment)$/,
+      }),
+    )
     fireEvent.change(
       screen.getByRole('textbox', { name: 'Environment name' }),
       {
@@ -409,6 +443,7 @@ describe('Environment workspace', () => {
   it('shows the legacy catalog failure state', async () => {
     vi.spyOn(globalThis, 'fetch').mockRejectedValueOnce(new Error('offline'))
     render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: 'Add environment' }))
     fireEvent.change(screen.getByRole('textbox', { name: 'Search Sounds' }), {
       target: { value: 'rain' },
     })
@@ -423,7 +458,11 @@ describe('Environment workspace', () => {
   it('shows Combat in the footer and disables it on stop', () => {
     render(<App />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /^(Create Environment|Add environment)$/,
+      }),
+    )
 
     expect(
       screen.queryByRole('checkbox', { name: 'Combat' }),
@@ -438,7 +477,11 @@ describe('Environment workspace', () => {
 
   it('offers the Combat toggle only in the now-playing footer', () => {
     render(<App />)
-    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /^(Create Environment|Add environment)$/,
+      }),
+    )
     fireEvent.click(screen.getByRole('button', { name: 'Play' }))
     const editor = screen.getByRole('region', { name: 'New Environment' })
     expect(
@@ -460,8 +503,16 @@ describe('Environment workspace', () => {
     render(<App />)
 
     // Create two environments
-    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /^(Create Environment|Add environment)$/,
+      }),
+    )
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /^(Create Environment|Add environment)$/,
+      }),
+    )
 
     // Open and play the first Environment, then enable Combat mode
     fireEvent.click(screen.getByRole('button', { name: 'Edit environments' }))
@@ -502,7 +553,11 @@ describe('Environment workspace', () => {
         ),
       )
     render(<App />)
-    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /^(Create Environment|Add environment)$/,
+      }),
+    )
     fireEvent.change(screen.getByRole('textbox', { name: 'Search Sounds' }), {
       target: { value: 'rain' },
     })
@@ -527,7 +582,11 @@ describe('Environment workspace', () => {
 
     const { unmount } = render(<App iconCatalog={fakeIconCatalog} />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /^(Create Environment|Add environment)$/,
+      }),
+    )
 
     fireEvent.click(
       screen.getByRole('button', { name: /select icon for new environment/i }),
@@ -609,7 +668,11 @@ describe('Environment workspace', () => {
   it('closes the icon modal from the backdrop without closing when its card is clicked', async () => {
     render(<App />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /^(Create Environment|Add environment)$/,
+      }),
+    )
     fireEvent.click(
       screen.getByRole('button', { name: /select icon for new environment/i }),
     )
@@ -650,7 +713,11 @@ describe('Environment workspace', () => {
 
     render(<App iconCatalog={fakeIconCatalog} />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /^(Create Environment|Add environment)$/,
+      }),
+    )
     const playButton = screen.getByRole('button', { name: 'Play' })
     fireEvent.click(playButton)
     expect(screen.getByRole('button', { name: 'Stop' })).toBeVisible()
@@ -701,7 +768,11 @@ describe('Environment workspace', () => {
 
   it('closes the icon picker with Escape', () => {
     render(<App />)
-    fireEvent.click(screen.getByRole('button', { name: 'Create Environment' }))
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /^(Create Environment|Add environment)$/,
+      }),
+    )
     fireEvent.click(
       screen.getByRole('button', { name: /select icon for new environment/i }),
     )

@@ -8,7 +8,9 @@ test('playing tiles keep their layout while showing a tile-coloured frame and ba
     (route) => route.fulfill({ contentType: 'application/json', body: '[]' }),
   )
   await page.goto('/')
-  await page.getByRole('button', { name: 'Create Environment' }).click()
+  await page
+    .getByRole('button', { name: /^(Create Environment|Add environment)$/ })
+    .click()
   await page
     .getByRole('button', { name: 'Select icon for New Environment' })
     .click()

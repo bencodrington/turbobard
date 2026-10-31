@@ -10,8 +10,16 @@ for (const mobile of [false, true]) {
       (route) => route.fulfill({ contentType: 'application/json', body: '[]' }),
     )
     await page.goto('/')
+    await page
+      .getByRole('button', { name: /^(Create Environment|Add environment)$/ })
+      .click()
+    if (mobile)
+      await page.getByRole('button', { name: 'Close Environment' }).click()
     await page.getByRole('button', { name: 'Edit environments' }).click()
-    await page.getByRole('button', { name: 'Create Environment' }).click()
+    if (mobile)
+      await page
+        .getByRole('button', { name: 'Open New Environment', exact: true })
+        .click()
     const editor = page.locator('.environment-editor')
     const tile = page.getByRole('button', {
       name: 'Open New Environment',

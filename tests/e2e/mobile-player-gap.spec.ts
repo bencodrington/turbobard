@@ -10,7 +10,9 @@ for (const width of [375, 480, 768]) {
       (route) => route.fulfill({ contentType: 'application/json', body: '[]' }),
     )
     await page.goto('/')
-    await page.getByRole('button', { name: 'Create Environment' }).click()
+    await page
+      .getByRole('button', { name: /^(Create Environment|Add environment)$/ })
+      .click()
     await page.getByRole('button', { name: 'Play', exact: true }).click()
 
     const editor = page.locator('.environment-editor')

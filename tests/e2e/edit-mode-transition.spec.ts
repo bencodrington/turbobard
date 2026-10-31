@@ -6,6 +6,9 @@ for (const mobile of [false, true]) {
   }) => {
     await page.setViewportSize({ width: mobile ? 375 : 1280, height: 800 })
     await page.goto('/')
+    await page.getByRole('button', { name: 'Add environment' }).click()
+    if (mobile)
+      await page.getByRole('button', { name: 'Close Environment' }).click()
     await page.evaluate(() => document.fonts.ready)
     // Exercise the narrower space available with scrollbars or wider font metrics.
     if (!mobile) {
@@ -39,7 +42,9 @@ test('mobile search slides up at a fixed width and respects reduced motion @mobi
     (route) => route.fulfill({ contentType: 'application/json', body: '[]' }),
   )
   await page.goto('/')
-  await page.getByRole('button', { name: 'Create Environment' }).click()
+  await page
+    .getByRole('button', { name: /^(Create Environment|Add environment)$/ })
+    .click()
   const search = page.locator('.catalog-panel')
   await search.evaluate((element) => {
     const observer = new MutationObserver(() => {

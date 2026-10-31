@@ -32,7 +32,9 @@ for (const mobile of [false, true]) {
       finishSearch = respond
     })
     await page.goto('/')
-    await page.getByRole('button', { name: 'Create Environment' }).click()
+    await page
+      .getByRole('button', { name: /^(Create Environment|Add environment)$/ })
+      .click()
     await page
       .getByRole('button', { name: /select icon for new environment/i })
       .click()

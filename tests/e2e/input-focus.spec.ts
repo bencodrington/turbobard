@@ -16,7 +16,9 @@ test('selects Environment name text on pointer and keyboard focus', async ({
     HTMLInputElement.prototype.select = function () {}
   })
   await page.goto('/')
-  await page.getByRole('button', { name: 'Create Environment' }).click()
+  await page
+    .getByRole('button', { name: /^(Create Environment|Add environment)$/ })
+    .click()
   const name = page.getByRole('textbox', { name: 'Environment name' })
   await name.click()
   await page.screenshot({

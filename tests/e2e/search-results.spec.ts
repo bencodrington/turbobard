@@ -72,7 +72,9 @@ for (const mobile of [false, true]) {
       },
     )
     await page.goto('/')
-    await page.getByRole('button', { name: 'Create Environment' }).click()
+    await page
+      .getByRole('button', { name: /^(Create Environment|Add environment)$/ })
+      .click()
     await page
       .getByRole('textbox', { name: 'Environment name' })
       .fill('Swamp Journey')
