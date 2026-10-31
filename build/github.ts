@@ -43,13 +43,17 @@ export class GitHub {
     }
   }
 
-  async bytes(path: string): Promise<Uint8Array> {
+  async bytes(
+    path: string,
+    accept = 'application/octet-stream',
+  ): Promise<Uint8Array> {
     const response = await fetch(
       `https://api.github.com/repos/${this.repository}/${path}`,
       {
         headers: {
           Authorization: `Bearer ${this.token}`,
-          Accept: 'application/octet-stream',
+          Accept: accept,
+          'X-GitHub-Api-Version': '2022-11-28',
         },
         signal: AbortSignal.timeout(60_000),
       },
