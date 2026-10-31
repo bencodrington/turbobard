@@ -24,4 +24,4 @@ When running Node or npm commands, read `docs/agents/node-tooling.md` first and 
 
 Save generated screenshots and recordings under ignored `docs/evidence/` or an external temporary directory. Keep generated review evidence out of commits; preserve application assets in their normal source locations.
 
-Upload captures to durable PR attachments or other accessible media hosting. Embed before/after screenshots directly in the PR description with `![description](url)` and use GitHub's playable attachment embeds for videos. Verify the rendered PR displays each image or video inline. If media upload or rendering is blocked, report the blocker rather than substituting ordinary links or committing captures.
+For capture, direct CLI attachment uploads, and inline rendering verification, read `docs/agents/pr-evidence.md` before preparing PR evidence.
