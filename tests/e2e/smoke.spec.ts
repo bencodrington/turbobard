@@ -729,22 +729,14 @@ test('searches, selects, and persists an Environment icon and color', async ({
 
 test('closes the icon picker with Escape @mobile', async ({ page }) => {
   await page.goto('/')
-  const tap = async (locator: ReturnType<typeof page.getByRole>) => {
-    const box = await locator.boundingBox()
-    expect(box).not.toBeNull()
-    await page.touchscreen.tap(
-      box!.x + box!.width / 2,
-      box!.y + box!.height / 2,
-    )
-  }
-  await tap(
-    page.getByRole('button', {
+  await page
+    .getByRole('button', {
       name: /^(Create Environment|Add environment)$/,
-    }),
-  )
-  await tap(
-    page.getByRole('button', { name: /select icon for new environment/i }),
-  )
+    })
+    .tap()
+  await page
+    .getByRole('button', { name: /select icon for new environment/i })
+    .tap()
 
   await expect(page.getByRole('dialog')).toBeVisible()
   await page.getByRole('textbox', { name: 'Search icons' }).press('Escape')
