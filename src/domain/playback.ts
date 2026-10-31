@@ -15,6 +15,7 @@ export type Sound = {
   muted?: boolean
   variations?: string[]
   minIntervalSeconds?: number
+  timing?: { intervalSeconds: number; variationSeconds: number }
   maxIntervalSeconds?: number
   loaded?: boolean
 }

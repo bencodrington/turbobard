@@ -359,14 +359,16 @@ export default function App({
   const updateSoundTiming = (
     environment: Environment,
     sound: Environment['sounds'][number],
-    field: 'minIntervalSeconds' | 'maxIntervalSeconds',
-    value: number,
+    intervalSeconds: number,
+    variationSeconds: number,
   ) => {
-    const minimum = sound.minIntervalSeconds ?? 0
-    const maximum = sound.maxIntervalSeconds ?? minimum
-    const nextMinimum = field === 'minIntervalSeconds' ? value : minimum
-    const nextMaximum = field === 'maxIntervalSeconds' ? value : maximum
-    workspace.setSoundTiming(environment.id, sound.id, nextMinimum, nextMaximum)
+    workspace.setSoundTiming(
+      environment.id,
+      sound.id,
+      Math.max(0, intervalSeconds - variationSeconds),
+      intervalSeconds + variationSeconds,
+      { intervalSeconds, variationSeconds },
+    )
   }
 
   return (
@@ -725,12 +727,15 @@ export default function App({
                                     ),
                                   )
                                 }
-                                onTimingChange={(field, value) =>
+                                onTimingChange={(
+                                  intervalSeconds,
+                                  variationSeconds,
+                                ) =>
                                   updateSoundTiming(
                                     selectedEnvironment,
                                     sound,
-                                    field,
-                                    value,
+                                    intervalSeconds,
+                                    variationSeconds,
                                   )
                                 }
                                 onPlayNow={() =>

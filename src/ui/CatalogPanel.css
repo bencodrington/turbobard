@@ -36,33 +36,8 @@
   outline-color: var(--gradient-color-3);
   outline-offset: -1px;
 }
-.catalog-panel .catalog-filters {
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 0;
+.catalog-filters {
   margin: var(--space-3) 0 var(--space-5);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-}
-.catalog-filters .button {
-  flex: 1;
-  min-width: 0;
-  padding: var(--space-3);
-  gap: var(--space-3);
-  border-radius: 0;
-  color: var(--text-muted);
-  font-size: 1.1rem;
-}
-.catalog-filters .button + .button {
-  border-left: 1px solid var(--border);
-}
-.catalog-filters .button[aria-pressed='true'] {
-  background: var(--surface-raised-strong);
-  color: var(--text);
-}
-.catalog-filters .button:focus-visible {
-  outline-offset: -3px;
 }
 .catalog-panel .catalog-results {
   gap: 0;

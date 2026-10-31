@@ -342,24 +342,62 @@ describe('Environment workspace', () => {
       screen.getByRole('button', { name: 'Edit intervals for Owl' }),
     )
 
-    const minimum = screen.getByRole('spinbutton', {
-      name: 'Minimum interval for Owl',
-    })
-    const maximum = screen.getByRole('spinbutton', {
-      name: 'Maximum interval for Owl',
-    })
-    fireEvent.change(minimum, { target: { value: '3' } })
-    fireEvent.change(maximum, { target: { value: '8' } })
-
-    expect(minimum).toHaveValue(3)
-    expect(maximum).toHaveValue(8)
+    expect(screen.getByRole('dialog', { name: 'Adjust timing' })).toBeVisible()
+    expect(
+      screen.getByRole('dialog', { name: 'Adjust timing' }),
+    ).toHaveTextContent('Control how often Owl plays')
+    const cadence = within(screen.getByRole('group', { name: 'Play every' }))
+    const variation = within(
+      screen.getByRole('group', { name: 'Give or take' }),
+    )
+    expect(cadence.getByRole('button', { name: /^4\s*s$/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(variation.getByRole('button', { name: /^2\s*s$/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    fireEvent.click(variation.getByRole('button', { name: /^8\s*s$/ }))
+    expect(
+      within(screen.getByRole('dialog', { name: 'Adjust timing' })).getByRole(
+        'status',
+      ),
+    ).toHaveTextContent('...every 0 to 12 seconds')
     expect(JSON.parse(localStorage.getItem('environments')!)).toMatchObject({
       environments: [
         {
-          sounds: [{ minIntervalSeconds: 3, maxIntervalSeconds: 8 }],
+          sounds: [
+            {
+              minIntervalSeconds: 0,
+              maxIntervalSeconds: 12,
+              timing: { intervalSeconds: 4, variationSeconds: 8 },
+            },
+          ],
         },
       ],
     })
+    fireEvent.click(screen.getByRole('button', { name: 'Close intervals' }))
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Edit intervals for Owl' }),
+    )
+    expect(
+      within(screen.getByRole('group', { name: 'Play every' })).getByRole(
+        'button',
+        { name: /^4\s*s$/ },
+      ),
+    ).toHaveAttribute('aria-pressed', 'true')
+    fireEvent.click(
+      within(screen.getByRole('group', { name: 'Give or take' })).getByRole(
+        'button',
+        { name: /^0\s*s$/ },
+      ),
+    )
+    expect(
+      within(screen.getByRole('dialog', { name: 'Adjust timing' })).getByRole(
+        'status',
+      ),
+    ).toHaveTextContent('...every 4 seconds')
   })
 
   it('plays a One-shot immediately while its Environment is stopped', () => {

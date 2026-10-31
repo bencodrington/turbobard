@@ -1,0 +1,36 @@
+.button-group {
+  --button-group-highlight: color-mix(
+    in srgb,
+    var(--grey-3) 85%,
+    var(--surface)
+  );
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0;
+  border: 1px solid var(--button-group-highlight);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  overflow: hidden;
+}
+.button-group .button {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-3);
+  gap: var(--space-3);
+  border-radius: 0;
+  color: var(--text);
+  font-size: 1.1rem;
+}
+.button-group .button + .button:not(:disabled) {
+  border-left: 1px solid var(--button-group-highlight);
+}
+.button-group .button:not(:disabled):hover {
+  background: var(--surface-raised-strong);
+}
+.button-group .button:not(:disabled)[aria-pressed='true'] {
+  background: var(--button-group-highlight);
+  color: var(--text);
+}
+.button-group .button:focus-visible {
+  outline-offset: -3px;
+}

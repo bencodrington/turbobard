@@ -69,15 +69,7 @@ test('selects Environment name text on pointer and keyboard focus', async ({
     .toEqual([0, 'New Environment'.length])
 })
 
-test('replaces numeric text on focus where number selection is supported', async ({
-  page,
-  browserName,
-}) => {
-  test.skip(
-    browserName !== 'chromium',
-    'Chromium supports selection on number inputs',
-  )
-
+test('supports keyboard selection of timing presets', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem(
       'environments',
@@ -105,12 +97,12 @@ test('replaces numeric text on focus where number selection is supported', async
   })
   await page.goto('/')
   await page.getByRole('button', { name: 'Edit intervals for Owl' }).click()
-  const minimum = page.getByRole('spinbutton', {
-    name: 'Minimum interval for Owl',
-  })
-
-  await minimum.focus()
-  await page.keyboard.type('8')
-
-  await expect(minimum).toHaveValue('8')
+  const cadence = page.getByRole('group', { name: 'Play every', exact: true })
+  const first = cadence.getByRole('button').first()
+  await expect(first).toBeFocused()
+  await page.keyboard.press('Enter')
+  await expect(first).toHaveAttribute('aria-pressed', 'true')
+  await expect(
+    page.getByRole('dialog', { name: 'Adjust timing' }).getByRole('status'),
+  ).toContainText('...every 0 to 3 seconds')
 })
