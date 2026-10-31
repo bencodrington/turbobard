@@ -138,7 +138,12 @@ export async function preparePublication(
     buildId: identity.buildId,
     digest: identity.artifactDigest,
   })
-  const archive = await github.bytes(`${artifactPath}/zip`)
+  // Actions archives use the REST API media type before redirecting to the ZIP.
+  // Release assets below require octet-stream to select their binary content.
+  const archive = await github.bytes(
+    `${artifactPath}/zip`,
+    'application/vnd.github+json',
+  )
   verifyArchive(archive, identity.artifactDigest)
   await files.inspectArchive(archive, identity)
 
