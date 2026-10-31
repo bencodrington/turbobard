@@ -28,7 +28,7 @@
 .playback-button-hexagon path {
   stroke: var(--grey-2);
   fill: var(--grey-0);
-  transition: fill 0.3s ease;
+  transition: none;
 }
 
 .playback-button > :last-child {

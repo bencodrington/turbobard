@@ -3,6 +3,7 @@ import { Welcome } from './ui/Welcome'
 import { PlaybackButton } from './ui/PlaybackButton'
 import {
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -130,6 +131,43 @@ export default function App({
       (window.matchMedia?.('(min-width: 900px)').matches ?? true),
   )
   const editorRef = useRef<HTMLElement>(null)
+  const environmentPanelRef = useRef<HTMLElement>(null)
+  const createTileRef = useRef<HTMLButtonElement>(null)
+  const [isCreateTileVisible, setIsCreateTileVisible] = useState(true)
+  useEffect(() => {
+    const tile = createTileRef.current
+    const panel = environmentPanelRef.current
+    if (!tile || !panel || !window.IntersectionObserver) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsCreateTileVisible(entry.isIntersecting),
+      { root: panel },
+    )
+    observer.observe(tile)
+    return () => observer.disconnect()
+  }, [environments.length])
+  const headerLogoRef = useRef<HTMLImageElement>(null)
+  const welcomeLogoRef = useRef<HTMLImageElement>(null)
+  const logoOriginRef = useRef<DOMRect | undefined>(undefined)
+  const isWelcome = environments.length === 0
+  useLayoutEffect(() => {
+    const origin = logoOriginRef.current
+    logoOriginRef.current = undefined
+    const image = headerLogoRef.current
+    if (isWelcome || !origin || !image || !image.animate) return
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    const target = image.getBoundingClientRect()
+    const animation = image.animate(
+      [
+        {
+          transform: `translate(${origin.x - target.x}px, ${origin.y - target.y}px) scale(${origin.width / target.width})`,
+          zIndex: 20,
+        },
+        { transform: 'none', zIndex: 20 },
+      ],
+      { duration: 600, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+    )
+    return () => animation.cancel()
+  }, [isWelcome])
   const selectedTileRef = useRef<HTMLButtonElement>(null)
   useEffect(() => {
     if (!isEditorOpen && editorRef.current?.contains(document.activeElement)) {
@@ -248,6 +286,9 @@ export default function App({
   }
 
   const addEnvironment = () => {
+    if (isWelcome) {
+      logoOriginRef.current = welcomeLogoRef.current?.getBoundingClientRect()
+    }
     const environment = workspace.addEnvironment()
     setSelectedId(environment.id)
     setIsEditorOpen(true)
@@ -329,12 +370,12 @@ export default function App({
   }
 
   return (
-    <main className="app-shell">
+    <main className={`app-shell${isWelcome ? ' is-welcome' : ''}`}>
       <section className="workspace" aria-labelledby="app-title">
         <header className="app-header">
           <div>
             <h1 id="app-title">
-              <img src={logo} alt="" className="app-logo" />
+              <img ref={headerLogoRef} src={logo} alt="" className="app-logo" />
               <span className="sr-only">Turbobard</span>
             </h1>
           </div>
@@ -359,11 +400,15 @@ export default function App({
           className={`workspace-body${isEditorOpen && selectedEnvironment ? ' editor-open' : ''}${isSearchOpen ? ' search-open' : ''}`}
         >
           {environments.length === 0 ? (
-            <Welcome onAddEnvironment={addEnvironment} />
+            <Welcome
+              logoRef={welcomeLogoRef}
+              onAddEnvironment={addEnvironment}
+            />
           ) : (
             <section
               aria-labelledby="environments-heading"
               className="environment-panel"
+              ref={environmentPanelRef}
             >
               <div className="section-heading">
                 <h2 id="environments-heading">Environments</h2>
@@ -432,6 +477,20 @@ export default function App({
                               environment.icon ?? DEFAULT_ENVIRONMENT_ICON
                             }
                           />
+                          <span
+                            className="environment-tile-action"
+                            aria-hidden="true"
+                          >
+                            <FontAwesomeIconView
+                              iconId={
+                                isEditMode
+                                  ? 'wrench'
+                                  : environment.playing
+                                    ? 'pause'
+                                    : 'play'
+                              }
+                            />
+                          </span>
                         </span>
                         <span className="environment-tile-name">
                           {environment.name}
@@ -471,12 +530,32 @@ export default function App({
                     </div>
                   )
                 })}
+                <div
+                  className="environment-tile-container environment-create-container"
+                  role="listitem"
+                >
+                  <button
+                    ref={createTileRef}
+                    type="button"
+                    className="environment-tile environment-create-tile"
+                    onClick={addEnvironment}
+                  >
+                    <span className="environment-tile-icon">
+                      <FontAwesomeIconView iconId="plus" />
+                    </span>
+                    <span className="environment-tile-name">
+                      Create Environment
+                    </span>
+                  </button>
+                </div>
               </div>
-              <div className="environment-panel-footer">
-                <Button variant="primary" onClick={addEnvironment}>
-                  Create Environment
-                </Button>
-              </div>
+              {!isCreateTileVisible && (
+                <div className="environment-panel-footer">
+                  <Button variant="primary" onClick={addEnvironment}>
+                    <FontAwesomeIconView iconId="plus" /> Create Environment
+                  </Button>
+                </div>
+              )}
             </section>
           )}
 
@@ -580,7 +659,7 @@ export default function App({
                     }
                   >
                     {placement === 'combat' && (
-                      <>
+                      <div className="combat-section-header">
                         <h3 className="combat-heading">
                           <FontAwesomeIconView iconId="hand-fist" /> Combat
                         </h3>
@@ -588,7 +667,7 @@ export default function App({
                           Sounds in this section replace the music and add to
                           the ambiance during Combat.
                         </p>
-                      </>
+                      </div>
                     )}
                     {(['loop', 'one-shot'] as const).map((kind) => {
                       const sounds = selectedEnvironment.sounds.filter(
@@ -681,8 +760,8 @@ export default function App({
                     )
                   }}
                 >
-                  <FontAwesomeIconView iconId="plus" /> Add sounds to
-                  environment
+                  <FontAwesomeIconView iconId="magnifying-glass" /> Add sounds
+                  to environment
                 </Button>
               </div>
             </section>

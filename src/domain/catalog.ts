@@ -8,6 +8,7 @@ export type CatalogItem = {
   kind: SoundKind
   volume?: number
   source?: { author?: string; urls: string[] }
+  attributionUrls?: string[]
   tags?: string[]
   variations?: string[]
   minIntervalSeconds?: number
@@ -63,6 +64,7 @@ export function addCatalogItem(
       placement,
       volume: item.volume ?? 1,
       source: item.source,
+      attributionUrls: item.attributionUrls,
       tags: item.tags,
       variations: item.variations,
       minIntervalSeconds: item.minIntervalSeconds,

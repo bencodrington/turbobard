@@ -163,6 +163,9 @@ test('fades Heavy Rain out when it is removed from a playing Environment', async
 }) => {
   await stubCatalogAndAudio(page)
   await addAndPlayHeavyRain(page)
+  await page
+    .getByRole('button', { name: 'Sound options for Heavy Rain' })
+    .click()
   await page.getByRole('button', { name: 'Remove', exact: true }).click()
 
   await expect
@@ -583,8 +586,11 @@ test('toggling Combat mode fades ordinary music and starts combat music', async 
     .click()
   await expect(page.getByText('Battle Drums').last()).toBeVisible()
   await page
-    .getByRole('combobox', { name: /placement for battle drums/i })
-    .selectOption('combat')
+    .getByRole('button', { name: 'Sound options for Battle Drums' })
+    .click()
+  await page
+    .getByRole('button', { name: 'Move to combat', exact: true })
+    .click()
 
   // Play the environment
   await environment.getByRole('button', { name: 'Play' }).click()
@@ -723,22 +729,14 @@ test('searches, selects, and persists an Environment icon and color', async ({
 
 test('closes the icon picker with Escape @mobile', async ({ page }) => {
   await page.goto('/')
-  const tap = async (locator: ReturnType<typeof page.getByRole>) => {
-    const box = await locator.boundingBox()
-    expect(box).not.toBeNull()
-    await page.touchscreen.tap(
-      box!.x + box!.width / 2,
-      box!.y + box!.height / 2,
-    )
-  }
-  await tap(
-    page.getByRole('button', {
+  await page
+    .getByRole('button', {
       name: /^(Create Environment|Add environment)$/,
-    }),
-  )
-  await tap(
-    page.getByRole('button', { name: /select icon for new environment/i }),
-  )
+    })
+    .tap()
+  await page
+    .getByRole('button', { name: /select icon for new environment/i })
+    .tap()
 
   await expect(page.getByRole('dialog')).toBeVisible()
   await page.getByRole('textbox', { name: 'Search icons' }).press('Escape')

@@ -104,6 +104,7 @@ test('replaces numeric text on focus where number selection is supported', async
     )
   })
   await page.goto('/')
+  await page.getByRole('button', { name: 'Edit intervals for Owl' }).click()
   const minimum = page.getByRole('spinbutton', {
     name: 'Minimum interval for Owl',
   })

@@ -80,7 +80,9 @@ describe('Catalog results', () => {
 
   it('shows the destination, tags and pack contents, and switches plus/minus for shared members', () => {
     render(<Harness />)
-    expect(screen.getByRole('heading')).toHaveTextContent('Adding to Forest')
+    expect(screen.getByRole('heading')).toHaveTextContent(
+      'Add sounds to Forest',
+    )
     expect(
       screen.getByText('Contains 2 sounds, including music.'),
     ).toBeVisible()

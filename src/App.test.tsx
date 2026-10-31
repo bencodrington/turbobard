@@ -337,6 +337,11 @@ describe('Environment workspace', () => {
 
     render(<App />)
 
+    expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument()
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Edit intervals for Owl' }),
+    )
+
     const minimum = screen.getByRole('spinbutton', {
       name: 'Minimum interval for Owl',
     })

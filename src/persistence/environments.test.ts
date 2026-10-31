@@ -105,6 +105,7 @@ describe('versioned Environment persistence', () => {
             placement: 'ambiance',
             name: 'Rain',
             source: { author: 'A', urls: ['rain.mp3'] },
+            attributionUrls: ['rain.mp3'],
             tags: ['ambiance'],
             fileName: 'rain.mp3',
             volume: 0.4,
