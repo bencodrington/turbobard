@@ -50,6 +50,10 @@ for (const width of [375, 480, 900]) {
       await page
         .getByRole('button', { name: 'Add sounds to environment', exact: true })
         .click()
+      await expect(page.locator('.catalog-panel')).toHaveCSS(
+        'transform',
+        'matrix(1, 0, 0, 1, 0, 0)',
+      )
       const searchBox = await page
         .getByRole('region', { name: 'Search' })
         .boundingBox()

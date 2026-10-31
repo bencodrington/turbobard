@@ -11,6 +11,7 @@ import {
 } from '../domain/catalog'
 import { AsyncSearchState } from './AsyncSearchState'
 import { Button } from './Button'
+import { CombatToggle } from './CombatToggle'
 import { FontAwesomeIconView } from './icons'
 import { selectAllTextOnFocus } from './selectAllTextOnFocus'
 
@@ -124,16 +125,12 @@ export function CatalogPanel({
             'Search'
           )}
         </h2>
-        <label className="catalog-combat-toggle">
-          <input
-            type="checkbox"
-            checked={addToCombat}
-            disabled={!environment}
-            onChange={(event) => setAddToCombat(event.target.checked)}
-          />
-          <span className="catalog-switch" aria-hidden="true" />
-          <span>Add to combat</span>
-        </label>
+        <CombatToggle
+          label="Add to combat"
+          checked={addToCombat}
+          disabled={!environment}
+          onChange={setAddToCombat}
+        />
       </div>
       <div className="catalog-search-field">
         <FontAwesomeIconView iconId="magnifying-glass" />

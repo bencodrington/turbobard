@@ -76,6 +76,34 @@ for (const mobile of [false, true]) {
     await expect(editor).toBeVisible()
     await expect(editor).not.toHaveAttribute('inert', '')
 
+    if (mobile) {
+      await page.getByRole('button', { name: 'Close Environment' }).click()
+      await expect(editor).toBeHidden()
+      await editor.evaluate((element) => {
+        const workspace = element.parentElement!
+        const observer = new MutationObserver(() => {
+          if (!workspace.classList.contains('editor-open')) return
+          for (const animation of element.getAnimations()) {
+            animation.pause()
+            animation.currentTime = 90
+          }
+          observer.disconnect()
+        })
+        observer.observe(workspace, {
+          attributes: true,
+          attributeFilter: ['class'],
+        })
+      })
+      await tile.click()
+      const name = page.getByRole('textbox', { name: 'Environment name' })
+      const halfwayWidth = (await name.boundingBox())!.width
+      await page.evaluate(() =>
+        document.getAnimations().forEach((a) => a.finish()),
+      )
+      const finalWidth = (await name.boundingBox())!.width
+      expect(halfwayWidth).toBeCloseTo(finalWidth, 0)
+    }
+
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.getByRole('button', { name: 'Close Environment' }).click()
     await expect(editor).toBeHidden()

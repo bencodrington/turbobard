@@ -9,6 +9,9 @@ test('About identifies the running production build', async ({ page }) => {
   expect(info.buildId).toMatch(/^(local|[1-9]\d*\.[1-9]\d*)$/)
   expect(new Date(info.builtAt).toISOString()).toBe(info.builtAt)
   await page.getByRole('button', { name: 'About' }).click()
+  await expect(page.getByTestId('build-commit')).toBeHidden()
+  await page.getByText('Build information', { exact: true }).click()
+  await expect(page.getByTestId('build-commit')).toBeVisible()
   await expect(page.getByTestId('build-commit')).toHaveText(
     info.commit.slice(0, 7),
   )

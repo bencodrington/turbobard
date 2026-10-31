@@ -31,7 +31,8 @@ export default defineConfig({
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
   timeout: 30_000,
-  globalTimeout: 120_000,
+  // The full five-project matrix needs more time on shared CI runners.
+  globalTimeout: process.env.CI ? 300_000 : 120_000,
   expect: { timeout: 5_000 },
   reporter: process.env.CI
     ? [['html', { open: 'never' }], ['line']]

@@ -37,6 +37,7 @@ for (const mobile of [false, true]) {
       .getByRole('button', { name: /select icon for new environment/i })
       .click()
     const dialog = page.getByRole('dialog', { name: 'Select an icon' })
+    await expect(dialog).toHaveCSS('transform', 'none')
     await expect(
       dialog.getByRole('group', { name: 'Available icons' }),
     ).toBeVisible()
@@ -55,6 +56,8 @@ for (const mobile of [false, true]) {
       finishSearch = undefined
       await search.fill(query)
       await expect(dialog.getByRole('status')).toHaveText('Loading icons…')
+      await expect(dialog.locator('.icon-skeleton')).toHaveCount(36)
+      await expect(dialog.locator('.icon-skeleton').first()).toBeVisible()
       await assertStable()
       await expect.poll(() => Boolean(finishSearch)).toBe(true)
       await finishSearch!()
@@ -81,7 +84,15 @@ for (const mobile of [false, true]) {
     await expect(
       dialog.getByRole('button', { name: 'sack-dollar', exact: true }),
     ).toHaveAttribute('aria-pressed', 'true')
-    await dialog.getByRole('button', { name: 'Select color #9CC870' }).click()
+    await expect(
+      dialog.getByRole('button', { name: 'sack-dollar', exact: true }),
+    ).toHaveCSS('border-color', 'rgb(255, 255, 255)')
+    const color = dialog.getByRole('button', { name: 'Select color #9CC870' })
+    const target = (await color.boundingBox())!
+    expect(target.width).toBeGreaterThanOrEqual(44)
+    expect(target.height).toBeGreaterThanOrEqual(44)
+    // The padded area outside the visible swatch must also select its color.
+    await color.click({ position: { x: 22, y: 2 } })
     await expect(
       dialog.getByRole('button', { name: 'Select color #9CC870' }),
     ).toHaveAttribute('aria-pressed', 'true')

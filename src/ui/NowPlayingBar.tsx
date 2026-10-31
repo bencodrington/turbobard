@@ -1,6 +1,7 @@
 import type { Environment } from '../domain/playback'
 import { useEffect, useId, useRef, useState } from 'react'
 import { Button } from './Button'
+import { CombatToggle } from './CombatToggle'
 import {
   DEFAULT_ENVIRONMENT_ICON,
   DEFAULT_ENVIRONMENT_ICON_COLOR,
@@ -95,22 +96,12 @@ export function NowPlayingBar({
           />
         </div>
       </div>
-      <label
-        className={`now-playing-combat${environment.playing ? '' : ' is-disabled'}`}
-      >
-        <input
-          type="checkbox"
-          checked={environment.combatMode}
-          disabled={!environment.playing}
-          onChange={onToggleCombat}
-        />
-        <span className="now-playing-switch" aria-hidden="true">
-          <span className="now-playing-thumb">
-            <FontAwesomeIconView iconId="hand-fist" />
-          </span>
-        </span>
-        <span>Combat</span>
-      </label>
+      <CombatToggle
+        label="Combat"
+        checked={environment.combatMode}
+        disabled={!environment.playing}
+        onChange={onToggleCombat}
+      />
       <PlaybackButton
         playing={environment.playing}
         label={environment.playing ? 'Stop playback' : 'Play last environment'}

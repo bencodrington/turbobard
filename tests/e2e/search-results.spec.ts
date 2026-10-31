@@ -81,6 +81,9 @@ for (const mobile of [false, true]) {
         .getByRole('button', { name: 'Add sounds to environment' })
         .click()
     const search = page.getByRole('region', { name: 'Search', exact: true })
+    if (mobile) {
+      await expect(search).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, 0)')
+    }
     await expect(search.getByRole('heading')).toHaveText(
       'Adding to Swamp Journey',
     )

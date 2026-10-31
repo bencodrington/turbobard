@@ -1,0 +1,93 @@
+/* Keep existing now-playing markup styled during live component updates. */
+:is(.combat-toggle, .now-playing-combat) {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
+  font-size: 0.875rem;
+  line-height: 1rem;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+:is(.combat-toggle, .now-playing-combat).is-disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+:is(.combat-toggle, .now-playing-combat) input {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  cursor: inherit;
+}
+
+:is(.combat-switch, .now-playing-switch) {
+  position: relative;
+  width: 2.5rem;
+  height: 1.25rem;
+  border: 1px solid var(--grey-3);
+  border-radius: 1.25rem;
+  background: var(--grey-0);
+  transition: background-color 0.1s;
+}
+
+:is(.combat-thumb, .now-playing-thumb) {
+  position: absolute;
+  inset: 0 auto auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(1.25rem - 2px);
+  height: calc(1.25rem - 2px);
+  border-radius: 50%;
+  background: white;
+  color: var(--grey-0);
+  transition: transform 0.1s;
+}
+
+:is(.combat-thumb, .now-playing-thumb) svg {
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+
+:is(.combat-toggle, .now-playing-combat)
+  input:checked
+  + :is(.combat-switch, .now-playing-switch) {
+  background: var(--secondary);
+}
+
+:is(.combat-toggle, .now-playing-combat)
+  input:checked
+  + :is(.combat-switch, .now-playing-switch)
+  :is(.combat-thumb, .now-playing-thumb) {
+  transform: translateX(1.25rem);
+}
+
+:is(.combat-toggle, .now-playing-combat)
+  input:checked
+  + :is(.combat-switch, .now-playing-switch)
+  svg {
+  opacity: 1;
+}
+
+:is(.combat-toggle, .now-playing-combat)
+  input:focus-visible
+  + :is(.combat-switch, .now-playing-switch) {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(.combat-toggle, .now-playing-combat) * {
+    transition: none;
+  }
+}

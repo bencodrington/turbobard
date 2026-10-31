@@ -6,6 +6,7 @@ export type AsyncSearchStateProps = {
   error: boolean
   empty: boolean
   loadingMessage: ReactNode
+  loadingContent?: ReactNode
   errorMessage: ReactNode
   emptyMessage: ReactNode
   onRetry: () => void
@@ -18,13 +19,22 @@ export function AsyncSearchState({
   error,
   empty,
   loadingMessage,
+  loadingContent,
   errorMessage,
   emptyMessage,
   onRetry,
   errorClassName,
   children,
 }: AsyncSearchStateProps) {
-  if (loading) return <p role="status">{loadingMessage}</p>
+  if (loading)
+    return loadingContent ? (
+      <div role="status">
+        <span className="sr-only">{loadingMessage}</span>
+        {loadingContent}
+      </div>
+    ) : (
+      <p role="status">{loadingMessage}</p>
+    )
   if (error)
     return (
       <div role="alert" className={errorClassName}>
