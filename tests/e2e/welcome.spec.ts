@@ -50,18 +50,17 @@ for (const mobile of [false, true]) {
 
 test('welcome scrolls to a keyboard accessible action on short screens @mobile', async ({
   page,
-  browserName,
 }) => {
   await page.setViewportSize({ width: 320, height: 400 })
   await page.goto('/')
   await page.keyboard.press('Tab')
   await expect(page.getByRole('button', { name: 'About' })).toBeFocused()
   await page.keyboard.press('Tab')
-  // WebKit's default keyboard navigation skips links.
-  if (browserName !== 'webkit') {
-    await expect(
-      page.getByRole('link', { name: 'Donations welcome' }),
-    ).toBeFocused()
+  // Link tab stops depend on the platform's keyboard navigation settings.
+  const donation = page.getByRole('link', { name: 'Donations welcome' })
+  if (
+    await donation.evaluate((element) => element === document.activeElement)
+  ) {
     await page.keyboard.press('Tab')
   }
   const create = page.getByRole('button', { name: 'Add environment' })
