@@ -87,7 +87,7 @@ for (const mobile of [false, true]) {
       await expect(search).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, 0)')
     }
     await expect(search.getByRole('heading')).toHaveText(
-      'Adding to Swamp Journey',
+      'Add sounds to Swamp Journey',
     )
     await search.getByRole('textbox', { name: 'Search Sounds' }).fill('swamp')
     await expect(

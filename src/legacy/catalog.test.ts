@@ -35,6 +35,7 @@ describe('legacy sound catalog', () => {
         name: 'Cave',
         kind: 'loop',
         tags: ['dark'],
+        attributionUrls: ['credit-url'],
         source: {
           author: 'Legacy artist',
           urls: [

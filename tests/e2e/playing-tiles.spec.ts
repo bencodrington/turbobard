@@ -16,7 +16,7 @@ test('playing tiles keep their layout while showing a tile-coloured frame and ba
     .click()
   await page.getByRole('button', { name: 'Select color #F87C7C' }).click()
   await page.getByRole('button', { name: 'Close icon picker' }).click()
-  const tile = page.locator('.environment-tile')
+  const tile = page.locator('.environment-tile:not(.environment-create-tile)')
   const stopped = (await tile.boundingBox())!
   await page.getByRole('button', { name: 'Play', exact: true }).click()
   const playing = (await tile.boundingBox())!
@@ -86,4 +86,32 @@ test('playing tiles keep their layout while showing a tile-coloured frame and ba
   ).toBe(0)
   await page.getByRole('button', { name: 'Stop', exact: true }).click()
   await expect(tile.locator('.tile-equalizer')).toHaveCount(0)
+})
+
+test('tile hover shows the current play, pause, or edit action', async ({
+  page,
+}) => {
+  await page.goto('/')
+  await page
+    .getByRole('button', { name: 'Add environment', exact: true })
+    .click()
+  const tile = page.locator('.environment-tile:not(.environment-create-tile)')
+  const icon = tile.locator('.environment-icon')
+  const action = tile.locator('.environment-tile-action')
+  await page.mouse.move(0, 0)
+  await expect(icon).toBeVisible()
+  await expect(action).toBeHidden()
+  const bounds = (await tile.boundingBox())!
+  await tile.hover()
+  await expect(icon).toBeHidden()
+  await expect(action.locator('[data-icon="play"]')).toBeVisible()
+  await tile.click()
+  await expect(action.locator('[data-icon="pause"]')).toBeVisible()
+  await page.getByRole('button', { name: 'Edit environments' }).click()
+  await tile.hover()
+  await expect(action.locator('[data-icon="wrench"]')).toBeVisible()
+  expect((await tile.boundingBox())!.height).toBe(bounds.height)
+  await page.mouse.move(0, 0)
+  await expect(icon).toBeVisible()
+  await expect(action).toBeHidden()
 })

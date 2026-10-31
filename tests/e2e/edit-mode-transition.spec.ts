@@ -33,7 +33,7 @@ for (const mobile of [false, true]) {
   })
 }
 
-test('mobile search slides up at a fixed width and respects reduced motion @mobile', async ({
+test('mobile search fades in with a short upward slide and respects reduced motion @mobile', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 375, height: 800 })
@@ -51,7 +51,7 @@ test('mobile search slides up at a fixed width and respects reduced motion @mobi
       if (!element.classList.contains('mobile-search-open')) return
       for (const animation of element.getAnimations()) {
         animation.pause()
-        animation.currentTime = 110
+        animation.currentTime = 90
       }
       observer.disconnect()
     })
@@ -64,17 +64,21 @@ test('mobile search slides up at a fixed width and respects reduced motion @mobi
     const style = getComputedStyle(element)
     return {
       y: new DOMMatrixReadOnly(style.transform).m42,
+      opacity: Number(style.opacity),
       width: element.getBoundingClientRect().width,
       height: element.getBoundingClientRect().height,
     }
   })
   expect(halfway.y).toBeGreaterThan(0)
-  expect(halfway.y).toBeLessThan(halfway.height)
+  expect(halfway.y).toBeLessThan(12)
+  expect(halfway.opacity).toBeGreaterThan(0)
+  expect(halfway.opacity).toBeLessThan(1)
   expect(halfway.width).toBe(375)
   await page.evaluate(() =>
     document.getAnimations().forEach((animation) => animation.finish()),
   )
   await expect(search).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, 0)')
+  await expect(search).toHaveCSS('opacity', '1')
   await page.getByRole('button', { name: 'Close search' }).click()
   await expect(search).toBeHidden()
   await page.emulateMedia({ reducedMotion: 'reduce' })

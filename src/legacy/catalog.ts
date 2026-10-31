@@ -98,6 +98,7 @@ function mapTrack(track: LegacyTrack): CatalogItem {
     name: track.name,
     kind,
     source,
+    attributionUrls: stringArray(track.source?.urls),
     tags: stringArray(track.tags),
   }
   if (variations.length) item.variations = variations

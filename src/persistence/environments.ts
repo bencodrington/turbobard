@@ -91,6 +91,7 @@ function migrateTrack(track: LegacyTrack, placement: Placement): Sound {
         (url): url is string => typeof url === 'string',
       ),
     }
+    sound.attributionUrls = [...sound.source.urls]
   }
   if (Array.isArray(track.tags)) {
     sound.tags = track.tags.filter(
@@ -167,6 +168,13 @@ function normalizeSound(sound: Record<string, unknown>): Sound {
     volume: asNumber(sound.volume, 1),
     ...(typeof sound.index === 'number' ? { index: sound.index } : {}),
     ...(typeof sound.name === 'string' ? { name: sound.name } : {}),
+    ...(Array.isArray(sound.attributionUrls)
+      ? {
+          attributionUrls: sound.attributionUrls.filter(
+            (url): url is string => typeof url === 'string',
+          ),
+        }
+      : {}),
     ...(isRecord(sound.source) && Array.isArray(sound.source.urls)
       ? {
           source: {
@@ -248,6 +256,9 @@ function serializeSound(sound: Sound): Sound {
     ...(sound.index === undefined ? {} : { index: sound.index }),
     ...(sound.name === undefined ? {} : { name: sound.name }),
     ...(sound.source === undefined ? {} : { source: sound.source }),
+    ...(sound.attributionUrls === undefined
+      ? {}
+      : { attributionUrls: sound.attributionUrls }),
     ...(sound.tags === undefined ? {} : { tags: sound.tags }),
     ...(sound.fileName === undefined ? {} : { fileName: sound.fileName }),
     ...(sound.muted === undefined ? {} : { muted: sound.muted }),

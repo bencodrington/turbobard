@@ -163,6 +163,9 @@ test('fades Heavy Rain out when it is removed from a playing Environment', async
 }) => {
   await stubCatalogAndAudio(page)
   await addAndPlayHeavyRain(page)
+  await page
+    .getByRole('button', { name: 'Sound options for Heavy Rain' })
+    .click()
   await page.getByRole('button', { name: 'Remove', exact: true }).click()
 
   await expect
@@ -583,8 +586,11 @@ test('toggling Combat mode fades ordinary music and starts combat music', async 
     .click()
   await expect(page.getByText('Battle Drums').last()).toBeVisible()
   await page
-    .getByRole('combobox', { name: /placement for battle drums/i })
-    .selectOption('combat')
+    .getByRole('button', { name: 'Sound options for Battle Drums' })
+    .click()
+  await page
+    .getByRole('button', { name: 'Move to combat', exact: true })
+    .click()
 
   // Play the environment
   await environment.getByRole('button', { name: 'Play' }).click()

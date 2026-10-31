@@ -117,13 +117,7 @@ export function CatalogPanel({
           <FontAwesomeIconView iconId="arrow-left" />
         </Button>
         <h2 id="catalog-heading">
-          {environment ? (
-            <>
-              Adding to <strong>{environment.name}</strong>
-            </>
-          ) : (
-            'Search'
-          )}
+          {environment ? `Add sounds to ${environment.name}` : 'Search'}
         </h2>
         <CombatToggle
           label="Add to combat"

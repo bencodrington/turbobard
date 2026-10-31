@@ -9,6 +9,7 @@ export type Sound = {
   index?: number
   name?: string
   source?: { author?: string; urls: string[] }
+  attributionUrls?: string[]
   tags?: string[]
   fileName?: string
   muted?: boolean

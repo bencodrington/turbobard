@@ -24,10 +24,10 @@ for (const mobile of [false, true]) {
       expect(onTop).toBe(true)
     }
     await assertAboveScreen()
-    await page
-      .getByRole('button', { name: 'Add sounds to environment', exact: true })
-      .click()
     if (mobile) {
+      await page
+        .getByRole('button', { name: 'Add sounds to environment', exact: true })
+        .click()
       await expect(page.locator('.catalog-panel')).toHaveCSS(
         'transform',
         'matrix(1, 0, 0, 1, 0, 0)',
