@@ -255,11 +255,18 @@ input::placeholder {
   font-size: var(--font-size-heading);
 }
 .environment-panel .section-heading {
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   column-gap: var(--space-1);
+}
+.environment-panel .section-heading h2 {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .edit-mode-controls {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   gap: var(--space-3);
   margin-left: auto;

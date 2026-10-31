@@ -7,6 +7,12 @@ for (const mobile of [false, true]) {
     await page.setViewportSize({ width: mobile ? 375 : 1280, height: 800 })
     await page.goto('/')
     await page.evaluate(() => document.fonts.ready)
+    // Exercise the narrower space available with scrollbars or wider font metrics.
+    if (!mobile) {
+      await page.locator('.environment-panel').evaluate((element) => {
+        element.style.width = '225px'
+      })
+    }
     const heading = page.getByRole('heading', {
       name: 'Environments',
       exact: true,
