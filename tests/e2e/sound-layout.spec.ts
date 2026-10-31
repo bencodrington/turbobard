@@ -129,14 +129,18 @@ test('edits sound options through menus and modals', async ({ page }) => {
   await expect(options).toBeFocused()
   const edit = page.getByRole('button', { name: 'Edit intervals for Owl' })
   await edit.click()
-  const minimum = page.getByRole('spinbutton', {
-    name: 'Minimum interval for Owl',
+  const cadence = page.getByRole('group', { name: 'Play every', exact: true })
+  const variation = page.getByRole('group', {
+    name: 'Give or take',
+    exact: true,
   })
-  await expect(minimum).toBeFocused()
-  await minimum.fill('8')
-  await page
-    .getByRole('spinbutton', { name: 'Maximum interval for Owl' })
-    .fill('40')
+  await expect(cadence.getByRole('button').first()).toBeFocused()
+  await cadence.getByRole('button', { name: /^4\s*s$/ }).click()
+  await variation.getByRole('button', { name: /^8\s*s$/ }).click()
+  await expect(
+    page.getByRole('dialog', { name: 'Adjust timing' }).getByRole('status'),
+  ).toHaveText('...every 0 to 12 seconds.')
+  await variation.getByRole('button').last().focus()
   await page.keyboard.press('Tab')
   await expect(
     page.getByRole('button', { name: 'Close intervals' }),
@@ -144,7 +148,12 @@ test('edits sound options through menus and modals', async ({ page }) => {
   await page.keyboard.press('Escape')
   await expect(edit).toBeFocused()
   await edit.click()
-  await expect(minimum).toHaveValue('8')
+  await expect(
+    cadence.getByRole('button', { name: /^4\s*s$/ }),
+  ).toHaveAttribute('aria-pressed', 'true')
+  await expect(
+    variation.getByRole('button', { name: /^8\s*s$/ }),
+  ).toHaveAttribute('aria-pressed', 'true')
   await page.keyboard.press('Escape')
   await options.click()
   await page

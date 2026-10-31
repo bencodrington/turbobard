@@ -11,6 +11,7 @@ import {
 } from '../domain/catalog'
 import { AsyncSearchState } from './AsyncSearchState'
 import { Button } from './Button'
+import { ButtonGroup } from './ButtonGroup'
 import { CombatToggle } from './CombatToggle'
 import { FontAwesomeIconView } from './icons'
 import { selectAllTextOnFocus } from './selectAllTextOnFocus'
@@ -137,22 +138,20 @@ export function CatalogPanel({
           placeholder="Search"
         />
       </div>
-      <div
+      <ButtonGroup
         className="catalog-filters"
-        role="group"
-        aria-label="Catalog filters"
-      >
-        {filters.map(({ value, label, icon }) => (
-          <Button
-            key={value}
-            variant="ghost"
-            aria-pressed={filter === value}
-            onClick={() => onFilterChange(value)}
-          >
-            <FontAwesomeIconView iconId={icon} /> {label}
-          </Button>
-        ))}
-      </div>
+        label="Catalog filters"
+        value={filter}
+        onChange={onFilterChange}
+        options={filters.map(({ value, label, icon }) => ({
+          value,
+          label: (
+            <>
+              <FontAwesomeIconView iconId={icon} /> {label}
+            </>
+          ),
+        }))}
+      />
       {previewError && (
         <p role="alert" className="catalog-preview-error">
           {previewError}

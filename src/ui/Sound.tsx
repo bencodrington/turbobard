@@ -3,7 +3,14 @@ import { createPortal } from 'react-dom'
 import type { Placement, Sound as EnvironmentSound } from '../domain/playback'
 import type { OneShotState } from '../domain/coordinator'
 import { Button } from './Button'
-import { LabeledNumberField, LabeledRangeField } from './LabeledFields'
+import { ButtonGroup } from './ButtonGroup'
+import {
+  intervalPresets,
+  variationPresets,
+  nearestPreset,
+  soundTiming,
+} from '../domain/oneShotTiming'
+import { LabeledRangeField } from './LabeledFields'
 import { ModalShell } from './ModalShell'
 import { FontAwesomeIconView } from './icons'
 
@@ -12,10 +19,7 @@ type SoundProps = {
   oneShotState?: OneShotState
   onVolumeChange: (volume: number) => void
   onPlacementChange: (placement: Placement) => void
-  onTimingChange: (
-    field: 'minIntervalSeconds' | 'maxIntervalSeconds',
-    value: number,
-  ) => void
+  onTimingChange: (intervalSeconds: number, variationSeconds: number) => void
   onRemove: () => void
   onPlayNow: () => void
 }
@@ -35,6 +39,22 @@ export function Sound({
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const editButtonRef = useRef<HTMLButtonElement>(null)
   const id = useId()
+  const timing = soundTiming(sound)
+  const minimum = sound.minIntervalSeconds ?? 0
+  const maximum = sound.maxIntervalSeconds ?? minimum
+  const chooseTiming = (
+    field: 'intervalSeconds' | 'variationSeconds',
+    value: number,
+  ) => {
+    onTimingChange(
+      field === 'intervalSeconds'
+        ? value
+        : nearestPreset(timing.intervalSeconds, intervalPresets),
+      field === 'variationSeconds'
+        ? value
+        : nearestPreset(timing.variationSeconds, variationPresets),
+    )
+  }
   const name = sound.name ?? sound.id
   const seconds = (oneShotState?.remainingMs ?? 0) / 1_000
   const remainingLabel =
@@ -54,7 +74,13 @@ export function Sound({
     if (!dialog) return
     const controls = () =>
       Array.from(dialog.querySelectorAll<HTMLElement>('button, input, a[href]'))
-    ;(dialog.querySelector<HTMLElement>('input') ?? controls()[0])?.focus()
+    ;(
+      dialog.querySelector<HTMLElement>(
+        '.sound-timing button[aria-pressed="true"]',
+      ) ??
+      dialog.querySelector<HTMLElement>('.sound-timing button, input') ??
+      controls()[0]
+    )?.focus()
     const trapFocus = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.stopImmediatePropagation()
@@ -240,46 +266,73 @@ export function Sound({
       {modal &&
         createPortal(
           <ModalShell
-            title={modal === 'timing' ? 'One-shot intervals' : 'Audio source'}
+            title={modal === 'timing' ? 'Adjust timing' : 'Audio source'}
             titleId={`${id}-modal-title`}
-            subtitle={name}
+            subtitle={
+              modal === 'timing' ? (
+                <>
+                  Control how often <strong>{name}</strong> plays
+                </>
+              ) : (
+                name
+              )
+            }
             closeLabel={`Close ${modal === 'timing' ? 'intervals' : 'audio source'}`}
             onClose={closeModal}
           >
             {modal === 'timing' ? (
               <div className="sound-timing">
-                <LabeledNumberField
-                  label="Minimum interval (seconds)"
-                  value={sound.minIntervalSeconds ?? 0}
-                  inputProps={{
-                    'aria-label': `Minimum interval for ${name}`,
-                    min: 0,
-                    step: 1,
-                  }}
-                  onChange={(event) =>
-                    onTimingChange(
-                      'minIntervalSeconds',
-                      Number(event.target.value),
-                    )
-                  }
-                />
-                <LabeledNumberField
-                  label="Maximum interval (seconds)"
-                  value={
-                    sound.maxIntervalSeconds ?? sound.minIntervalSeconds ?? 0
-                  }
-                  inputProps={{
-                    'aria-label': `Maximum interval for ${name}`,
-                    min: 0,
-                    step: 1,
-                  }}
-                  onChange={(event) =>
-                    onTimingChange(
-                      'maxIntervalSeconds',
-                      Number(event.target.value),
-                    )
-                  }
-                />
+                <div className="timing-control">
+                  <p>Play every</p>
+                  <ButtonGroup
+                    label="Play every"
+                    value={timing.intervalSeconds}
+                    options={intervalPresets.map((value) => ({
+                      value,
+                      label: (
+                        <>
+                          <strong>{value}</strong>
+                          <span className="timing-unit">s</span>
+                        </>
+                      ),
+                    }))}
+                    onChange={(value) => chooseTiming('intervalSeconds', value)}
+                  />
+                </div>
+                <div className="timing-control">
+                  <p>Give or take</p>
+                  <ButtonGroup
+                    label="Give or take"
+                    value={timing.variationSeconds}
+                    options={variationPresets.map((value) => ({
+                      value,
+                      label: (
+                        <>
+                          <strong>{value}</strong>
+                          <span className="timing-unit">s</span>
+                        </>
+                      ),
+                    }))}
+                    onChange={(value) =>
+                      chooseTiming('variationSeconds', value)
+                    }
+                  />
+                </div>
+                <div className="timing-result" role="status" aria-live="polite">
+                  <p>
+                    ...every <strong>{minimum}</strong>
+                    {minimum !== maximum && (
+                      <>
+                        {' '}
+                        to <strong>{maximum}</strong>
+                      </>
+                    )}{' '}
+                    {minimum === maximum && minimum === 1
+                      ? 'second'
+                      : 'seconds'}
+                    .
+                  </p>
+                </div>
               </div>
             ) : (
               <div className="sound-source">

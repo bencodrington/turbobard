@@ -34,6 +34,7 @@ export type EnvironmentWorkspace = {
     soundId: string,
     minimum: number,
     maximum: number,
+    timing?: Sound['timing'],
   ) => void
   play: (environmentId: string) => void
   stop: (environmentId: string) => void
@@ -144,12 +145,13 @@ export function createEnvironmentWorkspace({
         return next
       })
     },
-    setSoundTiming(environmentId, soundId, minimum, maximum) {
+    setSoundTiming(environmentId, soundId, minimum, maximum, timing) {
       updateEnvironment(environmentId, (environment) => {
         const sounds = environment.sounds.map((sound) =>
           sound.id === soundId
             ? {
                 ...sound,
+                timing,
                 minIntervalSeconds: Math.max(0, minimum),
                 maxIntervalSeconds: Math.max(Math.max(0, minimum), maximum),
               }

@@ -801,8 +801,7 @@ input::placeholder {
 .sound-source ul {
   padding-left: var(--space-5);
 }
-.sound-controls,
-.sound-timing {
+.sound-controls {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -819,19 +818,52 @@ input::placeholder {
   max-width: 100%;
 }
 .sound-timing {
-  align-items: end;
-}
-.sound-timing > label {
-  display: flex;
-  flex: 1 1 10rem;
-  flex-direction: column;
-  gap: var(--space-2);
+  --timing-number-size: clamp(1rem, 4vw, 1.35rem);
+  display: grid;
+  gap: 1.75rem;
   min-width: 0;
-  overflow-wrap: anywhere;
 }
-.sound-timing input {
-  width: 100%;
+.timing-control {
+  display: grid;
+  gap: var(--space-3);
   min-width: 0;
+}
+.timing-control > p {
+  color: var(--text);
+}
+.sound-timing .button-group .button {
+  gap: 0.1em;
+  padding: var(--space-3) 0;
+  font-size: var(--timing-number-size);
+}
+.timing-unit {
+  font-size: 0.7em;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+.timing-control strong,
+.timing-result strong {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+.timing-result {
+  text-align: center;
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+}
+.timing-result p {
+  min-width: 0;
+  font-size: 1.1rem;
+  line-height: 1.4;
+}
+.timing-result strong {
+  display: inline-block;
+  min-width: 2.25ch;
+  margin-inline: 0.25em;
+  font-size: var(--timing-number-size);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 .one-shot-wick {
   display: inline-block;

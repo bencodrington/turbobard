@@ -209,6 +209,20 @@ function normalizeSound(sound: Record<string, unknown>): Sound {
     ...(typeof sound.maxIntervalSeconds === 'number'
       ? { maxIntervalSeconds: sound.maxIntervalSeconds }
       : {}),
+    ...(isRecord(sound.timing) &&
+    typeof sound.timing.intervalSeconds === 'number' &&
+    Number.isFinite(sound.timing.intervalSeconds) &&
+    sound.timing.intervalSeconds >= 0 &&
+    typeof sound.timing.variationSeconds === 'number' &&
+    Number.isFinite(sound.timing.variationSeconds) &&
+    sound.timing.variationSeconds >= 0
+      ? {
+          timing: {
+            intervalSeconds: sound.timing.intervalSeconds,
+            variationSeconds: sound.timing.variationSeconds,
+          },
+        }
+      : {}),
     loaded: false,
   }
 }
@@ -263,6 +277,7 @@ function serializeSound(sound: Sound): Sound {
     ...(sound.fileName === undefined ? {} : { fileName: sound.fileName }),
     ...(sound.muted === undefined ? {} : { muted: sound.muted }),
     ...(sound.variations === undefined ? {} : { variations: sound.variations }),
+    ...(sound.timing === undefined ? {} : { timing: sound.timing }),
     ...(sound.minIntervalSeconds === undefined
       ? {}
       : { minIntervalSeconds: sound.minIntervalSeconds }),
