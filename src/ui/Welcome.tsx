@@ -21,8 +21,8 @@ export function Welcome({
           className="welcome-logo"
         />
         <h2 id="welcome-heading" className="welcome-heading">
-          <span>Music and effects</span>
-          <span className="welcome-heading-middle">at the</span>
+          <span>Music and effects</span>{' '}
+          <span className="welcome-heading-middle">at the</span>{' '}
           <span>speed of sound.</span>
         </h2>
         <p className="welcome-description">

@@ -104,3 +104,35 @@
   font-size: clamp(20px, 2vw, 24px);
   background: var(--secondary);
 }
+
+@media (max-width: 899px) {
+  .app-shell.is-welcome .app-logo {
+    visibility: visible;
+  }
+  .welcome-logo {
+    display: none;
+  }
+  .welcome-content {
+    font-size: var(--font-size-body);
+    line-height: 1.35;
+  }
+  .welcome-heading {
+    font-size: var(--font-size-heading);
+    line-height: 1.35;
+  }
+  .welcome-heading span {
+    display: inline;
+    color: var(--text);
+    background: none;
+  }
+  .welcome-heading .welcome-heading-middle {
+    font-size: inherit;
+    line-height: inherit;
+  }
+  .welcome-start {
+    font-size: var(--font-size-body);
+  }
+  .welcome-create.button {
+    font-size: var(--font-size-button);
+  }
+}

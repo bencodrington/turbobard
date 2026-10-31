@@ -27,7 +27,7 @@ test('playing tiles keep their layout while showing a tile-coloured frame and ba
     'absolute',
   )
   await expect(tile.locator('.tile-equalizer')).toHaveCSS('opacity', '1')
-  await expect(tile.locator('.tile-equalizer')).toHaveCSS('bottom', '2px')
+  await expect(tile.locator('.tile-equalizer')).toHaveCSS('bottom', '0px')
   await expect(tile.locator('.tile-equalizer')).toHaveCSS('gap', '2px')
   await expect(tile.locator('.tile-equalizer i').first()).toHaveCSS(
     'border-radius',
