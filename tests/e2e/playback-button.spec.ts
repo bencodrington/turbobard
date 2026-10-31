@@ -8,7 +8,9 @@ test('hexagonal playback button follows hover, playback, and reduced-motion stat
     (route) => route.fulfill({ contentType: 'application/json', body: '[]' }),
   )
   await page.goto('/')
-  await page.getByRole('button', { name: 'Create Environment' }).click()
+  await page
+    .getByRole('button', { name: /^(Create Environment|Add environment)$/ })
+    .click()
 
   const play = page.getByRole('button', { name: 'Play', exact: true })
   await page.mouse.move(0, 0)

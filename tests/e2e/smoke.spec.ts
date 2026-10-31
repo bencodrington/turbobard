@@ -25,9 +25,11 @@ test('loads the Turbobard workspace', async ({ page }) => {
   await expect(page).toHaveTitle('Turbobard')
   await expect(page.getByRole('heading', { name: 'Turbobard' })).toBeVisible()
   await expect(
-    page.getByRole('heading', { name: 'Environments' }),
+    page.getByRole('heading', { name: /Music and effects/ }),
   ).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Search' })).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'Add environment' }),
+  ).toBeVisible()
 })
 
 test('closes the About modal when its backdrop is clicked', async ({
@@ -51,7 +53,9 @@ test('creates an Environment without the Search panel intercepting the action', 
 }) => {
   await page.goto('/')
 
-  await page.getByRole('button', { name: 'Create Environment' }).click()
+  await page
+    .getByRole('button', { name: /^(Create Environment|Add environment)$/ })
+    .click()
 
   await expect(
     page.getByRole('region', { name: 'New Environment' }),
@@ -118,7 +122,9 @@ async function stubCatalogAndAudio(page: Page) {
 
 async function addAndPlayHeavyRain(page: Page) {
   await page.goto('/')
-  await page.getByRole('button', { name: 'Create Environment' }).click()
+  await page
+    .getByRole('button', { name: /^(Create Environment|Add environment)$/ })
+    .click()
   const environment = page.getByRole('region', { name: 'New Environment' })
   const searchInput = page.getByRole('textbox', { name: 'Search Sounds' })
   if (!(await searchInput.isVisible())) {
@@ -212,7 +218,9 @@ test('fades Heavy Rain out when its playing Environment is deleted', async ({
   await page.getByRole('button', { name: 'Edit environments' }).click()
   await page.getByRole('button', { name: /^Delete / }).click()
 
-  await expect(page.getByText(/no Environments yet/i)).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'Add environment' }),
+  ).toBeVisible()
   await expect
     .poll(
       () =>
@@ -237,7 +245,9 @@ test('plays a sound added to an already-playing Environment', async ({
 }) => {
   await stubCatalogAndAudio(page)
   await page.goto('/')
-  await page.getByRole('button', { name: 'Create Environment' }).click()
+  await page
+    .getByRole('button', { name: /^(Create Environment|Add environment)$/ })
+    .click()
   const environment = page.getByRole('region', { name: 'New Environment' })
   await environment.getByRole('button', { name: 'Play' }).click()
   await page.getByRole('textbox', { name: 'Search Sounds' }).fill('rain')
@@ -536,7 +546,9 @@ test('toggling Combat mode fades ordinary music and starts combat music', async 
 }) => {
   await stubCatalogWithCombat(page)
   await page.goto('/')
-  await page.getByRole('button', { name: 'Create Environment' }).click()
+  await page
+    .getByRole('button', { name: /^(Create Environment|Add environment)$/ })
+    .click()
   const environment = page.getByRole('region', { name: 'New Environment' })
 
   // Add Heavy Rain as ambiance (search by exact name so only one result shows)
@@ -653,7 +665,9 @@ test('searches, selects, and persists an Environment icon and color', async ({
   })
 
   await page.goto('/')
-  await page.getByRole('button', { name: 'Create Environment' }).click()
+  await page
+    .getByRole('button', { name: /^(Create Environment|Add environment)$/ })
+    .click()
 
   const iconTrigger = page.getByRole('button', {
     name: /select icon for new environment/i,
@@ -717,7 +731,11 @@ test('closes the icon picker with Escape @mobile', async ({ page }) => {
       box!.y + box!.height / 2,
     )
   }
-  await tap(page.getByRole('button', { name: 'Create Environment' }))
+  await tap(
+    page.getByRole('button', {
+      name: /^(Create Environment|Add environment)$/,
+    }),
+  )
   await tap(
     page.getByRole('button', { name: /select icon for new environment/i }),
   )

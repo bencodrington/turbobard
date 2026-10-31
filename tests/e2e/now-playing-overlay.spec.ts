@@ -10,7 +10,9 @@ for (const mobile of [false, true]) {
       (route) => route.fulfill({ contentType: 'application/json', body: '[]' }),
     )
     await page.goto('/')
-    await page.getByRole('button', { name: 'Create Environment' }).click()
+    await page
+      .getByRole('button', { name: /^(Create Environment|Add environment)$/ })
+      .click()
     await page.getByRole('button', { name: 'Play', exact: true }).click()
     const border = page.locator('.now-playing-border')
     const assertAboveScreen = async () => {

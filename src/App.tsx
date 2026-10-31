@@ -1,4 +1,5 @@
 import { Button } from './ui/Button'
+import { Welcome } from './ui/Welcome'
 import { PlaybackButton } from './ui/PlaybackButton'
 import {
   useEffect,
@@ -357,41 +358,41 @@ export default function App({
         <div
           className={`workspace-body${isEditorOpen && selectedEnvironment ? ' editor-open' : ''}${isSearchOpen ? ' search-open' : ''}`}
         >
-          <section
-            aria-labelledby="environments-heading"
-            className="environment-panel"
-          >
-            <div className="section-heading">
-              <h2 id="environments-heading">Environments</h2>
-              <div className="edit-mode-controls">
-                {isEditMode && <span className="edit-mode-label">Editing</span>}
-                <Button
-                  variant={isEditMode ? 'primary' : 'ghost'}
-                  iconOnly={!isEditMode}
-                  aria-label={isEditMode ? undefined : 'Edit environments'}
-                  aria-pressed={isEditMode}
-                  onClick={() => setIsEditMode((value) => !value)}
-                >
-                  <FontAwesomeIconView
-                    iconId={isEditMode ? 'check' : 'wrench'}
-                  />
-                  {isEditMode && 'Done'}
-                </Button>
-              </div>
-            </div>
-            <div
-              className={`edit-mode-hint${isEditMode ? ' is-visible' : ''}`}
-              aria-hidden={!isEditMode}
+          {environments.length === 0 ? (
+            <Welcome onAddEnvironment={addEnvironment} />
+          ) : (
+            <section
+              aria-labelledby="environments-heading"
+              className="environment-panel"
             >
-              <p className="edit-mode-label">
-                Tap or click an environment to modify it
-              </p>
-            </div>
-            {environments.length === 0 ? (
-              <p className="empty-state">
-                No Environments yet. Create one to start building a scene.
-              </p>
-            ) : (
+              <div className="section-heading">
+                <h2 id="environments-heading">Environments</h2>
+                <div className="edit-mode-controls">
+                  {isEditMode && (
+                    <span className="edit-mode-label">Editing</span>
+                  )}
+                  <Button
+                    variant={isEditMode ? 'primary' : 'ghost'}
+                    iconOnly={!isEditMode}
+                    aria-label={isEditMode ? undefined : 'Edit environments'}
+                    aria-pressed={isEditMode}
+                    onClick={() => setIsEditMode((value) => !value)}
+                  >
+                    <FontAwesomeIconView
+                      iconId={isEditMode ? 'check' : 'wrench'}
+                    />
+                    {isEditMode && 'Done'}
+                  </Button>
+                </div>
+              </div>
+              <div
+                className={`edit-mode-hint${isEditMode ? ' is-visible' : ''}`}
+                aria-hidden={!isEditMode}
+              >
+                <p className="edit-mode-label">
+                  Tap or click an environment to modify it
+                </p>
+              </div>
               <div className="environment-list" role="list">
                 {environments.map((environment) => {
                   const selected = selectedId === environment.id && isEditorOpen
@@ -471,13 +472,13 @@ export default function App({
                   )
                 })}
               </div>
-            )}
-            <div className="environment-panel-footer">
-              <Button variant="primary" onClick={addEnvironment}>
-                Create Environment
-              </Button>
-            </div>
-          </section>
+              <div className="environment-panel-footer">
+                <Button variant="primary" onClick={addEnvironment}>
+                  Create Environment
+                </Button>
+              </div>
+            </section>
+          )}
 
           {selectedEnvironment && (
             <section
@@ -687,20 +688,22 @@ export default function App({
             </section>
           )}
 
-          <CatalogPanel
-            environment={selectedEnvironment}
-            open={isSearchOpen}
-            onClose={() => setIsSearchOpen(false)}
-            query={query}
-            onQueryChange={setQuery}
-            filter={filter}
-            onFilterChange={setFilter}
-            results={results}
-            loading={catalogLoading}
-            error={catalogError}
-            onRetry={() => setCatalogAttempt((attempt) => attempt + 1)}
-            onSoundsChange={updateSelectedSounds}
-          />
+          {environments.length > 0 && (
+            <CatalogPanel
+              environment={selectedEnvironment}
+              open={isSearchOpen}
+              onClose={() => setIsSearchOpen(false)}
+              query={query}
+              onQueryChange={setQuery}
+              filter={filter}
+              onFilterChange={setFilter}
+              results={results}
+              loading={catalogLoading}
+              error={catalogError}
+              onRetry={() => setCatalogAttempt((attempt) => attempt + 1)}
+              onSoundsChange={updateSelectedSounds}
+            />
+          )}
         </div>
       </section>
       {mostRecentlyPlayedEnvironment && (
