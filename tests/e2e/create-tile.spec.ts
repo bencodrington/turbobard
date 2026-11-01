@@ -76,7 +76,7 @@ test('search header matches the input size and desktop has no redundant search a
   await expect(heading).toHaveText('Add sounds to New Environment')
   const typography = (element: Element) => {
     const style = getComputedStyle(element)
-    return [style.fontFamily, style.fontWeight, style.color]
+    return [style.fontFamily, style.fontSize, style.fontWeight, style.color]
   }
   expect(await heading.evaluate(typography)).toEqual(
     await page.locator('#environments-heading').evaluate(typography),

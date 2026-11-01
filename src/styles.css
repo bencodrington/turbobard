@@ -244,6 +244,7 @@ input::placeholder {
 #environments-heading,
 #catalog-heading {
   font-family: var(--font-body);
+  font-size: var(--font-size-button);
 }
 .catalog-panel {
   padding-right: 0;
