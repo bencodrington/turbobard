@@ -19,6 +19,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
+    "test:e2e:audio": "playwright test tests/e2e/audio-fades.spec.ts",
     "test:e2e:install": "playwright install chromium",
     "test:e2e:chromium": "playwright test --project=chromium --reporter=line",
     "test:e2e:chromium:debug": "playwright test --project=chromium --reporter=line --trace=on",

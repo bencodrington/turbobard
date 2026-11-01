@@ -53,3 +53,29 @@ npm run test:e2e:chromium:debug -- tests/e2e/smoke.spec.ts
 ```
 
 Use `npm run test:e2e` only when cross-browser verification is required; it runs Chromium, Firefox, and WebKit.
+
+## Audio regression checks
+
+After selecting the `.nvmrc` runtime and building the app:
+
+```powershell
+npm run build
+npm run test:e2e:audio
+```
+
+`audio-fades.spec.ts` tests the real app workflow with simulated ignored-volume
+audio APIs and controlled time. It verifies fade-in, Stop, distinct Environment
+crossfades, and rapid restart, including ramp duration and pause/unload order.
+Each action clears prior events so fade-in cannot satisfy fade-out assertions.
+
+These tests use simulated audio APIs and produce no audio. They run on all five
+configured projects. They establish command timing and lifecycle behavior, not
+real decoding, gain processing, or audibility on a physical device.
+
+Routine test runs must not play generated tones or other audible audio. The
+experimental native graph test was removed after audible playback and failures
+in the Linux CI environment. Do not restore audible tests to routine verification.
+Keep real-device and output-recording tests explicitly user-triggered.
+
+See [the mobile audio investigation](../mobile-audio-device-research.md) for the
+remaining evidence gaps, device acceptance plan, and Mac/Safari WebDriver setup.
