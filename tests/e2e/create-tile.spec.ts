@@ -61,7 +61,7 @@ for (const mobile of [false, true]) {
   })
 }
 
-test('search header matches Environments typography and desktop has no redundant search action', async ({
+test('search header matches the input size and desktop has no redundant search action', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
@@ -76,17 +76,16 @@ test('search header matches Environments typography and desktop has no redundant
   await expect(heading).toHaveText('Add sounds to New Environment')
   const typography = (element: Element) => {
     const style = getComputedStyle(element)
-    return [
-      style.fontFamily,
-      style.fontSize,
-      style.fontWeight,
-      style.lineHeight,
-      style.color,
-    ]
+    return [style.fontFamily, style.fontWeight, style.color]
   }
   expect(await heading.evaluate(typography)).toEqual(
     await page.locator('#environments-heading').evaluate(typography),
   )
+  const searchInput = page.getByRole('textbox', { name: 'Search Sounds' })
+  const inputFontSize = await searchInput.evaluate(
+    (element) => getComputedStyle(element).fontSize,
+  )
+  await expect(heading).toHaveCSS('font-size', inputFontSize)
   const addSounds = page.getByRole('button', {
     name: 'Add sounds to environment',
     exact: true,
@@ -98,6 +97,7 @@ test('search header matches Environments typography and desktop has no redundant
     addSounds.locator('[data-icon="magnifying-glass"]'),
   ).toBeVisible()
   await addSounds.click()
+  await expect(heading).toHaveCSS('font-size', inputFontSize)
   await expect(
     page.getByRole('textbox', { name: 'Search Sounds' }),
   ).toBeInViewport()
