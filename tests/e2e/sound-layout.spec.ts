@@ -229,6 +229,7 @@ test('preserves original catalog attribution through adding and reloading a soun
 })
 
 test('long desktop columns scroll independently', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.setViewportSize({ width: 1440, height: 700 })
   await page.addInitScript(() => {
     localStorage.setItem(
@@ -277,6 +278,7 @@ test('long desktop columns scroll independently', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('textbox', { name: 'Search Sounds' }).fill('results')
   await expect(page.locator('.catalog-item')).toHaveCount(40)
+  await page.evaluate(() => document.fonts.ready)
   const panels = ['.environment-panel', '.environment-editor', '.catalog-panel']
   for (const selector of panels) {
     const metrics = await page.locator(selector).evaluate((element) => ({

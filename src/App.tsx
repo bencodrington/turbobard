@@ -11,6 +11,7 @@ import {
   type CSSProperties,
 } from 'react'
 import logo from './assets/logo.svg'
+import { flushSync } from 'react-dom'
 import type { Environment } from './domain/playback'
 import { createEnvironmentPersistence } from './persistence/environments'
 import {
@@ -71,6 +72,14 @@ export default function App({
   const [isEditMode, setIsEditMode] = useState(false)
   const [isAboutOpen, setIsAboutOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  useEffect(() => {
+    const desktop = window.matchMedia?.('(min-width: 900px)')
+    const closeMobileSearch = () => {
+      if (desktop?.matches) setIsSearchOpen(false)
+    }
+    desktop?.addEventListener('change', closeMobileSearch)
+    return () => desktop?.removeEventListener('change', closeMobileSearch)
+  }, [])
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<CatalogFilter>('everything')
   const [catalogError, setCatalogError] = useState(false)
@@ -154,6 +163,7 @@ export default function App({
     logoOriginRef.current = undefined
     const image = headerLogoRef.current
     if (isWelcome || !origin || !image || !image.animate) return
+    if (!(window.matchMedia?.('(min-width: 900px)').matches ?? true)) return
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
     const target = image.getBoundingClientRect()
     const animation = image.animate(
@@ -566,8 +576,8 @@ export default function App({
               ref={editorRef}
               className="environment-editor"
               aria-labelledby="editor-heading"
-              aria-hidden={!isEditorOpen}
-              inert={!isEditorOpen}
+              aria-hidden={!isEditorOpen || isSearchOpen}
+              inert={!isEditorOpen || isSearchOpen}
             >
               <h2 id="editor-heading" className="sr-only">
                 {selectedEnvironment.name}
@@ -757,12 +767,15 @@ export default function App({
                 <Button
                   variant="primary"
                   onClick={() => {
-                    setIsSearchOpen(true)
-                    requestAnimationFrame(() =>
-                      document
-                        .getElementById('catalog-search')
-                        ?.focus({ preventScroll: true }),
+                    flushSync(() =>
+                      setIsSearchOpen(
+                        window.matchMedia?.('(max-width: 899px)').matches ??
+                          false,
+                      ),
                     )
+                    document
+                      .getElementById('catalog-search')
+                      ?.focus({ preventScroll: true })
                   }}
                 >
                   <FontAwesomeIconView iconId="magnifying-glass" /> Add sounds

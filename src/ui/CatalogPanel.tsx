@@ -135,7 +135,7 @@ export function CatalogPanel({
           value={query}
           onFocus={selectAllTextOnFocus}
           onChange={(event) => onQueryChange(event.target.value)}
-          placeholder="Search"
+          placeholder="Search for sounds"
         />
       </div>
       <ButtonGroup
@@ -162,11 +162,36 @@ export function CatalogPanel({
         error={error}
         empty={results.length === 0}
         loadingMessage="Loading Sounds…"
+        loadingContent={
+          <div className="catalog-skeleton" aria-hidden="true">
+            {Array.from({ length: 4 }, (_, index) => (
+              <div className="catalog-skeleton-row" key={index}>
+                <span className="catalog-skeleton-icon" />
+                <div>
+                  <span className="catalog-skeleton-title" />
+                  <span className="catalog-skeleton-tags" />
+                </div>
+              </div>
+            ))}
+          </div>
+        }
         errorMessage="Legacy sound catalog unavailable. Check your local API configuration and network access."
         emptyMessage={
-          <p className="empty-state">
-            {query.trim() ? 'No Sounds found.' : 'Search for sounds and packs.'}
-          </p>
+          query.trim() ? (
+            <div className="catalog-empty" role="status">
+              <FontAwesomeIconView iconId="magnifying-glass" />
+              <h3>No sounds found</h3>
+              <p>Try a different keyword or a broader search.</p>
+              {filter !== 'everything' && (
+                <Button
+                  variant="text"
+                  onClick={() => onFilterChange('everything')}
+                >
+                  Search everything
+                </Button>
+              )}
+            </div>
+          ) : null
         }
         onRetry={onRetry}
       >

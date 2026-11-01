@@ -8,7 +8,7 @@
 .catalog-header #catalog-heading {
   flex: 1;
   min-width: 0;
-  font-size: var(--font-size-heading);
+  font-size: var(--font-size-button);
   font-weight: 400;
   line-height: 1.05;
   color: var(--text);
@@ -137,4 +137,74 @@
 .catalog-preview-error {
   color: var(--danger);
   padding: var(--space-3) 0;
+}
+
+.catalog-empty {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  padding: 3rem var(--space-5);
+  color: var(--text-muted);
+  text-align: center;
+}
+.catalog-empty > svg {
+  margin-bottom: var(--space-3);
+  font-size: 2rem;
+  color: var(--grey-4);
+}
+.catalog-empty h3 {
+  color: var(--text);
+  font-size: var(--font-size-button);
+  font-weight: 500;
+}
+.catalog-skeleton {
+  border-top: 1px solid var(--border);
+  animation: catalog-skeleton-pulse 1.6s ease-in-out infinite;
+}
+.catalog-skeleton-row {
+  display: flex;
+  align-items: start;
+  gap: var(--space-3);
+  min-height: 6rem;
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.catalog-skeleton-row > div {
+  flex: 1;
+  min-width: 0;
+}
+.catalog-skeleton-row span {
+  display: block;
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised-strong);
+}
+.catalog-skeleton-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+.catalog-skeleton-title {
+  width: 65%;
+  height: 1.25rem;
+}
+.catalog-skeleton-tags {
+  width: 40%;
+  height: 0.8rem;
+  margin-top: var(--space-3);
+}
+.catalog-skeleton-row:nth-child(even) .catalog-skeleton-title {
+  width: 48%;
+}
+@keyframes catalog-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .catalog-skeleton {
+    animation: none;
+  }
 }

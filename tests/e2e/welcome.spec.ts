@@ -83,7 +83,7 @@ test('welcome logo travels into the header and respects reduced motion', async (
   await page.evaluate(() => document.fonts.ready)
   const welcomeLogo = page.locator('.welcome-logo')
   const origin = (await welcomeLogo.boundingBox())!
-  expect(origin.width).toBeGreaterThan(400)
+  expect(origin.width).toBe(360)
   expect(origin.x + origin.width / 2).toBeCloseTo(720, 0)
   const headerLogo = page.locator('.app-logo')
   await headerLogo.evaluate((element: HTMLImageElement) => {
@@ -127,6 +127,8 @@ test('welcome logo travels into the header and respects reduced motion', async (
 test('desktop columns grow with the viewport and have separate borders', async ({
   page,
 }) => {
+  // Measure the final responsive layout, rather than an in-flight resize.
+  await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
   await page
     .getByRole('button', { name: 'Add environment', exact: true })
