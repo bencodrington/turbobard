@@ -77,5 +77,11 @@ experimental native graph test was removed after audible playback and failures
 in the Linux CI environment. Do not restore audible tests to routine verification.
 Keep real-device and output-recording tests explicitly user-triggered.
 
+The opt-in `npm run test:audio:native` command exercises the production adapter
+with real decoding and an unplayed MediaStream destination. It is outside routine
+E2E discovery and refuses playback without its silent route. The physical-iPhone
+runner is also explicit. See [the volume fix and device results](../iphone-audio-volume-fix.md)
+for commands, measurement boundaries, and listening acceptance.
+
 See [the mobile audio investigation](../mobile-audio-device-research.md) for the
 remaining evidence gaps, device acceptance plan, and Mac/Safari WebDriver setup.

@@ -28,6 +28,54 @@ const sound: Sound = {
 }
 
 describe('browser audio port', () => {
+  it('shares a lazy context across loops, automatic and manual One-shots', () => {
+    const gains: {
+      gain: { value: number }
+      connect: ReturnType<typeof vi.fn>
+    }[] = []
+    const context = {
+      state: 'suspended',
+      destination: {},
+      createMediaElementSource: vi.fn(() => ({ connect: vi.fn() })),
+      createGain: vi.fn(() => {
+        const gain = { gain: { value: 1 }, connect: vi.fn() }
+        gains.push(gain)
+        return gain
+      }),
+      resume: vi.fn(() => Promise.resolve()),
+    }
+    const createContext = vi.fn(() => context as unknown as AudioContext)
+    const createAudio = vi.fn(element)
+    const port = createBrowserAudioPort(createAudio, createContext)
+    expect(createContext).not.toHaveBeenCalled()
+    port.load(sound)
+    port.playLoop(sound, 0.8, 0)
+    port.setVolume(sound.id, 0.4)
+    port.playOneShot(sound, 'thunder-a.mp3', 0.6)
+    port.playManualOneShot(sound, 'thunder-b.mp3', 0.2)
+    expect(createContext).toHaveBeenCalledOnce()
+    expect(context.createMediaElementSource).toHaveBeenCalledTimes(3)
+    expect(gains.map((gain) => gain.gain.value)).toEqual([0.4, 0.6, 0.2])
+    expect(context.resume).toHaveBeenCalledTimes(3)
+    for (const result of createAudio.mock.results) {
+      expect(result.value.crossOrigin).toBe('anonymous')
+      expect(result.value.volume).toBe(1)
+    }
+  })
+
+  it('retains element volume control when Web Audio is unavailable', () => {
+    const createContext = vi.fn(() => undefined)
+    const createAudio = vi.fn(element)
+    const port = createBrowserAudioPort(createAudio, createContext)
+    port.playLoop(sound, 0.8, 0)
+    port.setVolume(sound.id, 0.4)
+    port.playManualOneShot(sound, 'thunder-a.mp3', 0.2)
+    expect(
+      createAudio.mock.results.map((result) => result.value.volume),
+    ).toEqual([0.4, 0.2])
+    expect(createContext).toHaveBeenCalledOnce()
+  })
+
   it('keeps media volume assignments inside the browser-supported range', () => {
     const createAudio = vi.fn(element)
     const port = createBrowserAudioPort(createAudio)
@@ -138,79 +186,90 @@ describe('browser audio port', () => {
     }
   })
 
-  it('fades out when the browser ignores HTMLMediaElement volume writes', () => {
-    const callbacks: FrameRequestCallback[] = []
-    const originalCreateElement = document.createElement.bind(document)
-    const createProbe = vi
-      .spyOn(document, 'createElement')
-      .mockImplementation((tagName) => {
-        if (tagName !== 'audio') return originalCreateElement(tagName)
-        const probe = {
-          canPlayType: () => '',
-          volume: 1,
-        } as unknown as HTMLAudioElement
-        Object.defineProperty(probe, 'volume', {
+  it.each(['ignored', 'transient', 'writable'])(
+    'controls amplitude through Web Audio when element volume is %s',
+    (behavior) => {
+      const callbacks: FrameRequestCallback[] = []
+      const originalCreateElement = document.createElement.bind(document)
+      const createProbe = vi
+        .spyOn(document, 'createElement')
+        .mockImplementation((tagName) => {
+          if (tagName !== 'audio') return originalCreateElement(tagName)
+          const probe = {
+            canPlayType: () => '',
+            volume: 1,
+          } as unknown as HTMLAudioElement
+          let volume = 1
+          Object.defineProperty(probe, 'volume', {
+            get: () => volume,
+            set: (value: number) => {
+              if (behavior === 'ignored') return
+              volume = value
+              if (behavior === 'transient') queueMicrotask(() => (volume = 1))
+            },
+          })
+          return probe
+        })
+      vi.stubGlobal(
+        'requestAnimationFrame',
+        (callback: FrameRequestCallback) => {
+          callbacks.push(callback)
+          return callbacks.length
+        },
+      )
+      vi.stubGlobal('cancelAnimationFrame', vi.fn())
+      try {
+        const mobileElement = element()
+        const assignments: string[] = []
+        Object.defineProperty(mobileElement, 'volume', {
+          configurable: true,
           get: () => 1,
           set: () => undefined,
         })
-        return probe
-      })
-    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
-      callbacks.push(callback)
-      return callbacks.length
-    })
-    vi.stubGlobal('cancelAnimationFrame', vi.fn())
-    try {
-      const mobileElement = element()
-      const assignments: string[] = []
-      Object.defineProperty(mobileElement, 'volume', {
-        configurable: true,
-        get: () => 1,
-        set: () => undefined,
-      })
-      Object.defineProperty(mobileElement, 'crossOrigin', {
-        configurable: true,
-        get: () => undefined,
-        set: () => assignments.push('crossOrigin'),
-      })
-      Object.defineProperty(mobileElement, 'src', {
-        configurable: true,
-        get: () => 'rain.mp3',
-        set: () => assignments.push('src'),
-      })
-      const gain = { gain: { value: 1 }, connect: vi.fn() }
-      const audioContext = {
-        state: 'suspended',
-        destination: {},
-        createMediaElementSource: vi.fn(() => ({ connect: vi.fn() })),
-        createGain: vi.fn(() => gain),
-        resume: vi.fn(() => Promise.resolve()),
+        Object.defineProperty(mobileElement, 'crossOrigin', {
+          configurable: true,
+          get: () => undefined,
+          set: () => assignments.push('crossOrigin'),
+        })
+        Object.defineProperty(mobileElement, 'src', {
+          configurable: true,
+          get: () => 'rain.mp3',
+          set: () => assignments.push('src'),
+        })
+        const gain = { gain: { value: 1 }, connect: vi.fn() }
+        const audioContext = {
+          state: 'suspended',
+          destination: {},
+          createMediaElementSource: vi.fn(() => ({ connect: vi.fn() })),
+          createGain: vi.fn(() => gain),
+          resume: vi.fn(() => Promise.resolve()),
+        }
+        const createAudio = vi.fn(() => mobileElement)
+        const port = createBrowserAudioPort(
+          createAudio,
+          () => audioContext as unknown as AudioContext,
+        )
+
+        const loopSound = { ...sound, kind: 'loop' as const }
+        port.playLoop(loopSound, 0.8, 2000)
+        callbacks[0]?.(performance.now() + 1000)
+        expect(gain.gain.value).toBeCloseTo(0.4)
+        port.setVolume(sound.id, 0.6)
+        expect(gain.gain.value).toBe(0.6)
+        port.stop(sound.id, 2000)
+        callbacks[2]?.(performance.now() + 2000)
+
+        expect(gain.gain.value).toBe(0)
+        expect(createAudio).toHaveBeenCalledWith()
+        expect(assignments).toEqual(['crossOrigin', 'src'])
+        expect(audioContext.resume).toHaveBeenCalledOnce()
+        expect(mobileElement.volume).toBe(1)
+      } finally {
+        vi.unstubAllGlobals()
+        createProbe.mockRestore()
       }
-      const createAudio = vi.fn(() => mobileElement)
-      const port = createBrowserAudioPort(
-        createAudio,
-        () => audioContext as unknown as AudioContext,
-      )
-
-      const loopSound = { ...sound, kind: 'loop' as const }
-      port.playLoop(loopSound, 0.8, 2000)
-      callbacks[0]?.(performance.now() + 1000)
-      expect(gain.gain.value).toBeCloseTo(0.4)
-      port.setVolume(sound.id, 0.6)
-      expect(gain.gain.value).toBe(0.6)
-      port.stop(sound.id, 2000)
-      callbacks[2]?.(performance.now() + 2000)
-
-      expect(gain.gain.value).toBe(0)
-      expect(createAudio).toHaveBeenCalledWith()
-      expect(assignments).toEqual(['crossOrigin', 'src'])
-      expect(audioContext.resume).toHaveBeenCalledOnce()
-      expect(mobileElement.volume).toBe(1)
-    } finally {
-      vi.unstubAllGlobals()
-      createProbe.mockRestore()
-    }
-  })
+    },
+  )
 
   it('reports manual playback errors through the audio port listener', () => {
     const createAudio = vi.fn(element)
