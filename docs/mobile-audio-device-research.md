@@ -45,13 +45,15 @@ Mobile emulation changes parameters such as viewport, user agent, screen, and to
 
 ## Testing improved in this change
 
-The old mobile browser test has been replaced by [app workflow tests](../tests/e2e/audio-fades.spec.ts) and a [real browser audio integration test](../tests/e2e/browser-audio.spec.ts). Application audio behavior has not been changed.
+The old mobile browser test has been replaced by [app workflow tests](../tests/e2e/audio-fades.spec.ts). Application audio behavior has not been changed.
 
-- **App commands:** controlled time, fresh events for each action, source-specific rising/falling ramps, a two-second duration contract, no early pause, distinct Rain→Wind crossfade, and rapid Rain→Wind→Rain restart without a stale pause/unload. These use simulated ignored-volume APIs, explicitly named as such.
-- **Real graph:** the production adapter is bundled into a browser harness, a constant-amplitude WAV is generated in memory, and a cross-origin fixture is delivered with valid CORS headers. Native media decoding, context, source and gain nodes remain real. An analyser measures decoded sample amplitude after gain; the test checks non-silence, fade-in, half-volume calibration, fade-out and pause timing. The injected context routes output to a real, unplayed MediaStream destination, never to speakers. Playback is refused until that stream graph is connected, preventing an audible fallback if setup fails. The capability probe is forced to select the gain path; this does not verify real iOS capability detection, actual catalog headers, OS output, or the speakers.
-- **Sensitivity:** removing fade-out made both the simulated Stop test and real graph test fail. Replacing fade-out with instant mute also made both fail. The source diff was checked for each mutation and the production adapter restored afterward. These experiments establish test sensitivity to those regressions; they do not reproduce the reported physical-phone failure.
+- **App commands:** controlled time, fresh events for each action, source-specific rising/falling ramps, a two-second duration contract, no early pause, distinct Rain→Wind crossfade, and rapid Rain→Wind→Rain restart without a stale pause/unload. These use simulated ignored-volume APIs, explicitly named as such, and produce no audio.
+- **Sensitivity:** removing fade-out made the new simulated Stop test fail. Replacing fade-out with instant mute also made it fail. The source diff was checked for each mutation and the production adapter restored afterward. These experiments establish sensitivity to those regressions; they do not reproduce the reported physical-phone failure.
+- **Real graph coverage remains a gap:** a generated-tone integration test was explored, but its first version played audible audio. A stream-only replacement failed signal checks across the Linux CI browsers despite passing locally. It has been removed rather than included as an unreliable or audible routine test. The attempted PulseAudio CI setup was also removed. No native sample-processing or speaker-output acceptance is claimed by the retained suite.
 
-Local validation on Node 26.12.1: `npm run verify:static` passed (114 unit tests plus formatting, lint, typecheck and build). The focused audio and existing smoke matrix passed **50 tests, with 2 explicit skips** across Chromium, Firefox, WebKit and the two mobile profiles. The skips are real graph tests on this Windows WebKit build, which exposes neither `AudioContext` nor `webkitAudioContext`; simulated WebKit app tests ran. Linux/macOS WebKit signal coverage still needs execution. Raw mutation/final-run logs are ignored under `docs/evidence/audio-audit/`; graph samples are Playwright JSON attachments. No generated evidence is committed.
+Routine test runs must stay silent. Real-device playback and calibrated output recording belong in explicit, user-triggered sessions. The Mac/Safari setup below describes that future workflow; it has not been configured here. Existing unit tests and the new browser workflow tests can validate application commands while that device work remains outstanding.
+
+Final local validation on Node 26.12.1: `npm run verify:static` passed (114 unit tests, formatting, lint, typecheck and build). The retained audio workflow tests plus the existing smoke tests passed all 47 cases across the five configured browser projects. These results establish simulated command coverage, not physical-device acceptance.
 
 Run the focused suite after selecting the `.nvmrc` runtime:
 
@@ -59,6 +61,8 @@ Run the focused suite after selecting the `.nvmrc` runtime:
 npm run build
 npm run test:e2e:audio
 ```
+
+Raw investigation logs remain ignored under `docs/evidence/audio-audit/` or in external temporary directories. No generated evidence is committed.
 
 ## Ranked hypotheses and decisive experiments
 
