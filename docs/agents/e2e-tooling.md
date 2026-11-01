@@ -76,6 +76,13 @@ non-silent output, fade-in, half-volume calibration, and fade-out before pause.
 It keeps normal autoplay policy and starts playback through a browser click.
 JSON measurements are attached to Playwright results, including on failures.
 
+The generated tone must remain inaudible. The injected context exposes a real
+`MediaStreamAudioDestinationNode` as its output, and the stream is never played
+or connected to speakers. The test rejects speaker connections and refuses
+media playback until the stream graph is connected, including when adapter
+setup fails and would otherwise fall back to direct playback. Do not restore a
+speaker output or make audible tests part of routine verification.
+
 The Windows WebKit build on the development host has no `AudioContext`. Only
 that combination, when the API is absent, explicitly skips the native signal
 test; run it on Linux/macOS WebKit for signal coverage. Simulated tests still
@@ -84,3 +91,21 @@ run on all five configured projects. Report skips separately from passes.
 Neither test is a physical-device or speaker-output check. See
 [the mobile audio investigation](../mobile-audio-device-research.md) for the
 device acceptance plan and user-triggered CLI/API connection options.
+
+### Headless Linux audio output
+
+Native Firefox Web Audio needs a usable audio output. Installing browser system
+libraries alone does not start an audio server. The verification workflow starts
+PulseAudio, creates a named null sink, selects it as the default output, and
+prints the server/sink information before launching browser tests. The null
+sink supplies a clocked output without requiring physical speakers; decoding,
+gain processing, analyser samples and autoplay policy remain real.
+
+If the context stays `suspended` despite a trusted Play click, inspect the
+attached `audioTime` and RMS samples and verify `pactl info` and
+`pactl list short sinks` in the runner environment. Do not skip Firefox, force
+the context state, or disable autoplay policy to make the test pass.
+
+PulseAudio's [null-sink documentation](https://wiki.freedesktop.org/www/Software/PulseAudio/Documentation/User/Modules/#module-null-sink)
+describes the system-clocked sink, and its [default-device documentation](https://wiki.freedesktop.org/www/Software/PulseAudio/Documentation/User/DefaultDevice/)
+describes selecting the fallback output with `pactl`.
