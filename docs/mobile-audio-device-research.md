@@ -1,5 +1,10 @@
 # Mobile audio fades: evidence, diagnosis, and device testing
 
+**Follow-up:** [The implemented volume fix](iphone-audio-volume-fix.md) records
+the subsequent physical-iPhone measurements, runnable device tooling, and the
+user's successful listening check. The investigation below describes the
+evidence available before that work.
+
 Research date: 2026-11-01. This is an investigation and a proposed resolution plan, not a declaration that the physical-device bug is fixed. The implementation examined is the browser audio adapter and playback coordinator on `main` after PR #52. Device/browser versions and the user's failing device have not yet been established. No physical device was connected or exercised during this research.
 
 **Your setup:** iPhone/iPad, with a Mac available. The recommended path is USB to the Mac, native Safari WebDriver, and explicit test runs initiated by an agent over SSH. Start with graph measurements and the original switching scenario; add calibrated device-output recording separately. The Windows-only and Android options below are alternatives, not prerequisites for your setup.

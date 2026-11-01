@@ -46,30 +46,23 @@ export function createBrowserAudioPort(
       ? undefined
       : document.createElement('audio')
   const canPlayType = probe?.canPlayType.bind(probe)
-  const canSetElementVolume = (() => {
-    if (!probe) return true
-    const original = probe.volume
-    const check = original === 0 ? 1 : 0
-    try {
-      probe.volume = check
-      return probe.volume === check
-    } catch {
-      return false
-    } finally {
-      try {
-        probe.volume = original
-      } catch {
-        // Some browsers expose the property as read-only.
-      }
-    }
-  })()
+  // A successful volume-property write does not prove amplitude control:
+  // iOS can read back the requested value briefly, then reset it to 1.
+  // Use one gain path wherever Web Audio exists; resume on the play gesture.
   let audioContext: AudioContext | undefined
+  let contextInitialized = false
+  const contextFor = () => {
+    if (!contextInitialized) {
+      audioContext = createAudioContext()
+      contextInitialized = true
+    }
+    return audioContext
+  }
   const gainFor = (element: AudioElement) => {
-    if (canSetElementVolume) return undefined
     const existing = gainNodes.get(element)
     if (existing) return existing
     try {
-      audioContext ??= createAudioContext()
+      audioContext = contextFor()
       if (!audioContext) return undefined
       const source = audioContext.createMediaElementSource(element)
       const gain = audioContext.createGain()
@@ -112,12 +105,13 @@ export function createBrowserAudioPort(
     let element = elements.get(key)
     if (!element) {
       const source = sourceFor(sound, variation, canPlayType)
+      const useWebAudio = Boolean(contextFor())
       element = (
-        canSetElementVolume ? createAudio(source) : createAudio()
+        useWebAudio ? createAudio() : createAudio(source)
       ) as AudioElement
-      if (!canSetElementVolume) {
+      if (useWebAudio) {
         // MediaElementSource needs a CORS-enabled request. Set this before src
-        // so the request can be routed through Web Audio on iOS.
+        // so the request can be routed through Web Audio.
         element.crossOrigin = 'anonymous'
         if (source) element.src = source
       }
@@ -185,7 +179,7 @@ export function createBrowserAudioPort(
         sound,
         (() => {
           const source = sourceFor(sound, variation, canPlayType)
-          if (canSetElementVolume) return createAudio(source)
+          if (!contextFor()) return createAudio(source)
           const audio = createAudio() as AudioElement
           audio.crossOrigin = 'anonymous'
           if (source) audio.src = source
