@@ -113,24 +113,21 @@
     display: none;
   }
   .welcome-content {
-    font-size: var(--font-size-body);
+    font-size: 16px;
     line-height: 1.35;
   }
   .welcome-heading {
-    font-size: var(--font-size-heading);
+    font-size: clamp(28px, 4vw, 36px);
     line-height: 1.35;
-  }
-  .welcome-heading span {
-    display: inline;
   }
   .welcome-heading .welcome-heading-middle {
     font-size: 0.8em;
     line-height: inherit;
   }
   .welcome-start {
-    font-size: var(--font-size-body);
+    font-size: inherit;
   }
   .welcome-create.button {
-    font-size: var(--font-size-button);
+    font-size: 20px;
   }
 }

@@ -8,8 +8,8 @@ test('mobile welcome keeps the header logo and compact typography @mobile', asyn
   await page.evaluate(() => document.fonts.ready)
   await expect(page.locator('.app-logo')).toBeVisible()
   await expect(page.locator('.welcome-logo')).toBeHidden()
-  await expect(page.locator('.welcome-content')).toHaveCSS('font-size', '14px')
-  await expect(page.locator('.welcome-heading')).toHaveCSS('font-size', '21px')
+  await expect(page.locator('.welcome-content')).toHaveCSS('font-size', '16px')
+  await expect(page.locator('.welcome-heading')).toHaveCSS('font-size', '28px')
   await page.screenshot({ path: 'docs/evidence/compact-welcome.png' })
   await page
     .getByRole('button', { name: 'Add environment', exact: true })
