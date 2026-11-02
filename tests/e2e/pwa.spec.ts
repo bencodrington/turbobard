@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('serves the legacy installed-app identity and browser icons', async ({
+test('serves the installed-app identity and browser icons', async ({
   page,
 }) => {
   await page.goto('/')
@@ -63,4 +63,57 @@ test('serves the legacy installed-app identity and browser icons', async ({
   expect(await tiles.text()).toContain('/mstile-150x150.png')
   const tileIcon = await page.request.get('/mstile-150x150.png')
   expect(tileIcon.headers()['content-type']).toContain('image/png')
+})
+
+test('home screen icons show the current logo on the app background', async ({
+  page,
+}) => {
+  await page.goto('/')
+  const manifest = await page.request
+    .get('/site.webmanifest')
+    .then((r) => r.json())
+  const touchIcon = await page
+    .locator('link[rel="apple-touch-icon"]')
+    .getAttribute('href')
+  const iconUrls = [
+    touchIcon!,
+    '/apple-touch-icon.png',
+    ...manifest.icons.map((icon: { src: string }) => icon.src),
+  ]
+
+  for (const src of iconUrls) {
+    const pixels = await page.evaluate(async (url: string) => {
+      const image = new Image()
+      image.src = url
+      await image.decode()
+      const canvas = document.createElement('canvas')
+      canvas.width = image.naturalWidth
+      canvas.height = image.naturalHeight
+      const context = canvas.getContext('2d')!
+      context.drawImage(image, 0, 0)
+      const { data } = context.getImageData(0, 0, canvas.width, canvas.height)
+      let blue = 0
+      let yellow = 0
+      for (let index = 0; index < data.length; index += 4) {
+        if (
+          data[index] === 0 &&
+          data[index + 1] === 120 &&
+          data[index + 2] === 206 &&
+          data[index + 3] === 255
+        )
+          blue++
+        if (
+          data[index] === 255 &&
+          data[index + 1] === 218 &&
+          data[index + 2] === 34 &&
+          data[index + 3] === 255
+        )
+          yellow++
+      }
+      return { corner: [...data.slice(0, 4)], blue, yellow }
+    }, src)
+    expect(pixels.corner, src).toEqual([18, 18, 18, 255])
+    expect(pixels.blue, src).toBeGreaterThan(0)
+    expect(pixels.yellow, src).toBeGreaterThan(0)
+  }
 })
