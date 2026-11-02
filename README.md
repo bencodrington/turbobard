@@ -36,6 +36,8 @@ Unit tests are isolated and run in jsdom. End-to-end tests run against the local
 
 For a first local browser run, install Chromium once with `npm run test:e2e:install`. The diagnostic command `npm run test:e2e:chromium:debug` enables full tracing and the line reporter. Browser runs stop after bounded test, server-start, or global timeouts; inspect `playwright-report/` and `test-results/` when a run fails. If a browser cannot launch, rerun the install command before debugging the application.
 
+For a summary of audio fading issues on iPhone, fixes, and explicit device-test setup, see [iPhone audio fades](docs/ios-audio-fades.md).
+
 ## Deployment
 
 See [deployment operations](docs/deployment-operations.md) for private staging
