@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 
+test.use({ timezoneId: 'America/New_York' })
+
 test('About identifies the running production build', async ({ page }) => {
   await page.goto('/')
   const response = await page.request.get('/build-info.json')
@@ -16,7 +18,12 @@ test('About identifies the running production build', async ({ page }) => {
     info.commit.slice(0, 7),
   )
   await expect(page.getByTestId('build-id')).toHaveText(info.buildId)
-  await expect(page.getByTestId('build-time')).toHaveText(info.builtAt)
+  await expect(page.getByText('Built at (local time)')).toBeVisible()
+  const localBuildTime = await page.evaluate(
+    (builtAt: string) => new Date(builtAt).toLocaleString(),
+    info.builtAt,
+  )
+  await expect(page.getByTestId('build-time')).toHaveText(localBuildTime)
 })
 
 test('loads the Turbobard workspace', async ({ page }) => {

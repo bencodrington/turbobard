@@ -879,8 +879,12 @@ export default function App({
                 </dd>
                 <dt>CI build ID</dt>
                 <dd data-testid="build-id">{buildInfo.buildId}</dd>
-                <dt>Built at (UTC)</dt>
-                <dd data-testid="build-time">{buildInfo.builtAt}</dd>
+                <dt>Built at (local time)</dt>
+                <dd data-testid="build-time">
+                  {buildInfo.builtAt === 'development'
+                    ? buildInfo.builtAt
+                    : new Date(buildInfo.builtAt).toLocaleString()}
+                </dd>
               </dl>
             </details>
           </div>
