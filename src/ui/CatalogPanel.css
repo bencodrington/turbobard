@@ -37,6 +37,8 @@
   outline-offset: -1px;
 }
 .catalog-filters {
+  flex-wrap: nowrap;
+  gap: 0;
   margin: var(--space-3) 0 var(--space-5);
 }
 .catalog-panel .catalog-results {
