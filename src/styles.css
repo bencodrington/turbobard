@@ -877,12 +877,6 @@ input::placeholder {
   width: 100%;
   margin-top: var(--space-3);
 }
-.catalog-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-top: var(--space-3);
-}
 .catalog-item {
   align-items: flex-start;
 }
